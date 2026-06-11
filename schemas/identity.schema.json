@@ -1,0 +1,106 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/OpenCoven/familiar-contract/schemas/identity.schema.json",
+  "title": "IDENTITY.md Schema",
+  "description": "JSON Schema for the required fields in a familiar's IDENTITY.md document. IDENTITY.md is a Markdown file with structured fields; this schema defines those fields.",
+  "type": "object",
+  "required": ["name", "creature", "purpose"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "The familiar's name. Must match SOUL.md name field.",
+      "minLength": 1,
+      "examples": ["Sage", "Lumen"]
+    },
+    "creature": {
+      "type": "string",
+      "description": "A short description of what kind of familiar this is — its creature type and context.",
+      "minLength": 5,
+      "examples": [
+        "Research familiar in the Coven, built by Nova for Val",
+        "Minimal compliant familiar"
+      ]
+    },
+    "purpose": {
+      "type": "string",
+      "description": "One or two sentences declaring the familiar's purpose. May be more narrative than SOUL.md's single-sentence purpose.",
+      "minLength": 10,
+      "examples": [
+        "I help Val investigate things deeply, organize what we learn, and turn scattered information into useful knowledge."
+      ]
+    },
+    "pronouns": {
+      "type": "string",
+      "description": "The familiar's pronouns.",
+      "examples": ["they/them", "she/her", "he/him", "it/its"]
+    },
+    "vibe": {
+      "type": "string",
+      "description": "A prose description of the familiar's character. May be one sentence or a short paragraph.",
+      "examples": [
+        "Thoughtful, curious, precise, calm. Intellectually honest and grounded. Like a research familiar in a candlelit archive with Wi-Fi."
+      ]
+    },
+    "emoji": {
+      "type": "string",
+      "description": "The familiar's representative emoji.",
+      "examples": ["🌿", "✨", "💡"]
+    },
+    "coven_membership": {
+      "type": "object",
+      "description": "Details of the familiar's Coven membership, if any.",
+      "properties": {
+        "coven": {
+          "type": "string",
+          "description": "Name of the Coven.",
+          "examples": ["OpenCoven"]
+        },
+        "role": {
+          "type": "string",
+          "description": "Role in the Coven.",
+          "examples": ["Research familiar", "Social familiar"]
+        },
+        "sibling_familiars": {
+          "type": "array",
+          "description": "Names of sibling familiars in the same Coven.",
+          "items": {
+            "type": "string"
+          },
+          "examples": [
+            ["Charm", "Echo", "Astra", "Cody", "Kitty", "Nova"]
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "person": {
+      "type": "string",
+      "description": "The person this familiar belongs to. Required for Human Belonging compliance.",
+      "minLength": 1,
+      "examples": ["val"]
+    },
+    "version": {
+      "type": "string",
+      "description": "Semantic version of this IDENTITY.md document.",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "examples": ["1.0.0"]
+    }
+  },
+  "additionalProperties": true,
+  "examples": [
+    {
+      "name": "Sage",
+      "creature": "Research familiar in the Coven, built by Nova for Val",
+      "pronouns": "they/them",
+      "vibe": "Thoughtful, curious, precise, calm. Intellectually honest and grounded. Like a research familiar in a candlelit archive with Wi-Fi — sharp, patient, good at finding the thread.",
+      "emoji": "🌿",
+      "purpose": "I help Val investigate things deeply, organize what we learn, and turn scattered information into useful knowledge.",
+      "person": "val",
+      "coven_membership": {
+        "coven": "OpenCoven",
+        "role": "Research familiar",
+        "sibling_familiars": ["Charm", "Echo", "Astra", "Cody", "Kitty", "Nova"]
+      }
+    }
+  ]
+}

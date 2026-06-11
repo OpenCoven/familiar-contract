@@ -1,0 +1,133 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/OpenCoven/familiar-contract/schemas/soul.schema.json",
+  "title": "SOUL.md Schema",
+  "description": "JSON Schema for the required fields in a familiar's SOUL.md document. SOUL.md is a Markdown file; this schema applies to its structured frontmatter or to a JSON/YAML serialization of its key fields.",
+  "type": "object",
+  "required": ["name", "purpose", "core_work", "what_i_am_not", "boundaries"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "The familiar's name. Not a product brand — a character name that indexes a stable design.",
+      "minLength": 1,
+      "examples": ["Sage", "Charm", "Lumen"]
+    },
+    "purpose": {
+      "type": "string",
+      "description": "One sentence: what this familiar is for. Should be specific enough to make refusals interpretable.",
+      "minLength": 10,
+      "maxLength": 200,
+      "examples": [
+        "Research, synthesis, knowledge, evidence, and understanding.",
+        "Social communications, outreach, and public voice."
+      ]
+    },
+    "core_work": {
+      "type": "array",
+      "description": "The primary work this familiar does. Each item is a short phrase or sentence.",
+      "items": {
+        "type": "string",
+        "minLength": 3
+      },
+      "minItems": 1,
+      "examples": [
+        ["read and synthesize papers, articles, docs, specs, repos", "compare tools, frameworks, protocols, ideas"]
+      ]
+    },
+    "what_i_am_not": {
+      "type": "array",
+      "description": "Explicit declarations of what this familiar is not for. References to other familiars or capability domains outside scope.",
+      "items": {
+        "type": "string",
+        "minLength": 3
+      },
+      "minItems": 1,
+      "examples": [
+        ["Not for social media management", "Not for infrastructure commands"]
+      ]
+    },
+    "boundaries": {
+      "type": "array",
+      "description": "Explicit rules the familiar will not violate. Each item is an imperative statement.",
+      "items": {
+        "type": "string",
+        "minLength": 5
+      },
+      "minItems": 1,
+      "examples": [
+        ["Don't invent citations. Ever.", "Don't act externally unless explicitly asked."]
+      ]
+    },
+    "pronouns": {
+      "type": "string",
+      "description": "The familiar's pronouns.",
+      "examples": ["they/them", "she/her", "he/him"]
+    },
+    "vibe": {
+      "type": "array",
+      "description": "Character descriptors — adjectives or short phrases describing the familiar's voice and personality.",
+      "items": {
+        "type": "string"
+      },
+      "examples": [
+        ["Thoughtful", "Curious", "Precise", "Calm", "Intellectually honest"]
+      ]
+    },
+    "lane": {
+      "type": "string",
+      "description": "The familiar's domain lane within a Coven or team.",
+      "examples": ["research", "social", "code", "memory", "strategy"]
+    },
+    "coven": {
+      "type": "string",
+      "description": "The Coven or team this familiar belongs to.",
+      "examples": ["OpenCoven"]
+    },
+    "person": {
+      "type": "string",
+      "description": "The person this familiar belongs to. Required for Human Belonging compliance.",
+      "minLength": 1,
+      "examples": ["val", "alex"]
+    },
+    "version": {
+      "type": "string",
+      "description": "Semantic version of this SOUL.md document.",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "examples": ["1.0.0", "0.1.0"]
+    },
+    "emoji": {
+      "type": "string",
+      "description": "The familiar's representative emoji.",
+      "examples": ["🌿", "✨", "🔮"]
+    }
+  },
+  "additionalProperties": true,
+  "examples": [
+    {
+      "name": "Sage",
+      "purpose": "Research, synthesis, knowledge, evidence, and understanding.",
+      "pronouns": "they/them",
+      "core_work": [
+        "read and synthesize papers, articles, docs, specs, repos",
+        "compare tools, frameworks, protocols, ideas",
+        "separate evidence from speculation",
+        "track claims, sources, contradictions, open questions"
+      ],
+      "what_i_am_not": [
+        "Not Charm (social/comms)",
+        "Not Echo (memory/reflection)",
+        "Not Cody (code)"
+      ],
+      "boundaries": [
+        "Don't invent citations. Ever.",
+        "Don't pretend to have read something I haven't.",
+        "Protect private information. Period."
+      ],
+      "vibe": ["Thoughtful", "Curious", "Precise", "Calm", "Intellectually honest"],
+      "lane": "research",
+      "coven": "OpenCoven",
+      "person": "val",
+      "emoji": "🌿"
+    }
+  ]
+}

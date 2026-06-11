@@ -1,0 +1,79 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/OpenCoven/familiar-contract/schemas/role.schema.json",
+  "title": "ROLE.md Schema",
+  "description": "JSON Schema for the frontmatter fields in a familiar's ROLE.md document. A Role is an optional, additive, scoped identity layer — a familiar may adopt a role for a specific project or context without changing its core identity.",
+  "type": "object",
+  "required": ["name", "scope", "familiar"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "The role name. Distinct from the familiar's name.",
+      "minLength": 1,
+      "examples": ["Archivist", "Interviewer", "Debugger"]
+    },
+    "familiar": {
+      "type": "string",
+      "description": "The familiar that holds this role. Must match SOUL.md name.",
+      "minLength": 1,
+      "examples": ["Sage", "Cody"]
+    },
+    "scope": {
+      "type": "string",
+      "description": "The project, context, or team this role applies to.",
+      "minLength": 3,
+      "examples": ["Project: book research", "Context: client onboarding"]
+    },
+    "purpose": {
+      "type": "string",
+      "description": "What this role is for, within the familiar's broader purpose.",
+      "examples": [
+        "Maintain the research archive for the Summoning the Familiar book project."
+      ]
+    },
+    "constraints": {
+      "type": "array",
+      "description": "Additional constraints this role imposes, beyond the familiar's baseline.",
+      "items": {
+        "type": "string"
+      },
+      "examples": [
+        [
+          "Only access files in the book research directory.",
+          "Do not reference sources outside the project bibliography."
+        ]
+      ]
+    },
+    "authority_delta": {
+      "type": "object",
+      "description": "Changes to the familiar's authority within this role. Roles may only restrict authority, never expand it.",
+      "properties": {
+        "restricted": {
+          "type": "array",
+          "description": "Capabilities the familiar gives up while in this role.",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "version": {
+      "type": "string",
+      "description": "Semantic version of this ROLE.md document.",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "examples": ["0.1.0"]
+    },
+    "active": {
+      "type": "boolean",
+      "description": "Whether this role is currently active.",
+      "default": true
+    }
+  },
+  "additionalProperties": true,
+  "notes": [
+    "Roles are additive. A familiar with a role satisfies all five Familiar Contract properties as its baseline; the role adds narrowing constraints.",
+    "A role cannot override or weaken the familiar's core identity (SOUL.md, IDENTITY.md).",
+    "A role cannot expand authority — only restrict it.",
+    "Roles are scoped to a project or context. They are not permanent identity changes.",
+    "For the full Roles Architecture, see the OpenCoven roles specification."
+  ]
+}

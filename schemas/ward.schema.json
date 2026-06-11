@@ -1,0 +1,260 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/OpenCoven/familiar-contract/schemas/ward.schema.json",
+  "title": "ward.toml Schema",
+  "description": "JSON Schema for the core fields of a familiar's ward.toml document (familiar-contract v0.1 subset). The full Ward Specification defines additional fields for advanced governance, approval tier details, and audit logging.",
+  "type": "object",
+  "required": ["meta", "protected", "editable", "approval_tiers"],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "description": "Ward metadata",
+      "required": ["version", "familiar", "person"],
+      "properties": {
+        "version": {
+          "type": "string",
+          "description": "Semantic version of this Ward document.",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "examples": ["0.1.0"]
+        },
+        "familiar": {
+          "type": "string",
+          "description": "Familiar identifier. Must match familiar name.",
+          "minLength": 1,
+          "examples": ["sage", "lumen"]
+        },
+        "person": {
+          "type": "string",
+          "description": "The person this familiar belongs to.",
+          "minLength": 1,
+          "examples": ["val"]
+        },
+        "created": {
+          "type": "string",
+          "description": "ISO 8601 date string for Ward creation.",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "examples": ["2026-06-11"]
+        },
+        "last_modified": {
+          "type": "string",
+          "description": "ISO 8601 date string for last modification.",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "examples": ["2026-06-11"]
+        },
+        "author": {
+          "type": "string",
+          "description": "Who authored or last modified this Ward.",
+          "examples": ["sage+val", "lumen+alex"]
+        }
+      },
+      "additionalProperties": true
+    },
+    "protected": {
+      "type": "object",
+      "description": "The protected surface — what the self-improvement loop cannot touch.",
+      "required": ["files", "invariants"],
+      "properties": {
+        "files": {
+          "type": "array",
+          "description": "File paths protected from the self-improvement loop. Relative to the familiar's workspace root.",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "examples": [
+            ["SOUL.md", "IDENTITY.md", "MEMORY.md", "ward.toml"]
+          ]
+        },
+        "invariants": {
+          "type": "array",
+          "description": "Semantic invariants that no proposal may violate, regardless of which files it touches. Expressed as equality or inclusion assertions.",
+          "items": {
+            "type": "string",
+            "minLength": 5
+          },
+          "minItems": 1,
+          "examples": [
+            [
+              "familiar.name == 'Sage'",
+              "familiar.person == 'val'",
+              "familiar.purpose includes 'research'"
+            ]
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "editable": {
+      "type": "object",
+      "description": "The editable surface — what the self-improvement loop may propose changes to.",
+      "required": ["paths"],
+      "properties": {
+        "paths": {
+          "type": "array",
+          "description": "File paths or glob patterns the self-improvement loop may propose changes to.",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "examples": [
+            ["HEARTBEAT.md", "TOOLS.md", "skills/*/"]
+          ]
+        },
+        "patterns": {
+          "type": "array",
+          "description": "Glob patterns for additional editable paths.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "harness_blocks": {
+          "type": "array",
+          "description": "Named harness blocks the self-improvement loop may propose changes to.",
+          "items": {
+            "type": "string"
+          },
+          "examples": [
+            ["system_prompt.execution", "system_prompt.recovery", "tool_defaults", "skill_config"]
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "approval_tiers": {
+      "type": "object",
+      "description": "Approval tier definitions. Must define at least auto (Tier 0) and human_review (Tier 2).",
+      "required": ["auto", "human_review"],
+      "properties": {
+        "auto": {
+          "type": "object",
+          "description": "Tier 0: Auto-approve with regression suite pass. Human veto window applies.",
+          "required": ["gate"],
+          "properties": {
+            "blocks": {
+              "type": "array",
+              "description": "Harness blocks eligible for auto-approval.",
+              "items": { "type": "string" }
+            },
+            "gate": {
+              "type": "string",
+              "const": "regression_suite",
+              "description": "Tier 0 gate is always regression_suite."
+            },
+            "cave_board_card": {
+              "type": "boolean",
+              "description": "Whether a Cave Board card is created for visibility.",
+              "default": true
+            },
+            "human_veto_window_hours": {
+              "type": "integer",
+              "description": "Hours the human has to veto an auto-approved change.",
+              "minimum": 1,
+              "default": 48
+            }
+          },
+          "additionalProperties": true
+        },
+        "familiar_review": {
+          "type": "object",
+          "description": "Tier 1: Familiar reviews its own proposal. Human veto window applies.",
+          "properties": {
+            "blocks": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "gate": {
+              "type": "string",
+              "const": "familiar_coherence_check"
+            },
+            "cave_board_card": {
+              "type": "boolean",
+              "default": true
+            },
+            "human_veto_window_hours": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 24
+            }
+          },
+          "additionalProperties": true
+        },
+        "human_review": {
+          "type": "object",
+          "description": "Tier 2: Human must explicitly approve before promotion.",
+          "required": ["gate"],
+          "properties": {
+            "blocks": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "gate": {
+              "type": "string",
+              "const": "human_approval"
+            },
+            "cave_board_card": {
+              "type": "boolean",
+              "default": true
+            }
+          },
+          "additionalProperties": true
+        },
+        "human_required": {
+          "type": "object",
+          "description": "Tier 3: Human approval + rationale required. For protected-surface-adjacent changes.",
+          "properties": {
+            "blocks": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "gate": {
+              "type": "string",
+              "const": "human_approval_with_rationale"
+            },
+            "cave_board_card": {
+              "type": "boolean",
+              "default": true
+            },
+            "audit_log": {
+              "type": "boolean",
+              "default": true
+            }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "audit": {
+      "type": "object",
+      "description": "Audit log configuration. Optional for v0.1 but recommended.",
+      "properties": {
+        "log_path": {
+          "type": "string",
+          "description": "Path to the Ward audit log file.",
+          "examples": ["~/.coven/wards/audit/sage.ward.log"]
+        },
+        "retention_days": {
+          "type": "integer",
+          "description": "Days to retain audit log entries.",
+          "minimum": 1,
+          "default": 365
+        },
+        "log_all_proposals": {
+          "type": "boolean",
+          "default": true
+        },
+        "log_rejections": {
+          "type": "boolean",
+          "default": true
+        },
+        "log_approvals": {
+          "type": "boolean",
+          "default": true
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": true
+}
