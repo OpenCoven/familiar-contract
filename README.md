@@ -4,6 +4,7 @@
 
 [![specification: v0.1.0](https://img.shields.io/badge/specification-v0.1.0-8b5cf6)](SPEC.md)
 [![license: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/OpenCoven/familiar-contract)
 
 ---
 
