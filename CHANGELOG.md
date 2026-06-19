@@ -7,6 +7,44 @@ This project uses [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.2.0] — 2026-06-19
+
+### Added
+
+- **rfcs/RFC-0001-familiar-contract.md** — Reformulation of the v0.1.0 specification as a numbered, RFC-2119-keyworded document
+  - 11 sections, 3,614 words, normative throughout
+  - Section 5.1 hardens authority-layer separation requirement
+  - Section 5.4 specifies four enforcement gates with normative MUST/MUST NOT requirements
+  - Section 4.2 adds protected-invariants requirement (semantic protection beyond path-only)
+  - Section 5.5 specifies regression-suite and identity-probe requirements
+  - Section 5.6 adds audit-log requirements (append-only)
+  - Section 7.2 documents convention-based production systems (HKUDS ohmo, Signet AI, Letta) and explicitly distinguishes from this RFC's structural protection
+  - Section 7.3 documents the self-improvement loops this RFC defends against (Self-Harness, SkillOpt, sleep-time compute, Letta sleep-time agents)
+  - Section 8 adds explicit threat model and failure modes
+  - Section 9 acknowledges open testing gaps (file-level vs system-level conformance)
+- **rfcs/README.md** — RFC process documentation (lifecycle, numbering, citation format)
+- **tests/conformance/** — Executable conformance suite
+  - `positive/` — minimum 5 cases that MUST pass validation
+  - `negative/` — minimum 8 cases that MUST fail validation, each with documented violation
+  - `run-conformance.sh` — runnable bash script verifying full suite
+
+### Changed
+
+- **README.md** — Version badge updated to v0.2.0; RFC-0001 badge added
+- **validators/validate.js** — Promoted missing MEMORY.md from warning to violation (RFC-0001 §3.4 makes file presence a MUST, not a SHOULD). Also updated version-string output to v0.2.0. Surfaced by negative/09-missing-memory test case.
+- **SPEC.md** — Marked as Superseded; preserved for reproducibility with clear pointer to RFC-0001
+
+### Citation
+
+The RFC is now the canonical citation target:
+
+> Familiar Contract RFC-0001 v0.2.0, "The Familiar Contract."
+> OpenCoven, 2026. https://github.com/OpenCoven/familiar-contract/blob/main/rfcs/RFC-0001-familiar-contract.md
+
+For academic citation, the tagged release at `v0.2.0` provides a stable URL.
+
+---
+
 ## [0.1.0] — 2026-06-11
 
 ### Added

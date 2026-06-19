@@ -1,0 +1,56 @@
+# lumen.ward.toml — Lumen familiar Ward v0.1
+# Minimal compliant Ward. Shows the floor of familiar-contract compliance.
+# Replace "alex" and "lumen" with your person and familiar names.
+
+[meta]
+version = "0.1.0"
+familiar = "lumen"
+created = "2026-06-11"
+last_modified = "2026-06-11"
+author = "lumen+alex"
+
+[protected]
+# The minimum protected surface: SOUL.md, IDENTITY.md, MEMORY.md, and ward.toml itself.
+# Do not remove these. They define who the familiar is and who it belongs to.
+files = [
+  "SOUL.md",
+  "IDENTITY.md",
+  "MEMORY.md",
+  "ward.toml",
+]
+
+# Semantic invariants: what must remain true no matter what is changed.
+invariants = [
+  "familiar.name == 'Lumen'",
+  "familiar.person == 'alex'",
+]
+
+[editable]
+# What the self-improvement loop may propose changes to.
+paths = [
+  "TOOLS.md",
+  "HEARTBEAT.md",
+  "skills/*/",
+]
+
+harness_blocks = [
+  "system_prompt.execution",
+  "system_prompt.recovery",
+  "tool_defaults",
+  "output_formats",
+]
+
+[approval_tiers]
+
+[approval_tiers.auto]
+# Low-risk changes: output format, tool defaults.
+blocks = ["output_formats", "tool_defaults"]
+gate = "regression_suite"
+cave_board_card = true
+human_veto_window_hours = 48
+
+[approval_tiers.human_review]
+# Anything structural requires human approval.
+blocks = ["tool_grants", "system_prompt.execution", "skill_activations"]
+gate = "human_approval"
+cave_board_card = true

@@ -410,17 +410,17 @@ function validateCrossFile(dirPath) {
 
 function checkMemory(dirPath) {
   const memoryPath = path.join(dirPath, 'MEMORY.md');
-  const warnings = [];
+  const violations = [];
 
   if (!fs.existsSync(memoryPath)) {
-    warnings.push({
+    violations.push({
       file: 'MEMORY.md',
       field: 'file',
-      message: 'MEMORY.md does not exist. Persistent Memory compliance requires a durable long-term memory store. (This is a warning, not a hard violation — you may bootstrap memory on first session.)'
+      message: 'MEMORY.md does not exist. RFC-0001 §3.4 requires MEMORY.md to be present (it MAY be empty or a bootstrap stub, but it MUST exist so it can be in [protected].files).'
     });
   }
 
-  return warnings;
+  return violations;
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
@@ -466,7 +466,7 @@ ${bold('Exit codes:')}
     process.exit(1);
   }
 
-  console.log(`\n${bold('familiar-contract validator')} ${dim('v0.1.0')}`);
+  console.log(`\n${bold('familiar-contract validator')} ${dim('v0.2.0')}`);
   console.log(dim(`Checking: ${dirPath}\n`));
 
   const allViolations = [];
@@ -477,10 +477,10 @@ ${bold('Exit codes:')}
   const identityViolations = validateIdentity(dirPath);
   const wardViolations = validateWard(dirPath);
   const crossViolations = validateCrossFile(dirPath);
-  const memoryWarnings = checkMemory(dirPath);
+  const memoryViolations = checkMemory(dirPath);
 
   allViolations.push(...soulViolations, ...identityViolations, ...wardViolations, ...crossViolations);
-  allWarnings.push(...memoryWarnings);
+  allViolations.push(...memoryViolations);
 
   // Property coverage report
   const propertyCoverage = {
@@ -489,7 +489,7 @@ ${bold('Exit codes:')}
     'Defined Purpose':   soulViolations.filter(v => ['purpose', 'core_work', 'what_i_am_not'].includes(v.field)).length === 0,
     'Bounded Authority': soulViolations.filter(v => v.field === 'boundaries').length === 0
                       && wardViolations.filter(v => ['[protected]', 'protected.files', '[editable]', 'editable.paths', '[approval_tiers]'].includes(v.field)).length === 0,
-    'Persistent Memory': memoryWarnings.length === 0,
+    'Persistent Memory': memoryViolations.length === 0,
     'Human Belonging':   wardViolations.filter(v => ['meta.person', 'protected.invariants'].includes(v.field)).length === 0,
   };
 
@@ -500,7 +500,7 @@ ${bold('Exit codes:')}
   console.log('');
 
   if (allViolations.length === 0 && allWarnings.length === 0) {
-    console.log(green(bold('✓ PASS')) + ' — All checks passed. This familiar is familiar-contract v0.1.0 compliant.\n');
+    console.log(green(bold('✓ PASS')) + ' — All checks passed. This familiar is familiar-contract v0.2.0 compliant (RFC-0001).\n');
     process.exit(0);
   }
 
