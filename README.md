@@ -40,7 +40,7 @@ These are not soft design preferences. Each one has architectural implications, 
 ## How to Use This Spec
 
 **If you're building a familiar:**
-1. Read [`SPEC.md`](SPEC.md) — the normative core
+1. Read [`rfcs/RFC-0001-familiar-contract.md`](rfcs/RFC-0001-familiar-contract.md) — the normative spec (v0.4.0)
 2. Copy an example from [`examples/`](examples/) — `minimal/` for the floor, `sage/` for a richer structurally conformant familiar directory
 3. Create `SOUL.md`, `IDENTITY.md`, and `ward.toml` for your familiar
 4. Validate with the CLI: `node validators/validate.js ./your-familiar-directory`
@@ -72,7 +72,7 @@ See [`validators/README.md`](validators/README.md) for full CLI docs.
 ## Repository Contents
 
 ```
-SPEC.md                  ← The Familiar Contract (normative)
+rfcs/RFC-0001-familiar-contract.md ← The Familiar Contract (normative, v0.4.0)
 README.md                ← This file
 PRIMER.md                ← Builder's guide (for new readers)
 CHANGELOG.md             ← Version history
@@ -93,6 +93,7 @@ docs/
   why-identity-not-skills.md
   ward-primer.md
   comparison.md          ← How this relates to ECC, Multica, others
+SPEC.md                 ← Historical / superseded predecessor specification
 .github/
   CONTRIBUTING.md
 ```

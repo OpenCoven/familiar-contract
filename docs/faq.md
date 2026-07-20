@@ -245,9 +245,10 @@ For structural conformance, the steps are:
 1. Create a familiar directory with all required files: `SOUL.md`, `IDENTITY.md`, `MEMORY.md`, `ward.toml`.
 2. Ensure `SOUL.md` includes the required sections: at minimum a name, pronouns, purpose, character description, and a `## What I Am Not` section.
 3. Ensure `ward.toml` conforms to `schemas/ward.schema.json`. The Ward must include `[meta]` (with `version`, `familiar`, `person`), `[protected]` (with `files` listing the four required protected files and an `invariants` array covering name and person), `[editable]`, and `[approval_tiers]` (with at minimum `auto` and `human_review` defined).
-4. Run `bash tests/conformance/run-conformance.sh` from the repo root. All six positive cases must pass. All twenty-eight negative cases must fail (demonstrating that the validator catches each documented violation, including unknown fields, gate mismatches, invalid vetoes, and unbound or duplicate block declarations).
+4. Run `node validators/validate.js ./your-directory` against the directory you want to claim is conformant.
+5. Run `bash tests/conformance/run-conformance.sh` from the repo root. All six positive cases must pass. All twenty-eight negative cases must fail (demonstrating that the validator catches each documented violation, including unknown fields, gate mismatches, invalid vetoes, and unbound or duplicate block declarations).
 
-If the conformance run returns `0` for positive cases and the validator correctly rejects all negative cases, the familiar is structurally conformant with v0.4.0. Claim conformance by declaring the version in your documentation and keeping a passing conformance run reproducible from your repo.
+The conformance suite validates the validator and fixtures. Your directory is structurally conformant only if its own `node validators/validate.js ./your-directory` run succeeds. If both the directory validator and the suite pass, the familiar is structurally conformant with v0.4.0. Claim conformance by declaring the version in your documentation and keeping both results reproducible from your repo.
 
 Full conformance — including runtime conformance — requires a running Ward daemon with proper authority-layer separation, an append-only audit log, and verified identity-probe consistency. These are not testable from a directory alone and are acknowledged as open testing gaps in RFC §9. A claim of full conformance should specify which layers have been verified.
 

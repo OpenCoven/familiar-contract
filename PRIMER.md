@@ -92,7 +92,7 @@ You do not need to use OpenCoven's infrastructure to implement familiar-contract
 
 ## Where to go next
 
-- [`SPEC.md`](../SPEC.md) — the normative specification
+- [`rfcs/RFC-0001-familiar-contract.md`](rfcs/RFC-0001-familiar-contract.md) — the normative specification (v0.4.0)
 - [`examples/minimal/`](../examples/minimal/) — the minimal structurally conformant familiar directory (Lumen)
 - [`examples/sage/`](../examples/sage/) — a richer structurally conformant familiar directory (Sage)
 - `node validators/validate.js ./your-directory` — validate your familiar
