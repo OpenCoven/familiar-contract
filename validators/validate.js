@@ -259,6 +259,22 @@ function parseTomlScalar(value) {
   return trimmed;
 }
 
+function hasParsedApprovalTierKey(key) {
+  return key !== null;
+}
+
+function formatTomlPathKey(key) {
+  return /^[A-Za-z0-9_-]+$/.test(key) ? key : JSON.stringify(key);
+}
+
+function formatApprovalTierPath(tierName) {
+  return `approval_tiers.${formatTomlPathKey(tierName)}`;
+}
+
+function formatApprovalTierFieldPath(tierName, field) {
+  return `${formatApprovalTierPath(tierName)}.${formatTomlPathKey(field)}`;
+}
+
 function parseWardToml(content) {
   const APPROVAL_TIER_KEY_TOKEN = /(?:"(?:\\.|[^"\\])*"|'[^']*'|[A-Za-z0-9_-]+)/;
   const result = {
@@ -448,7 +464,7 @@ function parseWardToml(content) {
     if (target.section === 'protected' && target.key === 'invariants') result.protectedInvariants = [...items];
     if (target.section === 'editable' && target.key === 'paths') result.editablePaths = [...items];
     if (target.section === 'editable' && target.key === 'harness_blocks') result.editableHarnessBlocks = [...items];
-    if (target.section === 'approval_tiers' && target.subSection && target.allowAssignment) {
+    if (target.section === 'approval_tiers' && target.subSection !== null && target.allowAssignment) {
       assignApprovalTierField(target.subSection, target.key, [...items]);
     }
   }
@@ -466,7 +482,7 @@ function parseWardToml(content) {
     if (/^\[editable\]$/.test(trimmed)) { currentSection = 'editable'; currentSubSection = null; allowCurrentTierAssignments = true; result.hasEditable = true; continue; }
     if (/^\[approval_tiers\]$/.test(trimmed)) { currentSection = 'approval_tiers'; currentSubSection = null; allowCurrentTierAssignments = true; result.hasApprovalTiers = true; continue; }
     const tierName = parseApprovalTierTableName(trimmed);
-    if (tierName) {
+    if (hasParsedApprovalTierKey(tierName)) {
       currentSection = 'approval_tiers';
       currentSubSection = tierName;
       result.hasApprovalTiers = true;
@@ -498,11 +514,11 @@ function parseWardToml(content) {
       continue;
     }
 
-    const approvalTierAssignment = currentSection === 'approval_tiers' && currentSubSection
+    const approvalTierAssignment = currentSection === 'approval_tiers' && currentSubSection !== null
       ? parseApprovalTierAssignment(trimmed)
       : null;
 
-    if (approvalTierAssignment && approvalTierAssignment.isArray && approvalTierAssignment.key) {
+    if (approvalTierAssignment && approvalTierAssignment.isArray && hasParsedApprovalTierKey(approvalTierAssignment.key)) {
       const target = {
         section: currentSection,
         subSection: currentSubSection,
@@ -535,7 +551,7 @@ function parseWardToml(content) {
     }
 
     // Key-value pairs
-    if (approvalTierAssignment && approvalTierAssignment.key) {
+    if (approvalTierAssignment && hasParsedApprovalTierKey(approvalTierAssignment.key)) {
       if (allowCurrentTierAssignments) {
         assignApprovalTierField(currentSubSection, approvalTierAssignment.key, parseTomlScalar(approvalTierAssignment.rawValue));
       }
@@ -553,7 +569,7 @@ function parseWardToml(content) {
         if (key === 'person') result.metaPerson = value;
         if (key === 'version') result.metaVersion = value;
       }
-      if (currentSection === 'approval_tiers' && currentSubSection && allowCurrentTierAssignments) {
+      if (currentSection === 'approval_tiers' && currentSubSection !== null && allowCurrentTierAssignments) {
         assignApprovalTierField(currentSubSection, key, parseTomlScalar(rawValue));
       }
     }
@@ -564,11 +580,12 @@ function parseWardToml(content) {
 
 function validateApprovalTiers(parsed) {
   const violations = [];
+  const BOOLEAN_FIELDS = new Set(['cave_board_card', 'audit_log']);
 
   for (const tierName of parsed.unknownApprovalTiers) {
     violations.push(violation(
       'ward.toml',
-      `approval_tiers.${tierName}`,
+      formatApprovalTierPath(tierName),
       `Unknown approval tier "${tierName}".`
     ));
   }
@@ -576,16 +593,16 @@ function validateApprovalTiers(parsed) {
   for (const tierName of parsed.duplicateApprovalTierTables) {
     violations.push(violation(
       'ward.toml',
-      `approval_tiers.${tierName}`,
-      `Duplicate approval tier table declaration for approval_tiers.${tierName}. Duplicate tier tables are ambiguous and forbidden.`
+      formatApprovalTierPath(tierName),
+      `Duplicate approval tier table declaration for ${formatApprovalTierPath(tierName)}. Duplicate tier tables are ambiguous and forbidden.`
     ));
   }
 
   for (const duplicateField of parsed.duplicateApprovalTierFields) {
     violations.push(violation(
       'ward.toml',
-      `approval_tiers.${duplicateField.tierName}.${duplicateField.field}`,
-      `Duplicate field "${duplicateField.field}" declared in approval_tiers.${duplicateField.tierName}. Duplicate approval-tier fields are ambiguous and forbidden.`
+      formatApprovalTierFieldPath(duplicateField.tierName, duplicateField.field),
+      `Duplicate field "${duplicateField.field}" declared in ${formatApprovalTierPath(duplicateField.tierName)}. Duplicate approval-tier fields are ambiguous and forbidden.`
     ));
   }
 
@@ -595,6 +612,15 @@ function validateApprovalTiers(parsed) {
         'ward.toml',
         `editable.harness_blocks[${index}]`,
         `Harness block identifiers must be TOML strings; found ${typeof block} ${JSON.stringify(block)}.`
+      ));
+      return;
+    }
+
+    if (block.trim() === '') {
+      violations.push(violation(
+        'ward.toml',
+        `editable.harness_blocks[${index}]`,
+        'Harness block identifiers must be non-empty strings; empty or whitespace-only identifiers are forbidden.'
       ));
     }
   });
@@ -607,8 +633,8 @@ function validateApprovalTiers(parsed) {
       if (!rule.fields.includes(field) && field !== 'human_veto_window_hours') {
         violations.push(violation(
           'ward.toml',
-          `approval_tiers.${tierName}.${field}`,
-          `Unknown field "${field}" for approval_tiers.${tierName}.`
+          formatApprovalTierFieldPath(tierName, field),
+          `Unknown field "${field}" for ${formatApprovalTierPath(tierName)}.`
         ));
       }
     }
@@ -616,15 +642,25 @@ function validateApprovalTiers(parsed) {
     if (tier.fields.gate !== rule.gate) {
       violations.push(violation(
         'ward.toml',
-        `approval_tiers.${tierName}.gate`,
-        `Expected gate "${rule.gate}" for approval_tiers.${tierName}.`
+        formatApprovalTierFieldPath(tierName, 'gate'),
+        `Expected gate "${rule.gate}" for ${formatApprovalTierPath(tierName)}.`
       ));
+    }
+
+    for (const field of rule.fields) {
+      if (BOOLEAN_FIELDS.has(field) && hasOwn(tier.fields, field) && typeof tier.fields[field] !== 'boolean') {
+        violations.push(violation(
+          'ward.toml',
+          formatApprovalTierFieldPath(tierName, field),
+          `${field} must be a TOML boolean when present; found ${typeof tier.fields[field]} ${JSON.stringify(tier.fields[field])}.`
+        ));
+      }
     }
 
     if (tier.blocks.length === 0) {
       violations.push(violation(
         'ward.toml',
-        `approval_tiers.${tierName}.blocks`,
+        formatApprovalTierFieldPath(tierName, 'blocks'),
         'Approval tier blocks must not be empty.'
       ));
     }
@@ -634,8 +670,17 @@ function validateApprovalTiers(parsed) {
       if (typeof block !== 'string') {
         violations.push(violation(
           'ward.toml',
-          `approval_tiers.${tierName}.blocks[${index}]`,
+          `${formatApprovalTierFieldPath(tierName, 'blocks')}[${index}]`,
           `Harness block identifiers must be TOML strings; found ${typeof block} ${JSON.stringify(block)}.`
+        ));
+        return;
+      }
+
+      if (block.trim() === '') {
+        violations.push(violation(
+          'ward.toml',
+          `${formatApprovalTierFieldPath(tierName, 'blocks')}[${index}]`,
+          'Harness block identifiers must be non-empty strings; empty or whitespace-only identifiers are forbidden.'
         ));
         return;
       }
@@ -643,8 +688,8 @@ function validateApprovalTiers(parsed) {
       if (seenBlocks.has(block)) {
         violations.push(violation(
           'ward.toml',
-          `approval_tiers.${tierName}.blocks`,
-          `Duplicate block "${block}" in approval_tiers.${tierName}.blocks.`
+          formatApprovalTierFieldPath(tierName, 'blocks'),
+          `Duplicate block "${block}" in ${formatApprovalTierFieldPath(tierName, 'blocks')}.`
         ));
       }
       seenBlocks.add(block);
@@ -652,14 +697,14 @@ function validateApprovalTiers(parsed) {
       if (!parsed.editableHarnessBlocks.includes(block)) {
         violations.push(violation(
           'ward.toml',
-          `approval_tiers.${tierName}.blocks`,
+          formatApprovalTierFieldPath(tierName, 'blocks'),
           `Harness block "${block}" is not declared in editable.harness_blocks.`
         ));
       }
     });
 
     if (hasOwn(tier.fields, 'human_veto_window_hours')) {
-      const vetoField = `approval_tiers.${tierName}.human_veto_window_hours`;
+      const vetoField = formatApprovalTierFieldPath(tierName, 'human_veto_window_hours');
       if (!rule.vetoAllowed) {
         violations.push(violation(
           'ward.toml',
