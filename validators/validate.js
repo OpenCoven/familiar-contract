@@ -359,6 +359,12 @@ function parseWardToml(content) {
     return items;
   }
 
+  function parseApprovalTierTableName(header) {
+    const match = header.match(/^\[approval_tiers\.(?:"((?:\\.|[^"\\])*)"|'([^']*)'|([A-Za-z0-9_-]+))\]$/);
+    if (!match) return null;
+    return match[1] ?? match[2] ?? match[3];
+  }
+
   function assignApprovalTierField(tierName, key, value) {
     const tier = approvalTier(tierName);
     if (tier.seenFields.has(key)) {
@@ -407,9 +413,8 @@ function parseWardToml(content) {
     if (/^\[protected\]$/.test(trimmed)) { currentSection = 'protected'; currentSubSection = null; allowCurrentTierAssignments = true; result.hasProtected = true; continue; }
     if (/^\[editable\]$/.test(trimmed)) { currentSection = 'editable'; currentSubSection = null; allowCurrentTierAssignments = true; result.hasEditable = true; continue; }
     if (/^\[approval_tiers\]$/.test(trimmed)) { currentSection = 'approval_tiers'; currentSubSection = null; allowCurrentTierAssignments = true; result.hasApprovalTiers = true; continue; }
-    const approvalTierMatch = trimmed.match(/^\[approval_tiers\.([A-Za-z0-9_-]+)\]$/);
-    if (approvalTierMatch) {
-      const tierName = approvalTierMatch[1];
+    const tierName = parseApprovalTierTableName(trimmed);
+    if (tierName) {
       currentSection = 'approval_tiers';
       currentSubSection = tierName;
       result.hasApprovalTiers = true;

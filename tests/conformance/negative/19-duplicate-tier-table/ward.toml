@@ -75,7 +75,7 @@ gate = "human_approval_with_rationale"
 cave_board_card = true
 audit_log = true
 
-[approval_tiers.auto]
+[approval_tiers."auto"]
 blocks = ["output_formats"]
 gate = "regression_suite"
 cave_board_card = true
