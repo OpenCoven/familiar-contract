@@ -1,6 +1,6 @@
 # Validator — familiar-contract
 
-A zero-dependency Node.js CLI that checks a familiar directory for familiar-contract v0.4.0 structural compliance.
+A zero-dependency Node.js CLI that checks a familiar directory for familiar-contract v0.4.0 structural conformance.
 
 ## Requirements
 
@@ -75,7 +75,7 @@ Warnings (e.g., missing MEMORY.md) are displayed but do not cause a failure exit
 - Whether the Ward is actually enforced at runtime (that requires a Ward daemon)
 - Whether the familiar's behavior matches its declared purpose (behavioral compliance requires runtime evaluation)
 
-This validator checks **structural compliance** — the presence and format of required declarations. Full compliance requires both structural compliance and behavioral compliance.
+This validator checks **structural conformance** — the presence and format of required declarations. Full conformance also requires runtime Ward enforcement beyond this file-level check.
 
 ## For CI Integration
 

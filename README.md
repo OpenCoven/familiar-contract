@@ -41,7 +41,7 @@ These are not soft design preferences. Each one has architectural implications, 
 
 **If you're building a familiar:**
 1. Read [`SPEC.md`](SPEC.md) — the normative core
-2. Copy an example from [`examples/`](examples/) — `minimal/` for the floor, `sage/` for a full compliant familiar
+2. Copy an example from [`examples/`](examples/) — `minimal/` for the floor, `sage/` for a richer structurally conformant familiar directory
 3. Create `SOUL.md`, `IDENTITY.md`, and `ward.toml` for your familiar
 4. Validate with the CLI: `node validators/validate.js ./your-familiar-directory`
 
@@ -83,8 +83,8 @@ schemas/
   ward.schema.json       ← JSON Schema for ward.toml
   role.schema.json       ← JSON Schema for ROLE.md
 examples/
-  sage/                  ← Sage (canonical compliant familiar)
-  minimal/               ← Lumen (minimal compliant familiar)
+  sage/                  ← Sage (canonical structurally conformant familiar directory)
+  minimal/               ← Lumen (minimal structurally conformant familiar directory)
 validators/
   validate.js            ← CLI validator
   README.md

@@ -38,6 +38,8 @@ Proposed → Draft → Review → Accepted → (Superseded)
 
 **Numbering:** RFCs are numbered in the order they enter `Draft` status. Numbers are not reused.
 
+**Draft versioning:** While an RFC remains `Draft`, it **MUST** stay below `1.0.0`. Draft minor versions (`0.y.0`) **MAY** introduce backward-incompatible conformance changes, but each such release **MUST** document migration impact and security rationale, and consumers **MUST** pin the exact version they implement. Once an RFC reaches `1.0.0` or higher, standard SemVer applies: major for incompatible changes, minor for backward-compatible additions, patch for clarifications and fixes.
+
 **Conformance:** Every normative requirement (a sentence containing MUST or SHOULD) in an Accepted RFC SHOULD have a corresponding test in `tests/conformance/`. RFCs that lack conformance coverage may still be Accepted, but the gap is documented in the RFC itself under an "Open testing gaps" section.
 
 ## How to cite an RFC

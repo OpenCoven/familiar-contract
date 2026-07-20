@@ -50,7 +50,7 @@ Three files:
 
 **`ward.toml`** — the governance document. Protected files, editable files, approval tiers. This is what tells the self-improvement loop what it cannot touch. See [`schemas/ward.schema.json`](../schemas/ward.schema.json).
 
-Start from [`examples/minimal/`](../examples/minimal/) — that's the floor. [`examples/sage/`](../examples/sage/) shows a full compliant familiar (Sage is a real familiar running on OpenCoven's infrastructure).
+Start from [`examples/minimal/`](../examples/minimal/) — that's the floor. [`examples/sage/`](../examples/sage/) shows a richer structurally conformant familiar directory. Sage's runtime enforcement lives outside this repo fixture.
 
 ---
 
@@ -93,8 +93,8 @@ You do not need to use OpenCoven's infrastructure to implement familiar-contract
 ## Where to go next
 
 - [`SPEC.md`](../SPEC.md) — the normative specification
-- [`examples/minimal/`](../examples/minimal/) — the minimal compliant familiar (Lumen)
-- [`examples/sage/`](../examples/sage/) — a full compliant familiar (Sage)
+- [`examples/minimal/`](../examples/minimal/) — the minimal structurally conformant familiar directory (Lumen)
+- [`examples/sage/`](../examples/sage/) — a richer structurally conformant familiar directory (Sage)
 - `node validators/validate.js ./your-directory` — validate your familiar
 - [`FAQ.md`](../FAQ.md) — common questions
 - [`docs/comparison.md`](../docs/comparison.md) — how this relates to other approaches

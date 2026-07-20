@@ -12,7 +12,7 @@ The core problem it addresses is this: AI agents have gotten very capable, but t
 
 The specification has two major parts. First, a five-property identity contract: a compliant "familiar" must have a stable named identity, a declared purpose, enforced authority limits, persistent memory, and an explicit binding to a specific person. Second, an enforcement model built around a component called the Ward — a TOML policy document plus a runtime enforcement daemon that checks proposed changes against the protected surface before they are applied. The key word is "enforced": the Ward is not asking the agent to have good values about self-modification. It is an external check that runs regardless of what the agent thinks about it.
 
-The Familiar Contract is a normative specification, which means it defines what must be true about a compliant system, tested against an executable conformance suite, not just described. The RFC (RFC-0001, v0.4.0) carries formal RFC 2119 keywords (MUST, MUST NOT, SHOULD) and the `tests/conformance/` directory is the spec made executable. A system that passes every positive case and fails every negative case is, by definition, conformant.
+The Familiar Contract is a normative specification, which means it defines what must be true about a conformant system, tested against an executable conformance suite, not just described. The RFC (RFC-0001, v0.4.0) carries formal RFC 2119 keywords (MUST, MUST NOT, SHOULD) and the `tests/conformance/` directory is the spec made executable. A familiar directory that passes every positive case and fails every negative case is, by definition, structurally conformant. Full conformance also requires runtime Ward enforcement as described in RFC §6.2.
 
 ---
 

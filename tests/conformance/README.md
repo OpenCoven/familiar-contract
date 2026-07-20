@@ -10,4 +10,4 @@ bash tests/conformance/run-conformance.sh
 
 Convention: `positive/<n>-<name>/` cases should PASS when run with `node validators/validate.js <case>`. `negative/<n>-<name>/` cases should FAIL for the documented reason in that case's `CASE.md`.
 
-A claim of v0.4.0 structural compliance = passing every positive case and failing every negative case.
+A claim of v0.4.0 structural conformance = passing every positive case and failing every negative case.

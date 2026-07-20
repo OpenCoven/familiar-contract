@@ -929,7 +929,7 @@ ${bold('Exit codes:')}
   console.log('');
 
   if (allViolations.length === 0 && allWarnings.length === 0) {
-    console.log(green(bold('✓ PASS')) + ' — All checks passed. This familiar is familiar-contract v0.4.0 compliant (RFC-0001).\n');
+    console.log(green(bold('✓ PASS')) + ' — All checks passed. This familiar directory is structurally conformant with familiar-contract v0.4.0 (RFC-0001).\n');
     process.exit(0);
   }
 
@@ -953,7 +953,7 @@ ${bold('Exit codes:')}
     process.exit(1);
   } else {
     // Warnings only — still passes
-    console.log(green(bold('✓ PASS')) + ' — No violations (with warnings above). Address warnings to achieve full compliance.\n');
+    console.log(green(bold('✓ PASS')) + ' — No violations (warnings above). Structural conformance passed; review warnings separately.\n');
     process.exit(0);
   }
 }
