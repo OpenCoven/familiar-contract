@@ -606,6 +606,7 @@ function validateApprovalTiers(parsed) {
     ));
   }
 
+  const seenEditableHarnessBlocks = new Set();
   parsed.editableHarnessBlocks.forEach((block, index) => {
     if (typeof block !== 'string') {
       violations.push(violation(
@@ -622,7 +623,19 @@ function validateApprovalTiers(parsed) {
         `editable.harness_blocks[${index}]`,
         'Harness block identifiers must be non-empty strings; empty or whitespace-only identifiers are forbidden.'
       ));
+      return;
     }
+
+    if (seenEditableHarnessBlocks.has(block)) {
+      violations.push(violation(
+        'ward.toml',
+        'editable.harness_blocks',
+        `Duplicate SurfaceRegionId declaration "${block}" in editable.harness_blocks.`
+      ));
+      return;
+    }
+
+    seenEditableHarnessBlocks.add(block);
   });
 
   for (const [tierName, tier] of Object.entries(parsed.approvalTiers)) {
