@@ -59,8 +59,7 @@
           "description": "File paths protected from the self-improvement loop. Relative to the familiar's workspace root.",
           "items": {
             "type": "string",
-            "minLength": 1,
-            "pattern": "\\S"
+            "minLength": 1
           },
           "minItems": 1,
           "examples": [
@@ -96,8 +95,7 @@
           "description": "File paths or glob patterns the self-improvement loop may propose changes to.",
           "items": {
             "type": "string",
-            "minLength": 1,
-            "pattern": "\\S"
+            "minLength": 1
           },
           "examples": [
             ["HEARTBEAT.md", "TOOLS.md", "skills/*/"]
@@ -207,7 +205,8 @@
               "type": "array",
               "items": {
                 "type": "string",
-                "minLength": 1
+                "minLength": 1,
+                "pattern": "\\S"
               },
               "minItems": 1,
               "uniqueItems": true
@@ -232,7 +231,8 @@
               "type": "array",
               "items": {
                 "type": "string",
-                "minLength": 1
+                "minLength": 1,
+                "pattern": "\\S"
               },
               "minItems": 1,
               "uniqueItems": true
