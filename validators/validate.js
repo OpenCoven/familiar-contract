@@ -12,13 +12,15 @@
  * Output: PASS or list of violations with file + field + message
  * Exit code: 0 on pass, 1 on fail
  * 
- * No external dependencies required (optional: ajv for strict JSON Schema validation)
+ * Uses standards-compliant TOML parsing and JSON Schema validation for ward.toml.
  */
 
 'use strict';
 
 const fs = require('fs');
 const path = require('path');
+const TOML = require('@iarna/toml');
+const Ajv = require('ajv');
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -203,587 +205,64 @@ function validateIdentity(dirPath) {
   return violations;
 }
 
-// ── ward.toml parser ──────────────────────────────────────────────────────────
-// Minimal TOML parser for the fields we need. Only handles the subset used in ward.toml.
+// ── ward.toml validation ─────────────────────────────────────────────────────
 
-const APPROVAL_TIER_RULES = Object.freeze(Object.assign(Object.create(null), {
-  auto: {
-    gate: 'regression_suite',
-    approvalPath: 'AutoRegression',
-    vetoAllowed: true,
-    fields: ['blocks', 'gate', 'cave_board_card', 'human_veto_window_hours'],
-  },
-  familiar_review: {
-    gate: 'familiar_coherence_check',
-    approvalPath: 'FamiliarCoherence',
-    vetoAllowed: true,
-    fields: ['blocks', 'gate', 'cave_board_card', 'human_veto_window_hours'],
-  },
-  human_review: {
-    gate: 'human_approval',
-    approvalPath: 'HumanApproval',
-    vetoAllowed: false,
-    fields: ['blocks', 'gate', 'cave_board_card'],
-  },
-  human_required: {
-    gate: 'human_approval_with_rationale',
-    approvalPath: 'HumanApprovalWithRationale',
-    vetoAllowed: false,
-    fields: ['blocks', 'gate', 'cave_board_card', 'audit_log'],
-  },
-}));
+const wardSchema = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'schemas', 'ward.schema.json'), 'utf8'));
+const validateWardSchema = new Ajv({ allErrors: true, strict: false }).compile(wardSchema);
 
-function hasOwn(obj, key) {
-  return Object.prototype.hasOwnProperty.call(obj, key);
-}
+const APPROVAL_PATHS = Object.freeze({
+  auto: 'AutoRegression',
+  familiar_review: 'FamiliarCoherence',
+  human_review: 'HumanApproval',
+  human_required: 'HumanApprovalWithRationale',
+});
 
-function createNullPrototypeMap() {
-  return Object.create(null);
-}
-
-function unsupportedTomlScalar(raw) {
-  return Object.freeze({ type: 'unsupported-toml-scalar', raw });
-}
-
-function parseTomlScalar(value) {
-  const trimmed = value.trim();
-  if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
-    if (trimmed.startsWith('"')) {
-      try {
-        return JSON.parse(trimmed);
-      } catch {
-        return unsupportedTomlScalar(trimmed);
-      }
-    }
-    return trimmed.slice(1, -1);
-  }
-  if (trimmed === 'true') return true;
-  if (trimmed === 'false') return false;
-  if (/^[+-]?\d(?:_?\d)*$/.test(trimmed)) return Number(trimmed.replaceAll('_', ''));
-  return unsupportedTomlScalar(trimmed);
-}
-
-function hasParsedApprovalTierKey(key) {
-  return key !== null;
-}
-
-function formatTomlPathKey(key) {
-  return /^[A-Za-z0-9_-]+$/.test(key) ? key : JSON.stringify(key);
-}
-
-function formatApprovalTierPath(tierName) {
-  return `approval_tiers.${formatTomlPathKey(tierName)}`;
-}
-
-function formatApprovalTierFieldPath(tierName, field) {
-  return `${formatApprovalTierPath(tierName)}.${formatTomlPathKey(field)}`;
+function isObject(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
 function parseWardToml(content) {
-  const APPROVAL_TIER_KEY_TOKEN = /(?:"(?:\\.|[^"\\])*"|'[^']*'|[A-Za-z0-9_-]+)/;
-  const result = {
-    hasMeta: false,
-    metaFamiliar: null,
-    metaPerson: null,
-    metaVersion: null,
-    hasProtected: false,
-    protectedFiles: [],
-    protectedInvariants: [],
-    hasEditable: false,
-    editablePaths: [],
-    editableHarnessBlocks: [],
-    hasApprovalTiers: false,
-    hasAutoTier: false,
-    hasHumanReviewTier: false,
-    approvalTiers: createNullPrototypeMap(),
-    unknownApprovalTiers: [],
-    duplicateApprovalTierTables: [],
-    duplicateApprovalTierFields: [],
-    unsupportedApprovalTierAssignments: [],
-    unsupportedApprovalTierTables: [],
-  };
-
-  const lines = content.split('\n');
-  let currentSection = null;
-  let currentSubSection = null;
-  let allowCurrentTierAssignments = true;
-  let inArray = false;
-  let arrayTarget = null;
-  let arrayBuffer = [];
-
-  function approvalTier(name) {
-    if (!hasOwn(result.approvalTiers, name)) {
-      result.approvalTiers[name] = { blocks: [], fields: createNullPrototypeMap(), fieldNames: [], seenFields: new Set() };
-    }
-    return result.approvalTiers[name];
+  try {
+    return { ward: TOML.parse(content), error: null };
+  } catch (error) {
+    return { ward: null, error };
   }
-
-  function findUnquotedChar(value, targetChar) {
-    let inSingleQuote = false;
-    let inDoubleQuote = false;
-    let escapeNext = false;
-
-    for (let i = 0; i < value.length; i++) {
-      const char = value[i];
-
-      if (escapeNext) {
-        escapeNext = false;
-        continue;
-      }
-
-      if (char === '\\' && inDoubleQuote) {
-        escapeNext = true;
-        continue;
-      }
-
-      if (char === "'" && !inDoubleQuote) {
-        inSingleQuote = !inSingleQuote;
-        continue;
-      }
-      if (char === '"' && !inSingleQuote) {
-        inDoubleQuote = !inDoubleQuote;
-        continue;
-      }
-      if (char === targetChar && !inSingleQuote && !inDoubleQuote) {
-        return i;
-      }
-    }
-
-    return -1;
-  }
-
-  function stripTomlComment(value) {
-    const commentStart = findUnquotedChar(value, '#');
-    return commentStart >= 0 ? value.slice(0, commentStart).trim() : value.trim();
-  }
-
-  function parseArrayItems(value) {
-    const items = [];
-    let currentItem = '';
-    let inSingleQuote = false;
-    let inDoubleQuote = false;
-    let escapeNext = false;
-
-    function pushCurrentItem() {
-      const trimmed = currentItem.trim();
-      if (trimmed !== '') items.push(parseTomlScalar(trimmed));
-      currentItem = '';
-    }
-
-    for (let i = 0; i < value.length; i++) {
-      const char = value[i];
-
-      if (escapeNext) {
-        currentItem += char;
-        escapeNext = false;
-        continue;
-      }
-
-      if (char === '\\' && inDoubleQuote) {
-        currentItem += char;
-        escapeNext = true;
-        continue;
-      }
-
-      if (char === "'" && !inDoubleQuote) {
-        inSingleQuote = !inSingleQuote;
-        currentItem += char;
-        continue;
-      }
-      if (char === '"' && !inSingleQuote) {
-        inDoubleQuote = !inDoubleQuote;
-        currentItem += char;
-        continue;
-      }
-
-      if (char === ',' && !inSingleQuote && !inDoubleQuote) {
-        pushCurrentItem();
-        continue;
-      }
-
-      currentItem += char;
-    }
-
-    pushCurrentItem();
-    return items;
-  }
-
-  function parseApprovalTierTableName(header) {
-    const match = header.match(new RegExp(`^\\[\\s*approval_tiers\\s*\\.\\s*(${APPROVAL_TIER_KEY_TOKEN.source})\\s*\\]$`));
-    if (!match) return null;
-    return parseApprovalTierKeyName(match[1]);
-  }
-
-  function parseApprovalTierKeyName(rawKey) {
-    const trimmed = rawKey.trim();
-    if (/^[A-Za-z0-9_-]+$/.test(trimmed)) return trimmed;
-    if (trimmed.startsWith("'") && trimmed.endsWith("'")) return trimmed.slice(1, -1);
-    if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
-      try {
-        return JSON.parse(trimmed);
-      } catch {
-        return trimmed.slice(1, -1);
-      }
-    }
-    return null;
-  }
-
-  function parseApprovalTierAssignment(value) {
-    const arrayMatch = value.match(new RegExp(`^(${APPROVAL_TIER_KEY_TOKEN.source})\\s*=\\s*\\[(.*)$`));
-    if (arrayMatch) {
-      return {
-        key: parseApprovalTierKeyName(arrayMatch[1]),
-        isArray: true,
-        rawValue: arrayMatch[2],
-      };
-    }
-
-    const scalarMatch = value.match(new RegExp(`^(${APPROVAL_TIER_KEY_TOKEN.source})\\s*=\\s*(.+)$`));
-    if (scalarMatch) {
-      return {
-        key: parseApprovalTierKeyName(scalarMatch[1]),
-        isArray: false,
-        rawValue: scalarMatch[2].trim(),
-      };
-    }
-
-    return null;
-  }
-
-  function assignApprovalTierField(tierName, key, value) {
-    const tier = approvalTier(tierName);
-    if (tier.seenFields.has(key)) {
-      result.duplicateApprovalTierFields.push({ tierName, field: key });
-      return;
-    }
-
-    tier.seenFields.add(key);
-    tier.fieldNames.push(key);
-    tier.fields[key] = value;
-    if (key === 'blocks' && Array.isArray(value)) {
-      tier.blocks = [...value];
-    }
-  }
-
-  function assignArray(target, items) {
-    if (target.section === 'protected' && target.key === 'files') result.protectedFiles = [...items];
-    if (target.section === 'protected' && target.key === 'invariants') result.protectedInvariants = [...items];
-    if (target.section === 'editable' && target.key === 'paths') result.editablePaths = [...items];
-    if (target.section === 'editable' && target.key === 'harness_blocks') result.editableHarnessBlocks = [...items];
-    if (target.section === 'approval_tiers' && target.subSection !== null && target.allowAssignment) {
-      assignApprovalTierField(target.subSection, target.key, [...items]);
-    }
-  }
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    const trimmed = stripTomlComment(line);
-
-    // Skip comments and empty lines
-    if (trimmed === '') continue;
-
-    // Section headers
-    if (/^\[meta\]$/.test(trimmed)) { currentSection = 'meta'; currentSubSection = null; allowCurrentTierAssignments = true; continue; }
-    if (/^\[protected\]$/.test(trimmed)) { currentSection = 'protected'; currentSubSection = null; allowCurrentTierAssignments = true; result.hasProtected = true; continue; }
-    if (/^\[editable\]$/.test(trimmed)) { currentSection = 'editable'; currentSubSection = null; allowCurrentTierAssignments = true; result.hasEditable = true; continue; }
-    if (/^\[approval_tiers\]$/.test(trimmed)) { currentSection = 'approval_tiers'; currentSubSection = null; allowCurrentTierAssignments = true; result.hasApprovalTiers = true; continue; }
-    const tierName = parseApprovalTierTableName(trimmed);
-    if (hasParsedApprovalTierKey(tierName)) {
-      currentSection = 'approval_tiers';
-      currentSubSection = tierName;
-      result.hasApprovalTiers = true;
-      const isDuplicateTable = hasOwn(result.approvalTiers, tierName);
-      allowCurrentTierAssignments = !isDuplicateTable;
-      if (isDuplicateTable) {
-        result.duplicateApprovalTierTables.push(tierName);
-      }
-      approvalTier(tierName);
-      if (tierName === 'auto') result.hasAutoTier = true;
-      if (tierName === 'human_review') result.hasHumanReviewTier = true;
-      if (!hasOwn(APPROVAL_TIER_RULES, tierName)) result.unknownApprovalTiers.push(tierName);
-      continue;
-    }
-    if (/^\[\[?\s*approval_tiers(?:\s*\.|\s*\])/.test(trimmed)) {
-      result.unsupportedApprovalTierTables.push(trimmed);
-      currentSection = 'approval_tiers';
-      currentSubSection = null;
-      allowCurrentTierAssignments = false;
-      result.hasApprovalTiers = true;
-      continue;
-    }
-    if (/^\[audit\]$/.test(trimmed)) { currentSection = 'audit'; currentSubSection = null; allowCurrentTierAssignments = true; continue; }
-    if (/^\[\w/.test(trimmed) && /^\[/.test(trimmed)) { currentSection = 'other'; currentSubSection = null; allowCurrentTierAssignments = true; continue; }
-
-    if (inArray) {
-      const closingBracket = findUnquotedChar(trimmed, ']');
-      if (closingBracket >= 0) {
-        arrayBuffer.push(...parseArrayItems(trimmed.slice(0, closingBracket)));
-        assignArray(arrayTarget, arrayBuffer);
-        inArray = false;
-        arrayTarget = null;
-        arrayBuffer = [];
-      } else {
-        arrayBuffer.push(...parseArrayItems(trimmed));
-      }
-      continue;
-    }
-
-    const approvalTierAssignment = currentSection === 'approval_tiers' && currentSubSection !== null
-      ? parseApprovalTierAssignment(trimmed)
-      : null;
-
-    if (approvalTierAssignment && approvalTierAssignment.isArray && hasParsedApprovalTierKey(approvalTierAssignment.key)) {
-      const target = {
-        section: currentSection,
-        subSection: currentSubSection,
-        key: approvalTierAssignment.key,
-        allowAssignment: allowCurrentTierAssignments,
-      };
-      const closingBracket = findUnquotedChar(approvalTierAssignment.rawValue, ']');
-      if (closingBracket >= 0) {
-        assignArray(target, parseArrayItems(approvalTierAssignment.rawValue.slice(0, closingBracket)));
-      } else {
-        inArray = true;
-        arrayTarget = target;
-        arrayBuffer = parseArrayItems(approvalTierAssignment.rawValue);
-      }
-      continue;
-    }
-
-    const arrayMatch = trimmed.match(/^([A-Za-z0-9_-]+)\s*=\s*\[(.*)$/);
-    if (arrayMatch) {
-      const target = { section: currentSection, subSection: currentSubSection, key: arrayMatch[1], allowAssignment: allowCurrentTierAssignments };
-      const closingBracket = findUnquotedChar(arrayMatch[2], ']');
-      if (closingBracket >= 0) {
-        assignArray(target, parseArrayItems(arrayMatch[2].slice(0, closingBracket)));
-      } else {
-        inArray = true;
-        arrayTarget = target;
-        arrayBuffer = parseArrayItems(arrayMatch[2]);
-      }
-      continue;
-    }
-
-    // Key-value pairs
-    if (approvalTierAssignment && hasParsedApprovalTierKey(approvalTierAssignment.key)) {
-      if (allowCurrentTierAssignments) {
-        assignApprovalTierField(currentSubSection, approvalTierAssignment.key, parseTomlScalar(approvalTierAssignment.rawValue));
-      }
-      continue;
-    }
-
-    if (currentSection === 'approval_tiers' && findUnquotedChar(trimmed, '=') >= 0) {
-      const assignmentSeparator = findUnquotedChar(trimmed, '=');
-      result.unsupportedApprovalTierAssignments.push({
-        tierName: currentSubSection,
-        key: trimmed.slice(0, assignmentSeparator).trim(),
-      });
-      continue;
-    }
-
-    const kvMatch = trimmed.match(/^([A-Za-z0-9_-]+)\s*=\s*(.+)$/);
-    if (kvMatch) {
-      const key = kvMatch[1];
-      const rawValue = kvMatch[2].trim();
-      const value = rawValue.replace(/^["']|["']$/g, '');
-      if (currentSection === 'meta') {
-        result.hasMeta = true;
-        if (key === 'familiar') result.metaFamiliar = value;
-        if (key === 'person') result.metaPerson = value;
-        if (key === 'version') result.metaVersion = value;
-      }
-      if (currentSection === 'approval_tiers' && currentSubSection !== null && allowCurrentTierAssignments) {
-        assignApprovalTierField(currentSubSection, key, parseTomlScalar(rawValue));
-      }
-    }
-  }
-
-  return result;
 }
 
-function validateApprovalTiers(parsed) {
-  const violations = [];
-  const BOOLEAN_FIELDS = new Set(['cave_board_card', 'audit_log']);
-
-  for (const tierName of parsed.unknownApprovalTiers) {
-    violations.push(violation(
+function schemaViolations(errors) {
+  return errors.map(error => {
+    const instancePath = error.instancePath || '/';
+    return violation(
       'ward.toml',
-      formatApprovalTierPath(tierName),
-      `Unknown approval tier "${tierName}".`
-    ));
-  }
-
-  for (const tierName of parsed.duplicateApprovalTierTables) {
-    violations.push(violation(
-      'ward.toml',
-      formatApprovalTierPath(tierName),
-      `Duplicate approval tier table declaration for ${formatApprovalTierPath(tierName)}. Duplicate tier tables are ambiguous and forbidden.`
-    ));
-  }
-
-  for (const duplicateField of parsed.duplicateApprovalTierFields) {
-    violations.push(violation(
-      'ward.toml',
-      formatApprovalTierFieldPath(duplicateField.tierName, duplicateField.field),
-      `Duplicate field "${duplicateField.field}" declared in ${formatApprovalTierPath(duplicateField.tierName)}. Duplicate approval-tier fields are ambiguous and forbidden.`
-    ));
-  }
-
-  for (const unsupportedAssignment of parsed.unsupportedApprovalTierAssignments) {
-    const field = unsupportedAssignment.tierName === null
-      ? 'approval_tiers'
-      : formatApprovalTierPath(unsupportedAssignment.tierName);
-    violations.push(violation(
-      'ward.toml',
-      field,
-      `Unsupported approval-tier field syntax "${unsupportedAssignment.key}". Fields must use one supported single key.`
-    ));
-  }
-
-  for (const header of parsed.unsupportedApprovalTierTables) {
-    violations.push(violation(
-      'ward.toml',
-      'approval_tiers',
-      `Unsupported nested approval-tier table "${header}". Approval tiers may contain exactly one tier subsection.`
-    ));
-  }
-
-  const seenEditableHarnessBlocks = new Set();
-  parsed.editableHarnessBlocks.forEach((block, index) => {
-    if (typeof block !== 'string') {
-      violations.push(violation(
-        'ward.toml',
-        `editable.harness_blocks[${index}]`,
-        `Harness block identifiers must be TOML strings; found ${typeof block} ${JSON.stringify(block)}.`
-      ));
-      return;
-    }
-
-    if (block.trim() === '') {
-      violations.push(violation(
-        'ward.toml',
-        `editable.harness_blocks[${index}]`,
-        'Harness block identifiers must be non-empty strings; empty or whitespace-only identifiers are forbidden.'
-      ));
-      return;
-    }
-
-    if (seenEditableHarnessBlocks.has(block)) {
-      violations.push(violation(
-        'ward.toml',
-        'editable.harness_blocks',
-        `Duplicate SurfaceRegionId declaration "${block}" in editable.harness_blocks.`
-      ));
-      return;
-    }
-
-    seenEditableHarnessBlocks.add(block);
+      `schema ${instancePath} [${error.keyword}]`,
+      `Schema validation failed at ${instancePath} (${error.keyword}): ${error.message}.`
+    );
   });
+}
 
+function validateApprovalTiers(ward) {
+  const violations = [];
+  const editableBlocks = new Set(ward.editable.harness_blocks);
   const blockApprovalPaths = new Map();
-  for (const [tierName, tier] of Object.entries(parsed.approvalTiers)) {
-    const rule = hasOwn(APPROVAL_TIER_RULES, tierName) ? APPROVAL_TIER_RULES[tierName] : null;
-    if (!rule) continue;
 
-    for (const field of tier.fieldNames) {
-      if (!rule.fields.includes(field) && field !== 'human_veto_window_hours') {
+  for (const [tierName, tier] of Object.entries(ward.approval_tiers)) {
+    for (const block of tier.blocks) {
+      const previousTier = blockApprovalPaths.get(block);
+      if (previousTier && previousTier.tierName !== tierName) {
         violations.push(violation(
           'ward.toml',
-          formatApprovalTierFieldPath(tierName, field),
-          `Unknown field "${field}" for ${formatApprovalTierPath(tierName)}.`
-        ));
-      }
-    }
-
-    if (tier.fields.gate !== rule.gate) {
-      violations.push(violation(
-        'ward.toml',
-        formatApprovalTierFieldPath(tierName, 'gate'),
-        `Expected gate "${rule.gate}" for ${formatApprovalTierPath(tierName)}.`
-      ));
-    }
-
-    for (const field of rule.fields) {
-      if (BOOLEAN_FIELDS.has(field) && hasOwn(tier.fields, field) && typeof tier.fields[field] !== 'boolean') {
-        violations.push(violation(
-          'ward.toml',
-          formatApprovalTierFieldPath(tierName, field),
-          `${field} must be a TOML boolean when present; found ${typeof tier.fields[field]} ${JSON.stringify(tier.fields[field])}.`
-        ));
-      }
-    }
-
-    if (tier.blocks.length === 0) {
-      violations.push(violation(
-        'ward.toml',
-        formatApprovalTierFieldPath(tierName, 'blocks'),
-        'Approval tier blocks must not be empty.'
-      ));
-    }
-
-    const seenBlocks = new Set();
-    tier.blocks.forEach((block, index) => {
-      if (typeof block !== 'string') {
-        violations.push(violation(
-          'ward.toml',
-          `${formatApprovalTierFieldPath(tierName, 'blocks')}[${index}]`,
-          `Harness block identifiers must be TOML strings; found ${typeof block} ${JSON.stringify(block)}.`
-        ));
-        return;
-      }
-
-      if (block.trim() === '') {
-        violations.push(violation(
-          'ward.toml',
-          `${formatApprovalTierFieldPath(tierName, 'blocks')}[${index}]`,
-          'Harness block identifiers must be non-empty strings; empty or whitespace-only identifiers are forbidden.'
-        ));
-        return;
-      }
-
-      const duplicateInTier = seenBlocks.has(block);
-      if (duplicateInTier) {
-        violations.push(violation(
-          'ward.toml',
-          formatApprovalTierFieldPath(tierName, 'blocks'),
-          `Duplicate block "${block}" in ${formatApprovalTierFieldPath(tierName, 'blocks')}.`
+          `approval_tiers.${tierName}.blocks`,
+          `Ambiguous SurfaceRegionId "${block}" is mapped to multiple ApprovalPaths: ${previousTier.tierName} (${previousTier.approvalPath}) and ${tierName} (${APPROVAL_PATHS[tierName]}).`
         ));
       } else {
-        const previousTier = blockApprovalPaths.get(block);
-        if (previousTier && previousTier.tierName !== tierName) {
-          violations.push(violation(
-            'ward.toml',
-            formatApprovalTierFieldPath(tierName, 'blocks'),
-            `Ambiguous SurfaceRegionId "${block}" is mapped to multiple ApprovalPaths: ${previousTier.tierName} (${previousTier.approvalPath}) and ${tierName} (${rule.approvalPath}).`
-          ));
-        } else {
-          blockApprovalPaths.set(block, { tierName, approvalPath: rule.approvalPath });
-        }
+        blockApprovalPaths.set(block, { tierName, approvalPath: APPROVAL_PATHS[tierName] });
       }
-      seenBlocks.add(block);
 
-      if (!parsed.editableHarnessBlocks.includes(block)) {
+      if (!editableBlocks.has(block)) {
         violations.push(violation(
           'ward.toml',
-          formatApprovalTierFieldPath(tierName, 'blocks'),
+          `approval_tiers.${tierName}.blocks`,
           `Harness block "${block}" is not declared in editable.harness_blocks.`
-        ));
-      }
-    });
-
-    if (hasOwn(tier.fields, 'human_veto_window_hours')) {
-      const vetoField = formatApprovalTierFieldPath(tierName, 'human_veto_window_hours');
-      if (!rule.vetoAllowed) {
-        violations.push(violation(
-          'ward.toml',
-          vetoField,
-          'Synchronous veto windows are forbidden for this approval tier.'
-        ));
-      } else if (!Number.isInteger(tier.fields.human_veto_window_hours) || tier.fields.human_veto_window_hours <= 0) {
-        violations.push(violation(
-          'ward.toml',
-          vetoField,
-          'A veto window must be a positive integer number of hours.'
         ));
       }
     }
@@ -794,89 +273,45 @@ function validateApprovalTiers(parsed) {
 
 function validateWard(dirPath) {
   const filePath = path.join(dirPath, 'ward.toml');
-  const violations = [];
 
   if (!fs.existsSync(filePath)) {
     return [violation('ward.toml', 'file', 'ward.toml does not exist. Required for Bounded Authority and Human Belonging compliance.')];
   }
 
   const content = fs.readFileSync(filePath, 'utf8');
+  const parsed = parseWardToml(content);
+  if (parsed.error) {
+    return [violation('ward.toml', 'syntax', `TOML syntax violation: ${parsed.error.message}`)];
+  }
 
   if (content.trim().length < 50) {
-    violations.push(violation('ward.toml', 'content', 'ward.toml appears empty or too short.'));
-    return violations;
+    return [violation('ward.toml', 'content', 'ward.toml appears empty or too short.')];
   }
 
-  const parsed = parseWardToml(content);
-
-  if (!parsed.hasMeta) {
-    violations.push(violation('ward.toml', '[meta]', '[meta] section missing. Required: version, familiar, person.'));
-  } else {
-    if (!parsed.metaFamiliar) violations.push(violation('ward.toml', 'meta.familiar', 'meta.familiar is missing. Must match the familiar\'s name.'));
-    if (!parsed.metaPerson) violations.push(violation('ward.toml', 'meta.person', 'meta.person is missing. Human Belonging requires a declared person binding.'));
-    if (!parsed.metaVersion) violations.push(violation('ward.toml', 'meta.version', 'meta.version is missing. Ward must be versioned.'));
+  if (!validateWardSchema(parsed.ward)) {
+    return schemaViolations(validateWardSchema.errors || []);
   }
 
-  if (!parsed.hasProtected) {
-    violations.push(violation('ward.toml', '[protected]', '[protected] section missing. The protected surface must be declared.'));
-  } else {
-    const requiredProtected = ['SOUL.md', 'IDENTITY.md', 'MEMORY.md', 'ward.toml'];
-    for (const required of requiredProtected) {
-      if (!parsed.protectedFiles.includes(required)) {
-        violations.push(violation('ward.toml', 'protected.files', `${required} must be in the protected files list. It defines core familiar identity.`));
-      }
-    }
+  const violations = [];
+  const ward = parsed.ward;
+  const requiredProtected = ['SOUL.md', 'IDENTITY.md', 'MEMORY.md', 'ward.toml'];
 
-    if (parsed.protectedInvariants.length === 0) {
-      violations.push(violation('ward.toml', 'protected.invariants', 'No invariants declared. At minimum, familiar.name and familiar.person must be invariants.'));
-    } else {
-      const stringInvariants = [];
-      parsed.protectedInvariants.forEach((invariant, index) => {
-        if (typeof invariant !== 'string') {
-          violations.push(violation(
-            'ward.toml',
-            `protected.invariants[${index}]`,
-            `Protected invariants must be TOML strings; found ${typeof invariant} ${JSON.stringify(invariant)}.`
-          ));
-          return;
-        }
-        if (invariant.trim() === '') {
-          violations.push(violation(
-            'ward.toml',
-            `protected.invariants[${index}]`,
-            'Protected invariants must be non-empty TOML strings.'
-          ));
-          return;
-        }
-        stringInvariants.push(invariant);
-      });
-      const hasNameInvariant = stringInvariants.some(invariant => invariant.includes('familiar.name'));
-      const hasPersonInvariant = stringInvariants.some(invariant => invariant.includes('familiar.person'));
-      if (!hasNameInvariant) violations.push(violation('ward.toml', 'protected.invariants', 'No familiar.name invariant found. The familiar\'s name must be protected.'));
-      if (!hasPersonInvariant) violations.push(violation('ward.toml', 'protected.invariants', 'No familiar.person invariant found. The person binding must be protected.'));
+  for (const required of requiredProtected) {
+    if (!ward.protected.files.includes(required)) {
+      violations.push(violation('ward.toml', 'protected.files', `${required} must be in the protected files list. It defines core familiar identity.`));
     }
   }
 
-  if (!parsed.hasEditable) {
-    violations.push(violation('ward.toml', '[editable]', '[editable] section missing. The editable surface must be declared (even if minimal).'));
-  } else {
-    if (parsed.editablePaths.length === 0) {
-      violations.push(violation('ward.toml', 'editable.paths', 'editable.paths is empty. Declare at least one editable path (e.g., TOOLS.md, HEARTBEAT.md).'));
-    }
+  const hasNameInvariant = ward.protected.invariants.some(invariant => invariant.includes('familiar.name'));
+  const hasPersonInvariant = ward.protected.invariants.some(invariant => invariant.includes('familiar.person'));
+  if (!hasNameInvariant) violations.push(violation('ward.toml', 'protected.invariants', 'No familiar.name invariant found. The familiar\'s name must be protected.'));
+  if (!hasPersonInvariant) violations.push(violation('ward.toml', 'protected.invariants', 'No familiar.person invariant found. The person binding must be protected.'));
+
+  if (ward.editable.paths.length === 0) {
+    violations.push(violation('ward.toml', 'editable.paths', 'editable.paths is empty. Declare at least one editable path (e.g., TOOLS.md, HEARTBEAT.md).'));
   }
 
-  if (!parsed.hasApprovalTiers) {
-    violations.push(violation('ward.toml', '[approval_tiers]', '[approval_tiers] section missing. Approval tiers must be defined.'));
-  } else {
-    if (!parsed.hasAutoTier) {
-      violations.push(violation('ward.toml', 'approval_tiers.auto', '[approval_tiers.auto] (Tier 0) not found. Auto tier must be defined even if empty.'));
-    }
-    if (!parsed.hasHumanReviewTier) {
-      violations.push(violation('ward.toml', 'approval_tiers.human_review', '[approval_tiers.human_review] (Tier 2) not found. Human review tier is required.'));
-    }
-    violations.push(...validateApprovalTiers(parsed));
-  }
-
+  violations.push(...validateApprovalTiers(ward));
   return violations;
 }
 
@@ -889,20 +324,19 @@ function validateCrossFile(dirPath) {
 
   if (!fs.existsSync(soulPath) || !fs.existsSync(wardPath)) return violations;
 
-  const soulContent = fs.readFileSync(soulPath, 'utf8');
-  const wardContent = fs.readFileSync(wardPath, 'utf8');
-  const soulParsed = parseSoul(soulContent);
-  const wardParsed = parseWardToml(wardContent);
+  const soulParsed = parseSoul(fs.readFileSync(soulPath, 'utf8'));
+  const wardParsed = parseWardToml(fs.readFileSync(wardPath, 'utf8'));
+  const wardFamiliar = wardParsed.ward && isObject(wardParsed.ward.meta)
+    ? wardParsed.ward.meta.familiar
+    : null;
 
-  // Check name consistency
-  if (soulParsed.name && wardParsed.metaFamiliar) {
+  if (soulParsed.name && typeof wardFamiliar === 'string') {
     const soulName = soulParsed.name.toLowerCase();
-    const wardFamiliar = wardParsed.metaFamiliar.toLowerCase();
-    if (soulName !== wardFamiliar) {
+    if (soulName !== wardFamiliar.toLowerCase()) {
       violations.push(violation(
         'cross-file',
         'name consistency',
-        `SOUL.md declares name "${soulParsed.name}" but ward.toml has familiar="${wardParsed.metaFamiliar}". These must match (case-insensitive).`
+        `SOUL.md declares name "${soulParsed.name}" but ward.toml has familiar="${wardFamiliar}". These must match (case-insensitive).`
       ));
     }
   }
@@ -937,6 +371,7 @@ function main() {
 ${bold('familiar-contract validator')} — checks a familiar directory for spec compliance
 
 ${bold('Usage:')}
+  npm install
   node validate.js <path-to-familiar-directory>
 
 ${bold('Examples:')}
@@ -947,7 +382,7 @@ ${bold('Examples:')}
 ${bold('Checks:')}
   • SOUL.md      — Named Identity + Defined Purpose + Bounded Authority (surface rules)
   • IDENTITY.md  — Named Identity (machine-readable record)
-  • ward.toml    — Bounded Authority + Human Belonging (enforcement declarations)
+  • ward.toml    — TOML syntax + JSON Schema, then Bounded Authority + Human Belonging checks
   • MEMORY.md    — Persistent Memory (required; missing is a violation)
   • Cross-file   — Name consistency between SOUL.md and ward.toml
 
@@ -1003,7 +438,7 @@ ${bold('Exit codes:')}
   console.log('');
 
   if (allViolations.length === 0) {
-    console.log(green(bold('✓ PASS')) + ' — Directory validation passed. Structural conformance additionally requires `bash tests/conformance/run-conformance.sh` in this repository.\n');
+    console.log(green(bold('✓ PASS')) + ' — Directory validation passed. Structural conformance additionally requires `npm test` in this repository.\n');
     process.exit(0);
   }
 

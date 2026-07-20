@@ -12,7 +12,7 @@ This project uses [Semantic Versioning](https://semver.org/).
 ### Added
 
 - **RFC-0001 §5.3.1** — Added a normative approval-tier compiler mapping from Ward TOML declarations to typed daemon approval paths and registered surface-region identifiers.
-- **tests/conformance/** — Expanded approval-tier conformance coverage to 28 negative cases total, including unknown tier fields, gate mismatches, invalid veto declarations, and unbound, duplicate, or mistyped block declarations.
+- **tests/conformance/** — Expanded approval-tier conformance coverage to 36 negative cases total, including malformed TOML, schema-invalid metadata, unknown tier fields, gate mismatches, invalid veto declarations, and unbound, duplicate, or mistyped block declarations.
 
 ### Changed
 
@@ -20,6 +20,7 @@ This project uses [Semantic Versioning](https://semver.org/).
 - **RFC-0001 §5.3.1 / §5.4** — Veto windows remain optional where allowed, but use delayed apply with evidence replay plus Gate 4 revalidation before any write.
 - **RFC-0001 §5.3.1 / §5.4** — Protected-target proposals are explicitly outside approval-path promotion; principal-authorized protected updates remain a separate audited path.
 - **README.md, rfcs/README.md, SPEC.md, docs/faq.md, tests/conformance/README.md, validators/README.md, validators/validate.js** — Updated current-version references to v0.4.0.
+- **validators/validate.js** — Replaced the hand-written Ward parser with standards-compliant TOML parsing and Ajv JSON Schema validation before semantic checks.
 
 ### Migration
 
@@ -30,11 +31,11 @@ Upgrading from v0.3.0 to v0.4.0 can invalidate previously accepted Ward declarat
 3. Use the tier's exact gate for promotion; do not infer or alias gates.
 4. Remove unknown tier fields and unknown tier tables.
 5. Allow `human_veto_window_hours` only on `auto` and `familiar_review`, and only as a positive integer.
-6. Validate the Ward before upgrading.
+6. Run `npm install`, then validate the Ward before upgrading.
 
 ### Security rationale
 
-Prior v0.3-style ignored, ambiguous, or stringly typed declarations could create policy drift or bypasses. v0.4.0 forces deterministic compilation and fail-closed rejection so authority is explicit and unambiguous.
+Prior v0.3-style ignored, ambiguous, or stringly typed declarations could create policy drift or bypasses. The v0.4 validator now rejects malformed TOML and schema-invalid values before semantic compilation, forcing deterministic, fail-closed authority declarations.
 
 ---
 

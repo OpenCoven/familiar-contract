@@ -461,7 +461,7 @@ These gaps are intentional. The file-level conformance suite verifies the **stru
 ### v0.4.0 (2026-07-19)
 
 - Added a normative approval-tier compiler mapping from Ward TOML declarations to typed daemon approval paths and registered surface-region identifiers (§5.3.1).
-- Expanded conformance coverage to 28 negative cases total, including unknown tier fields, gate mismatches, invalid veto declarations, and unbound, duplicate, or mistyped block declarations.
+- Expanded conformance coverage to 36 negative cases total, including malformed TOML, schema-invalid metadata, unknown tier fields, gate mismatches, invalid veto declarations, and unbound, duplicate, or mistyped block declarations.
 - Required approval-tier declarations to fail closed on unknown fields, use the tier's exact gate, and bind non-empty unique block lists to registered `editable.harness_blocks` entries (§5.3.1).
 - Clarified that veto windows are optional where allowed, but use delayed apply with evidence replay plus Gate 4 revalidation before any write (§5.3.1, §5.4).
 - Clarified that protected-target proposals are outside approval-path promotion; principal-authorized protected updates remain a separate audited path (§5.3.1, §5.4, §5.6).

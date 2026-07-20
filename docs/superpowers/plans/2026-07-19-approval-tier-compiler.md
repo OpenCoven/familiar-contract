@@ -2,11 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Make RFC-0001, `ward.schema.json`, and the zero-dependency validator define and enforce one fail-closed mapping from Ward approval-tier declarations to typed Phase 5 semantics.
+**Goal:** Make RFC-0001, `ward.schema.json`, and the standards-compliant validator define and enforce one fail-closed mapping from Ward approval-tier declarations to typed Phase 5 semantics.
 
 **Architecture:** Keep the existing TOML keys as the portable declaration surface, but parse each approval tier into a structured validator model and validate it against one tier-rule table. JSON Schema enforces structural constraints; the validator enforces cross-field and cross-section rules such as block registration, gate matching, veto placement, and duplicate rejection. The RFC remains the normative source and explicitly excludes protected targets from the proposal pipeline.
 
-**Tech Stack:** Markdown RFC, JSON Schema draft-07, zero-dependency Node.js validator, Bash conformance fixtures.
+**Tech Stack:** Markdown RFC, JSON Schema draft-07, CommonJS Node.js validator using `@iarna/toml` and Ajv v8, Bash conformance fixtures. Install with `npm install` and run the suite with `npm test`.
 
 ---
 

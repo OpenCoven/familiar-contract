@@ -1,34 +1,35 @@
 # Validator — familiar-contract
 
-A zero-dependency Node.js CLI that checks one claimant directory for the familiar-contract v0.4.0 structural requirements.
+A Node.js CLI that checks one claimant directory for the familiar-contract v0.4.0 structural requirements. It parses `ward.toml` with `@iarna/toml` and validates the resulting object against `schemas/ward.schema.json` with Ajv before evaluating Ward semantics.
 
 ## Requirements
 
-- Node.js 16+ (no npm install required — no external dependencies)
+- Node.js 16+
+- `npm install` from the repository root
 
 ## Usage
 
 ```bash
-node validate.js <path-to-familiar-directory>
+node validators/validate.js <path-to-familiar-directory>
 ```
 
 ### Examples
 
 ```bash
 # Validate the canonical Sage example
-node validate.js ../examples/sage
+node validators/validate.js examples/sage
 
 # Validate the minimal Lumen example
-node validate.js ../examples/minimal
+node validators/validate.js examples/minimal
 
 # Validate your own claimant directory
-node validate.js /path/to/your/familiar
+node validators/validate.js /path/to/your/familiar
 ```
 
 ### Help
 
 ```bash
-node validate.js --help
+node validators/validate.js --help
 ```
 
 ## What It Checks
@@ -37,7 +38,7 @@ node validate.js --help
 |---|---|---|
 | `SOUL.md` | `## I am <Name>`, `## Core Work`, `## What I Am Not`, `## My Boundaries`, purpose declaration | Named Identity, Defined Purpose |
 | `IDENTITY.md` | Name, `**Creature:**` field, purpose description | Named Identity |
-| `ward.toml` | `[meta]` with familiar + person + version, `[protected]` with SOUL.md/IDENTITY.md/MEMORY.md/ward.toml + invariants, `[editable]` with paths, `[approval_tiers]` with auto + human_review | Bounded Authority, Human Belonging |
+| `ward.toml` | Standards-compliant TOML syntax and JSON Schema validation, then `[meta]` with familiar + person + version, `[protected]` with SOUL.md/IDENTITY.md/MEMORY.md/ward.toml + invariants, `[editable]` with paths, `[approval_tiers]` with auto + human_review | Bounded Authority, Human Belonging |
 | `MEMORY.md` | Existence | Persistent Memory (required; missing is a violation) |
 | Cross-file | Name consistency between SOUL.md and ward.toml | Consistency |
 
@@ -82,10 +83,10 @@ This validator checks whether one claimant directory satisfies the required file
 ```yaml
 # .github/workflows/familiar-validate.yml
 - name: Validate claimant directory
-  run: node validators/validate.js ./my-familiar-directory
+  run: npm ci && node validators/validate.js ./my-familiar-directory
 
 - name: Run bundled conformance suite
-  run: bash tests/conformance/run-conformance.sh
+  run: npm test
 ```
 
 Both steps must pass for a reproducible v0.4.0 structural-conformance claim. The first checks the claimant directory; the second verifies the bundled reference validator and fixtures. Exit code 1 on either step will fail CI.

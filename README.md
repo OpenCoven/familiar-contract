@@ -43,7 +43,8 @@ These are not soft design preferences. Each one has architectural implications, 
 1. Read [`rfcs/RFC-0001-familiar-contract.md`](rfcs/RFC-0001-familiar-contract.md) — the normative spec (v0.4.0)
 2. Copy an example from [`examples/`](examples/) — `minimal/` for the floor, `sage/` for a richer structurally conformant familiar directory
 3. Create `SOUL.md`, `IDENTITY.md`, `MEMORY.md`, and `ward.toml` for your familiar
-4. For a v0.4.0 structural-conformance claim, run both `node validators/validate.js ./your-directory` and `bash tests/conformance/run-conformance.sh`
+4. Run `npm install` to install the reference validator's TOML parser and JSON Schema validator.
+5. For a v0.4.0 structural-conformance claim, run both `node validators/validate.js ./your-directory` and `npm test`
 
 **If you're evaluating a familiar:**
 - Five properties. All five. Fewer than five is an agent, not a familiar.
@@ -58,11 +59,14 @@ These are not soft design preferences. Each one has architectural implications, 
 ## Quick Start
 
 ```bash
+# Install the reference validator dependencies
+npm install
+
 # Validate the claimant directory for your v0.4.0 claim
 node validators/validate.js ./your-directory
 
 # Verify the bundled reference validator + fixtures for the same v0.4.0 claim
-bash tests/conformance/run-conformance.sh
+npm test
 ```
 
 The validator checks one claimant directory for the required files and structure: `SOUL.md`, `IDENTITY.md`, `MEMORY.md`, and `ward.toml`. The conformance suite verifies that the bundled reference validator accepts the positive fixtures and rejects the negative fixtures. A structural-conformance claim is reproducible only when both commands pass for the same contract version.

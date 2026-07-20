@@ -77,6 +77,10 @@ The implementation PR will keep normative artifacts synchronized:
 5. Add a changelog/version note explaining the compatible declaration surface
    and stricter load-time validation.
 
+The reference validator uses `@iarna/toml` for TOML parsing and Ajv v8 for
+JSON Schema validation. Contributors install these exact production
+dependencies with `npm install` and run the suite with `npm test`.
+
 The PR will not implement coven daemon types or scheduling. It defines the
 upstream contract that `threads-uqx.8` must implement.
 
