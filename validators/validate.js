@@ -241,6 +241,10 @@ function createNullPrototypeMap() {
   return Object.create(null);
 }
 
+function unsupportedTomlScalar(raw) {
+  return Object.freeze({ type: 'unsupported-toml-scalar', raw });
+}
+
 function parseTomlScalar(value) {
   const trimmed = value.trim();
   if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
@@ -248,15 +252,15 @@ function parseTomlScalar(value) {
       try {
         return JSON.parse(trimmed);
       } catch {
-        // fall through to the raw interior text below
+        return unsupportedTomlScalar(trimmed);
       }
     }
     return trimmed.slice(1, -1);
   }
   if (trimmed === 'true') return true;
   if (trimmed === 'false') return false;
-  if (/^-?\d+$/.test(trimmed)) return Number(trimmed);
-  return trimmed;
+  if (/^[+-]?\d(?:_?\d)*$/.test(trimmed)) return Number(trimmed.replaceAll('_', ''));
+  return unsupportedTomlScalar(trimmed);
 }
 
 function hasParsedApprovalTierKey(key) {
@@ -295,6 +299,8 @@ function parseWardToml(content) {
     unknownApprovalTiers: [],
     duplicateApprovalTierTables: [],
     duplicateApprovalTierFields: [],
+    unsupportedApprovalTierAssignments: [],
+    unsupportedApprovalTierTables: [],
   };
 
   const lines = content.split('\n');
@@ -497,6 +503,14 @@ function parseWardToml(content) {
       if (!hasOwn(APPROVAL_TIER_RULES, tierName)) result.unknownApprovalTiers.push(tierName);
       continue;
     }
+    if (/^\[\[?\s*approval_tiers(?:\s*\.|\s*\])/.test(trimmed)) {
+      result.unsupportedApprovalTierTables.push(trimmed);
+      currentSection = 'approval_tiers';
+      currentSubSection = null;
+      allowCurrentTierAssignments = false;
+      result.hasApprovalTiers = true;
+      continue;
+    }
     if (/^\[audit\]$/.test(trimmed)) { currentSection = 'audit'; currentSubSection = null; allowCurrentTierAssignments = true; continue; }
     if (/^\[\w/.test(trimmed) && /^\[/.test(trimmed)) { currentSection = 'other'; currentSubSection = null; allowCurrentTierAssignments = true; continue; }
 
@@ -558,6 +572,15 @@ function parseWardToml(content) {
       continue;
     }
 
+    if (currentSection === 'approval_tiers' && findUnquotedChar(trimmed, '=') >= 0) {
+      const assignmentSeparator = findUnquotedChar(trimmed, '=');
+      result.unsupportedApprovalTierAssignments.push({
+        tierName: currentSubSection,
+        key: trimmed.slice(0, assignmentSeparator).trim(),
+      });
+      continue;
+    }
+
     const kvMatch = trimmed.match(/^([A-Za-z0-9_-]+)\s*=\s*(.+)$/);
     if (kvMatch) {
       const key = kvMatch[1];
@@ -606,6 +629,25 @@ function validateApprovalTiers(parsed) {
     ));
   }
 
+  for (const unsupportedAssignment of parsed.unsupportedApprovalTierAssignments) {
+    const field = unsupportedAssignment.tierName === null
+      ? 'approval_tiers'
+      : formatApprovalTierPath(unsupportedAssignment.tierName);
+    violations.push(violation(
+      'ward.toml',
+      field,
+      `Unsupported approval-tier field syntax "${unsupportedAssignment.key}". Fields must use one supported single key.`
+    ));
+  }
+
+  for (const header of parsed.unsupportedApprovalTierTables) {
+    violations.push(violation(
+      'ward.toml',
+      'approval_tiers',
+      `Unsupported nested approval-tier table "${header}". Approval tiers may contain exactly one tier subsection.`
+    ));
+  }
+
   const seenEditableHarnessBlocks = new Set();
   parsed.editableHarnessBlocks.forEach((block, index) => {
     if (typeof block !== 'string') {
@@ -638,6 +680,7 @@ function validateApprovalTiers(parsed) {
     seenEditableHarnessBlocks.add(block);
   });
 
+  const blockApprovalPaths = new Map();
   for (const [tierName, tier] of Object.entries(parsed.approvalTiers)) {
     const rule = hasOwn(APPROVAL_TIER_RULES, tierName) ? APPROVAL_TIER_RULES[tierName] : null;
     if (!rule) continue;
@@ -698,12 +741,24 @@ function validateApprovalTiers(parsed) {
         return;
       }
 
-      if (seenBlocks.has(block)) {
+      const duplicateInTier = seenBlocks.has(block);
+      if (duplicateInTier) {
         violations.push(violation(
           'ward.toml',
           formatApprovalTierFieldPath(tierName, 'blocks'),
           `Duplicate block "${block}" in ${formatApprovalTierFieldPath(tierName, 'blocks')}.`
         ));
+      } else {
+        const previousTier = blockApprovalPaths.get(block);
+        if (previousTier && previousTier.tierName !== tierName) {
+          violations.push(violation(
+            'ward.toml',
+            formatApprovalTierFieldPath(tierName, 'blocks'),
+            `Ambiguous SurfaceRegionId "${block}" is mapped to multiple ApprovalPaths: ${previousTier.tierName} (${previousTier.approvalPath}) and ${tierName} (${rule.approvalPath}).`
+          ));
+        } else {
+          blockApprovalPaths.set(block, { tierName, approvalPath: rule.approvalPath });
+        }
       }
       seenBlocks.add(block);
 
@@ -775,8 +830,28 @@ function validateWard(dirPath) {
     if (parsed.protectedInvariants.length === 0) {
       violations.push(violation('ward.toml', 'protected.invariants', 'No invariants declared. At minimum, familiar.name and familiar.person must be invariants.'));
     } else {
-      const hasNameInvariant = parsed.protectedInvariants.some(inv => inv.includes('familiar.name'));
-      const hasPersonInvariant = parsed.protectedInvariants.some(inv => inv.includes('familiar.person'));
+      const stringInvariants = [];
+      parsed.protectedInvariants.forEach((invariant, index) => {
+        if (typeof invariant !== 'string') {
+          violations.push(violation(
+            'ward.toml',
+            `protected.invariants[${index}]`,
+            `Protected invariants must be TOML strings; found ${typeof invariant} ${JSON.stringify(invariant)}.`
+          ));
+          return;
+        }
+        if (invariant.trim() === '') {
+          violations.push(violation(
+            'ward.toml',
+            `protected.invariants[${index}]`,
+            'Protected invariants must be non-empty TOML strings.'
+          ));
+          return;
+        }
+        stringInvariants.push(invariant);
+      });
+      const hasNameInvariant = stringInvariants.some(invariant => invariant.includes('familiar.name'));
+      const hasPersonInvariant = stringInvariants.some(invariant => invariant.includes('familiar.person'));
       if (!hasNameInvariant) violations.push(violation('ward.toml', 'protected.invariants', 'No familiar.name invariant found. The familiar\'s name must be protected.'));
       if (!hasPersonInvariant) violations.push(violation('ward.toml', 'protected.invariants', 'No familiar.person invariant found. The person binding must be protected.'));
     }
