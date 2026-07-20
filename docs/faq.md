@@ -284,7 +284,7 @@ The parts of the spec that are Coven-specific — Doll proposals, Cave Board int
 
 **A:** If you want to understand the design philosophy in more depth, read `docs/ward-primer.md` (the non-technical introduction to the Ward), `docs/five-properties.md` (each property in depth with architectural requirements), and `docs/ward-deep-dive.md` (the technical deep dive into Ward design).
 
-If you want to see what a conformant familiar looks like, browse `examples/sage/` (a full familiar with rich Ward configuration) and `examples/minimal/` (the minimum required to pass conformance). Both pass the conformance suite.
+If you want to see structurally conformant familiar directories, browse `examples/sage/` (a full familiar with rich Ward configuration), `examples/minimal/` (the minimum required to pass structural conformance), and the fixtures under `tests/conformance/`. These examples and fixtures are structurally conformant only; full conformance additionally requires runtime Ward enforcement, not just a passing directory-level suite.
 
 If you want to understand how the Familiar Contract relates to other agent specifications and frameworks, read `docs/comparison.md`.
 

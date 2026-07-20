@@ -21,6 +21,21 @@ This project uses [Semantic Versioning](https://semver.org/).
 - **RFC-0001 §5.3.1 / §5.4** — Protected-target proposals are explicitly outside approval-path promotion; principal-authorized protected updates remain a separate audited path.
 - **README.md, rfcs/README.md, SPEC.md, docs/faq.md, tests/conformance/README.md, validators/README.md, validators/validate.js** — Updated current-version references to v0.4.0.
 
+### Migration
+
+Upgrading from v0.3.0 to v0.4.0 can invalidate previously accepted Ward declarations. Before compiling or deploying v0.4.0:
+
+1. Declare `editable.harness_blocks`.
+2. Ensure every tier block is a nonempty, unique string registered in `editable.harness_blocks`.
+3. Use the tier's exact gate for promotion; do not infer or alias gates.
+4. Remove unknown tier fields and unknown tier tables.
+5. Allow `human_veto_window_hours` only on `auto` and `familiar_review`, and only as a positive integer.
+6. Validate the Ward before upgrading.
+
+### Security rationale
+
+Prior v0.3-style ignored, ambiguous, or stringly typed declarations could create policy drift or bypasses. v0.4.0 forces deterministic compilation and fail-closed rejection so authority is explicit and unambiguous.
+
 ---
 
 ## [0.3.0] — 2026-07-18

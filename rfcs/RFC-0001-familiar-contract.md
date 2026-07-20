@@ -340,9 +340,9 @@ The reference validator at `validators/validate.js` checks structural conformanc
 
 This RFC uses [Semantic Versioning](https://semver.org/) with an explicit draft rule:
 
-- **Patch** (`0.y.z` or `1.y.z`, where `z > 0`): Clarifications, non-normative edits, and fixes that do not change conformance requirements.
+- **Patch** (`x.y.z`, where `x >= 1` and `z > 0`): Clarifications, non-normative edits, and fixes that do not change conformance requirements.
 - **Draft minor** (`0.y.0`): While `Status: Draft`, this RFC **MUST** remain below `1.0.0`. A `0.y.0` release **MAY** introduce backward-incompatible conformance changes, including changes that invalidate previously structurally conformant familiar directories. Each such release **MUST** document the migration impact and the security rationale. Consumers **MUST** pin the exact `0.y.0` version they implement.
-- **Stable minor** (`1.y.0`, where `y > 0`): Backward-compatible normative additions and compatible schema evolution.
+- **Stable minor** (`x.y.0`, where `x >= 1` and `y > 0`): Backward-compatible normative additions and compatible schema evolution.
 - **Stable major** (`x.0.0`, where `x >= 1`): Backward-incompatible changes to existing conformance requirements or to the five properties. Requires a new RFC that supersedes this one.
 
 A familiar claiming compliance with `v0.4.0` **MUST** satisfy the normative core as defined in this version. Once this RFC reaches `1.0.0` or higher, incompatible changes **MUST** use a major version bump; compatible additions **MUST** use a minor version bump; clarifications and fixes **MUST** use a patch version bump.
