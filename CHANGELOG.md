@@ -7,6 +7,22 @@ This project uses [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.3.0] — 2026-07-18
+
+### Added
+
+- **RFC-0001** — Added Property 4 provenance requirements for continuity-bearing memory entries, including standard admission path definition and audit-log dependency.
+- **RFC-0001 §5.6** — Added `memory_entry_admitted` and `principal_authorized_write` audit event vocabulary for falsifiable source attestations.
+- **tests/conformance/negative/10-protected-missing-ward/** — Added negative fixture for a Ward manifest omitted from `[protected].files`.
+
+### Changed
+
+- **RFC-0001** — Bumped draft version to v0.3.0 for new backward-compatible normative requirements.
+- **RFC-0001 §4.1 / §5.4** — Strengthened Ward-manifest closure prose and Gate 1 fail-closed behavior.
+- **README.md, rfcs/README.md, SPEC.md, docs/faq.md, validators/validate.js** — Updated current-version references to v0.3.0.
+
+---
+
 ## [0.2.0] — 2026-06-19
 
 ### Added

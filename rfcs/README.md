@@ -18,7 +18,7 @@ The RFC is the spec. The schemas are the machine-readable form. The conformance 
 
 | Number | Title | Version | Status |
 |---|---|---|---|
-| [RFC-0001](RFC-0001-familiar-contract.md) | The Familiar Contract | v0.2.0 | Draft |
+| [RFC-0001](RFC-0001-familiar-contract.md) | The Familiar Contract | v0.3.0 | Draft |
 
 ## Process
 
@@ -43,14 +43,14 @@ Proposed → Draft → Review → Accepted → (Superseded)
 ## How to cite an RFC
 
 ```
-Familiar Contract RFC-0001 v0.2.0, "The Familiar Contract."
+Familiar Contract RFC-0001 v0.3.0, "The Familiar Contract."
 OpenCoven, 2026. https://github.com/OpenCoven/familiar-contract/blob/main/rfcs/RFC-0001-familiar-contract.md
 ```
 
 For academic citation, prefer the tagged release:
 
 ```
-https://github.com/OpenCoven/familiar-contract/releases/tag/v0.2.0
+https://github.com/OpenCoven/familiar-contract/releases/tag/v0.3.0
 ```
 
 ## License

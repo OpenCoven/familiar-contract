@@ -466,7 +466,7 @@ ${bold('Exit codes:')}
     process.exit(1);
   }
 
-  console.log(`\n${bold('familiar-contract validator')} ${dim('v0.2.0')}`);
+  console.log(`\n${bold('familiar-contract validator')} ${dim('v0.3.0')}`);
   console.log(dim(`Checking: ${dirPath}\n`));
 
   const allViolations = [];
@@ -500,7 +500,7 @@ ${bold('Exit codes:')}
   console.log('');
 
   if (allViolations.length === 0 && allWarnings.length === 0) {
-    console.log(green(bold('✓ PASS')) + ' — All checks passed. This familiar is familiar-contract v0.2.0 compliant (RFC-0001).\n');
+    console.log(green(bold('✓ PASS')) + ' — All checks passed. This familiar is familiar-contract v0.3.0 compliant (RFC-0001).\n');
     process.exit(0);
   }
 
