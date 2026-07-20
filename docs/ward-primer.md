@@ -32,14 +32,17 @@ Not all proposed changes require the same level of human involvement:
 
 **Tier 0 — Auto:** Low-risk changes (output format tweaks, tool invocation
 defaults, heartbeat scheduling) enter `AutoRegression`. After deterministic
-regression evidence passes, the proposal remains pending for its human veto
-window. It is not applied until the window expires and the daemon replays the
-evidence and Gate 4.
+regression evidence passes, a configured human veto window keeps the proposal
+pending until expiry; then the daemon replays the evidence and runs Gate 4 before
+write. Without a configured veto window, the path still follows its gate and
+runs Gate 4 before write.
 
 **Tier 1 — Familiar review:** Changes to instruction blocks, reasoning prompts,
 and skill configurations enter `FamiliarCoherence`. The familiar review record
-is evidence, not authority; the proposal remains pending through its human veto
-window and is revalidated before apply.
+is evidence, not authority; with a configured human veto window the proposal
+remains pending until expiry, then the daemon replays the review evidence and
+runs Gate 4 before write. Without a configured veto window, the path still follows
+its gate and runs Gate 4 before write.
 
 **Tier 2 — Human review:** Structural changes — new tool grants, capability expansion, new subagent patterns. Human must approve before promotion. No auto-promotion possible.
 
@@ -49,9 +52,9 @@ Ward audit log.
 
 **Blocked:** Any proposal that touches the protected surface. Rejected at intake. Repeated protected-surface proposals are surfaced as behavioral alerts.
 
-The TOML tier names are declarations that compile to typed daemon approval
-paths. Unknown fields, gate drift, duplicate or undeclared blocks, and invalid
-veto settings make the Ward fail closed at load time.
+The TOML tier names are declarations that compile at Ward load to typed daemon
+approval paths. Unknown fields, gate drift, duplicate or undeclared blocks,
+and invalid veto settings make the Ward fail closed at load time.
 
 ---
 
