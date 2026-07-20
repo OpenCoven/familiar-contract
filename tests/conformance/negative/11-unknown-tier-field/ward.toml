@@ -54,7 +54,7 @@ harness_blocks = [
 
 [approval_tiers.auto]
 blocks = ["output_formats", "heartbeat_schedule", "tool_defaults"]
-unknown_policy = "allow"
+"unknown_policy" = "allow"
 gate = "regression_suite"
 cave_board_card = true
 human_veto_window_hours = 48

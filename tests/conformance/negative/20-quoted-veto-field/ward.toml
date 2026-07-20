@@ -53,7 +53,7 @@ harness_blocks = [
 [approval_tiers]
 
 [approval_tiers.auto]
-"blocks" = ["output_formats", "heartbeat_schedule", "tool_defaults", "output_formats"]
+blocks = ["output_formats", "heartbeat_schedule", "tool_defaults"]
 gate = "regression_suite"
 cave_board_card = true
 human_veto_window_hours = 48
@@ -68,6 +68,7 @@ human_veto_window_hours = 24
 blocks = ["tool_grants", "skill_activations", "system_prompt.execution"]
 gate = "human_approval"
 cave_board_card = true
+"human_veto_window_hours" = 12
 
 [approval_tiers.human_required]
 blocks = ["memory_conventions", "session_introduction"]

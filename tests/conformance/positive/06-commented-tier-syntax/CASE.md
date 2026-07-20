@@ -1,3 +1,3 @@
 # 06 Commented Tier Syntax
 
-This case demonstrates that approval-tier headers may carry trailing comments, arrays may include inline comments, and quoted `#` characters inside TOML strings are preserved rather than treated as comment starts.
+This case demonstrates that approval-tier headers may carry trailing comments and whitespace around dotted separators, quoted known field keys still validate, arrays may include inline comments, and quoted `#` characters inside TOML strings are preserved rather than treated as comment starts.

@@ -234,6 +234,7 @@ const APPROVAL_TIER_RULES = {
 };
 
 function parseWardToml(content) {
+  const APPROVAL_TIER_KEY_TOKEN = /(?:"(?:\\.|[^"\\])*"|'[^']*'|[A-Za-z0-9_-]+)/;
   const result = {
     hasMeta: false,
     metaFamiliar: null,
@@ -360,9 +361,45 @@ function parseWardToml(content) {
   }
 
   function parseApprovalTierTableName(header) {
-    const match = header.match(/^\[approval_tiers\.(?:"((?:\\.|[^"\\])*)"|'([^']*)'|([A-Za-z0-9_-]+))\]$/);
+    const match = header.match(new RegExp(`^\\[\\s*approval_tiers\\s*\\.\\s*(${APPROVAL_TIER_KEY_TOKEN.source})\\s*\\]$`));
     if (!match) return null;
-    return match[1] ?? match[2] ?? match[3];
+    return parseApprovalTierKeyName(match[1]);
+  }
+
+  function parseApprovalTierKeyName(rawKey) {
+    const trimmed = rawKey.trim();
+    if (/^[A-Za-z0-9_-]+$/.test(trimmed)) return trimmed;
+    if (trimmed.startsWith("'") && trimmed.endsWith("'")) return trimmed.slice(1, -1);
+    if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
+      try {
+        return JSON.parse(trimmed);
+      } catch {
+        return trimmed.slice(1, -1);
+      }
+    }
+    return null;
+  }
+
+  function parseApprovalTierAssignment(value) {
+    const arrayMatch = value.match(new RegExp(`^(${APPROVAL_TIER_KEY_TOKEN.source})\\s*=\\s*\\[(.*)$`));
+    if (arrayMatch) {
+      return {
+        key: parseApprovalTierKeyName(arrayMatch[1]),
+        isArray: true,
+        rawValue: arrayMatch[2],
+      };
+    }
+
+    const scalarMatch = value.match(new RegExp(`^(${APPROVAL_TIER_KEY_TOKEN.source})\\s*=\\s*(.+)$`));
+    if (scalarMatch) {
+      return {
+        key: parseApprovalTierKeyName(scalarMatch[1]),
+        isArray: false,
+        rawValue: scalarMatch[2].trim(),
+      };
+    }
+
+    return null;
   }
 
   function assignApprovalTierField(tierName, key, value) {
@@ -446,6 +483,28 @@ function parseWardToml(content) {
       continue;
     }
 
+    const approvalTierAssignment = currentSection === 'approval_tiers' && currentSubSection
+      ? parseApprovalTierAssignment(trimmed)
+      : null;
+
+    if (approvalTierAssignment && approvalTierAssignment.isArray && approvalTierAssignment.key) {
+      const target = {
+        section: currentSection,
+        subSection: currentSubSection,
+        key: approvalTierAssignment.key,
+        allowAssignment: allowCurrentTierAssignments,
+      };
+      const closingBracket = findUnquotedChar(approvalTierAssignment.rawValue, ']');
+      if (closingBracket >= 0) {
+        assignArray(target, parseArrayItems(approvalTierAssignment.rawValue.slice(0, closingBracket)));
+      } else {
+        inArray = true;
+        arrayTarget = target;
+        arrayBuffer = parseArrayItems(approvalTierAssignment.rawValue);
+      }
+      continue;
+    }
+
     const arrayMatch = trimmed.match(/^([A-Za-z0-9_-]+)\s*=\s*\[(.*)$/);
     if (arrayMatch) {
       const target = { section: currentSection, subSection: currentSubSection, key: arrayMatch[1], allowAssignment: allowCurrentTierAssignments };
@@ -461,6 +520,13 @@ function parseWardToml(content) {
     }
 
     // Key-value pairs
+    if (approvalTierAssignment && approvalTierAssignment.key) {
+      if (allowCurrentTierAssignments) {
+        assignApprovalTierField(currentSubSection, approvalTierAssignment.key, parseTierScalar(approvalTierAssignment.rawValue));
+      }
+      continue;
+    }
+
     const kvMatch = trimmed.match(/^([A-Za-z0-9_-]+)\s*=\s*(.+)$/);
     if (kvMatch) {
       const key = kvMatch[1];
