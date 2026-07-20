@@ -44,6 +44,10 @@ harness_blocks = [
   "subagent_templates",
   "output_formats",
   "heartbeat_schedule",
+  "tool_grants",
+  "skill_activations",
+  "memory_conventions",
+  "session_introduction",
 ]
 
 [approval_tiers]

@@ -88,7 +88,7 @@
     "editable": {
       "type": "object",
       "description": "The editable surface — what the self-improvement loop may propose changes to.",
-      "required": ["paths"],
+      "required": ["paths", "harness_blocks"],
       "properties": {
         "paths": {
           "type": "array",
@@ -110,10 +110,13 @@
         },
         "harness_blocks": {
           "type": "array",
-          "description": "Named harness blocks the self-improvement loop may propose changes to.",
+          "description": "SurfaceRegionId declarations the self-improvement loop may propose changes to; runtime must bind deterministic extractors for each declared block.",
           "items": {
-            "type": "string"
+            "type": "string",
+            "minLength": 1
           },
+          "minItems": 1,
+          "uniqueItems": true,
           "examples": [
             ["system_prompt.execution", "system_prompt.recovery", "tool_defaults", "skill_config"]
           ]
@@ -129,12 +132,17 @@
         "auto": {
           "type": "object",
           "description": "Tier 0: Auto-approve with regression suite pass. Human veto window applies.",
-          "required": ["gate"],
+          "required": ["blocks", "gate"],
           "properties": {
             "blocks": {
               "type": "array",
               "description": "Harness blocks eligible for auto-approval.",
-              "items": { "type": "string" }
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1,
+              "uniqueItems": true
             },
             "gate": {
               "type": "string",
@@ -153,15 +161,21 @@
               "default": 48
             }
           },
-          "additionalProperties": true
+          "additionalProperties": false
         },
         "familiar_review": {
           "type": "object",
           "description": "Tier 1: Familiar reviews its own proposal. Human veto window applies.",
+          "required": ["blocks", "gate"],
           "properties": {
             "blocks": {
               "type": "array",
-              "items": { "type": "string" }
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1,
+              "uniqueItems": true
             },
             "gate": {
               "type": "string",
@@ -177,16 +191,21 @@
               "default": 24
             }
           },
-          "additionalProperties": true
+          "additionalProperties": false
         },
         "human_review": {
           "type": "object",
           "description": "Tier 2: Human must explicitly approve before promotion.",
-          "required": ["gate"],
+          "required": ["blocks", "gate"],
           "properties": {
             "blocks": {
               "type": "array",
-              "items": { "type": "string" }
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1,
+              "uniqueItems": true
             },
             "gate": {
               "type": "string",
@@ -197,15 +216,21 @@
               "default": true
             }
           },
-          "additionalProperties": true
+          "additionalProperties": false
         },
         "human_required": {
           "type": "object",
           "description": "Tier 3: Human approval + rationale required. For protected-surface-adjacent changes.",
+          "required": ["blocks", "gate"],
           "properties": {
             "blocks": {
               "type": "array",
-              "items": { "type": "string" }
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1,
+              "uniqueItems": true
             },
             "gate": {
               "type": "string",
@@ -220,7 +245,7 @@
               "default": true
             }
           },
-          "additionalProperties": true
+          "additionalProperties": false
         }
       },
       "additionalProperties": false

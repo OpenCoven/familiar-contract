@@ -36,9 +36,10 @@ paths = [
 
 harness_blocks = [
   "system_prompt.execution",
-  "system_prompt.recovery",
   "tool_defaults",
   "output_formats",
+  "tool_grants",
+  "skill_activations",
 ]
 
 [approval_tiers]
