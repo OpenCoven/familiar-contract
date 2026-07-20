@@ -4,10 +4,10 @@
 |---|---|
 | **Number** | RFC-0001 |
 | **Title** | The Familiar Contract |
-| **Version** | 0.3.0 |
+| **Version** | 0.4.0 |
 | **Status** | Draft |
 | **Authors** | Valentina Alexander, Sage |
-| **Date** | 2026-07-18 |
+| **Date** | 2026-07-19 |
 | **Supersedes** | SPEC.md v0.1.0 (in-tree predecessor; non-RFC form) |
 | **License** | MIT |
 | **Conformance** | `tests/conformance/` |
@@ -20,7 +20,7 @@ This document defines the Familiar Contract: a normative specification for a cla
 
 The Familiar Contract addresses an architectural gap in current agent systems: the absence of a principled answer to the question *what is this agent not allowed to change about itself?* As recursive self-improvement loops (Self-Harness, Skill-Opt, sleep-time compute) become production-deployable, the absence of a protected surface is a design flaw, not an oversight.
 
-This RFC is the formal, testable, citable specification. The accompanying conformance suite at `tests/conformance/` is the spec made executable: a familiar that passes every positive case and fails every negative case is conformant with v0.3.0.
+This RFC is the formal, testable, citable specification. The accompanying conformance suite at `tests/conformance/` is the spec made executable: a familiar that passes every positive case and fails every negative case is conformant with v0.4.0.
 
 ---
 
@@ -325,12 +325,12 @@ A `memory_entry_admitted` event **MUST** include an `entry_hash` for the admitte
 
 ### 6.1 Conformance test suite
 
-The directory `tests/conformance/` contains the executable form of this RFC. A familiar's directory is **conformant with v0.3.0** if and only if:
+The directory `tests/conformance/` contains the executable form of this RFC. A familiar's directory is **conformant with v0.4.0** if and only if:
 
 - It passes every positive case in `tests/conformance/positive/`.
 - It fails every negative case in `tests/conformance/negative/` (i.e. demonstrates the validator catches the documented violation).
 
-A claim of v0.3.0 conformance **MUST** be backed by a passing run of `bash tests/conformance/run-conformance.sh`.
+A claim of v0.4.0 conformance **MUST** be backed by a passing run of `bash tests/conformance/run-conformance.sh`.
 
 ### 6.2 Validator
 
@@ -340,11 +340,11 @@ The reference validator at `validators/validate.js` checks structural compliance
 
 This RFC uses [Semantic Versioning](https://semver.org/):
 
-- **Patch** (`0.3.x`): Clarifications, non-normative edits, schema additions that do not change conformance requirements.
+- **Patch** (`0.4.x`): Clarifications, non-normative edits, schema additions that do not change conformance requirements.
 - **Minor** (`0.x.0`): Backward-compatible normative additions, including new OPTIONAL properties and new MUST/SHOULD requirements that do not invalidate existing structurally conformant familiar directories.
 - **Major** (`x.0.0`): Incompatible changes to the five properties or to existing conformance requirements. Requires a new RFC that supersedes this one.
 
-A familiar claiming compliance with `v0.3.0` **MUST** satisfy the normative core as defined in this version. Future versions **SHOULD** preserve backward compatibility within a major version.
+A familiar claiming compliance with `v0.4.0` **MUST** satisfy the normative core as defined in this version. Future versions **SHOULD** preserve backward compatibility within a major version.
 
 ---
 
@@ -432,7 +432,7 @@ These gaps are intentional. The file-level conformance suite verifies the **stru
 - **`schemas/soul.schema.json`** — Required structural fields of `SOUL.md`.
 - **`schemas/identity.schema.json`** — Required structural fields of `IDENTITY.md`.
 - **`schemas/ward.schema.json`** — Required structural fields of `ward.toml`.
-- **`tests/conformance/`** — Executable conformance suite for v0.3.0.
+- **`tests/conformance/`** — Executable conformance suite for v0.4.0.
 
 ### 10.2 Informative
 
@@ -451,6 +451,14 @@ These gaps are intentional. The file-level conformance suite verifies the **stru
 ---
 
 ## 11. Changelog
+
+### v0.4.0 (2026-07-19)
+
+- Added a normative approval-tier compiler mapping from Ward TOML declarations to typed daemon approval paths and registered surface-region identifiers (§5.3.1).
+- Expanded conformance coverage to 28 negative cases total, including unknown tier fields, gate mismatches, invalid veto declarations, and unbound, duplicate, or mistyped block declarations.
+- Required approval-tier declarations to fail closed on unknown fields, use the tier's exact gate, and bind non-empty unique block lists to registered `editable.harness_blocks` entries (§5.3.1).
+- Clarified that veto windows are optional where allowed, but use delayed apply with evidence replay plus Gate 4 revalidation before any write (§5.3.1, §5.4).
+- Clarified that protected-target proposals are outside approval-path promotion; principal-authorized protected updates remain a separate audited path (§5.3.1, §5.4, §5.6).
 
 ### v0.3.0 (2026-07-18)
 
@@ -480,4 +488,4 @@ The original `SPEC.md` v0.1.0 — preserved for reproducibility. Superseded by t
 
 ---
 
-*RFC-0001 — Draft v0.3.0 — 2026-07-18. Maintained at `OpenCoven/familiar-contract`.*
+*RFC-0001 — Draft v0.4.0 — 2026-07-19. Maintained at `OpenCoven/familiar-contract`.*

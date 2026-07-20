@@ -2,7 +2,7 @@
 
 > **The Familiar Contract is an open specification for what an agent is allowed to be — not just what it can do, but what it cannot change about itself.**
 
-[![specification: v0.3.0](https://img.shields.io/badge/specification-v0.3.0-8b5cf6)](rfcs/RFC-0001-familiar-contract.md)
+[![specification: v0.4.0](https://img.shields.io/badge/specification-v0.4.0-8b5cf6)](rfcs/RFC-0001-familiar-contract.md)
 [![RFC-0001: Draft](https://img.shields.io/badge/RFC--0001-Draft-blue)](rfcs/RFC-0001-familiar-contract.md)
 [![license: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/OpenCoven/familiar-contract)

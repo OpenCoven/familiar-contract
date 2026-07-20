@@ -7,6 +7,22 @@ This project uses [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.4.0] — 2026-07-19
+
+### Added
+
+- **RFC-0001 §5.3.1** — Added a normative approval-tier compiler mapping from Ward TOML declarations to typed daemon approval paths and registered surface-region identifiers.
+- **tests/conformance/** — Expanded approval-tier conformance coverage to 28 negative cases total, including unknown tier fields, gate mismatches, invalid veto declarations, and unbound, duplicate, or mistyped block declarations.
+
+### Changed
+
+- **RFC-0001 §5.3.1** — Tier declarations now fail closed on unknown fields and require the tier's exact gate plus non-empty, unique block lists bound to registered `editable.harness_blocks` entries.
+- **RFC-0001 §5.3.1 / §5.4** — Veto windows remain optional where allowed, but use delayed apply with evidence replay plus Gate 4 revalidation before any write.
+- **RFC-0001 §5.3.1 / §5.4** — Protected-target proposals are explicitly outside approval-path promotion; principal-authorized protected updates remain a separate audited path.
+- **README.md, rfcs/README.md, SPEC.md, docs/faq.md, tests/conformance/README.md, validators/README.md, validators/validate.js** — Updated current-version references to v0.4.0.
+
+---
+
 ## [0.3.0] — 2026-07-18
 
 ### Added
