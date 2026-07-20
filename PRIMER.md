@@ -96,5 +96,5 @@ You do not need to use OpenCoven's infrastructure to implement familiar-contract
 - [`examples/minimal/`](../examples/minimal/) — the minimal structurally conformant familiar directory (Lumen)
 - [`examples/sage/`](../examples/sage/) — a richer structurally conformant familiar directory (Sage)
 - `node validators/validate.js ./your-directory` — validate your familiar
-- [`FAQ.md`](../FAQ.md) — common questions
+- [`docs/faq.md`](../docs/faq.md) — common questions
 - [`docs/comparison.md`](../docs/comparison.md) — how this relates to other approaches

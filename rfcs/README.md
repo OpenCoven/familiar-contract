@@ -16,9 +16,20 @@ The RFC is the spec. The schemas are the machine-readable form. The conformance 
 
 ## Index
 
-| Number | Title | Version | Status |
+| Number | Title | Version | Status | Notes |
+|---|---|---|---|---|
+| [RFC-0001](RFC-0001-familiar-contract.md) | The Familiar Contract | v0.4.0 | Draft | Canonical current draft |
+
+## Historical snapshots
+
+Prior draft snapshots are preserved as exact immutable copies of the source git
+objects they were extracted from. They exist for reproducibility and citation;
+do not edit them in place.
+
+| Snapshot | Version | Status | Source |
 |---|---|---|---|
-| [RFC-0001](RFC-0001-familiar-contract.md) | The Familiar Contract | v0.4.0 | Draft |
+| [RFC-0001-v0.3](RFC-0001-v0.3.md) | v0.3.0 | Historical snapshot | PR #3 head (`15f470146d7a9ab127c916b66e264130e8c4d1bb`) |
+| [RFC-0001-v0.2](RFC-0001-v0.2.md) | v0.2.0 | Historical snapshot | `origin/main` before stacked PR #3 |
 
 ## Process
 

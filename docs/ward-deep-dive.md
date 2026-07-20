@@ -382,4 +382,4 @@ Regression suites are currently familiar-specific and opaque to the conformance 
 
 *The Ward is the structural answer to a structural problem. Self-improvement loops are real, they are in production, and they can drift an agent's identity over time without a principled enforcement boundary. The Ward provides that boundary — not through agent cooperation, but through authority-layer enforcement that holds regardless of what the agent thinks about it. That distinction is what the Familiar Contract is built on.*
 
-*RFC-0001 v0.2.0 — 2026-06-19. `rfcs/RFC-0001-familiar-contract.md`.*
+*RFC-0001 v0.2.0 — 2026-06-19. `rfcs/RFC-0001-v0.2.md`.*

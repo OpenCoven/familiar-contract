@@ -75,7 +75,6 @@ See [`validators/README.md`](validators/README.md) for full CLI docs.
 SPEC.md                  ← The Familiar Contract (normative)
 README.md                ← This file
 PRIMER.md                ← Builder's guide (for new readers)
-FAQ.md                   ← Common questions
 CHANGELOG.md             ← Version history
 schemas/
   soul.schema.json       ← JSON Schema for SOUL.md
@@ -89,6 +88,7 @@ validators/
   validate.js            ← CLI validator
   README.md
 docs/
+  faq.md                 ← Common questions (canonical FAQ)
   five-properties.md     ← The five properties in depth
   why-identity-not-skills.md
   ward-primer.md

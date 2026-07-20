@@ -86,7 +86,7 @@ Prior v0.3-style ignored, ambiguous, or stringly typed declarations could create
 The RFC is now the canonical citation target:
 
 > Familiar Contract RFC-0001 v0.2.0, "The Familiar Contract."
-> OpenCoven, 2026. https://github.com/OpenCoven/familiar-contract/blob/main/rfcs/RFC-0001-familiar-contract.md
+> OpenCoven, 2026. https://github.com/OpenCoven/familiar-contract/blob/main/rfcs/RFC-0001-v0.2.md
 
 For academic citation, the tagged release at `v0.2.0` provides a stable URL.
 
