@@ -250,47 +250,42 @@ function parseWardToml(content) {
     hasHumanReviewTier: false,
     approvalTiers: {},
     unknownApprovalTiers: [],
+    duplicateApprovalTierTables: [],
+    duplicateApprovalTierFields: [],
   };
 
   const lines = content.split('\n');
   let currentSection = null;
   let currentSubSection = null;
+  let allowCurrentTierAssignments = true;
   let inArray = false;
   let arrayTarget = null;
   let arrayBuffer = [];
 
   function approvalTier(name) {
     if (!result.approvalTiers[name]) {
-      result.approvalTiers[name] = { blocks: [], fields: {}, fieldNames: [] };
+      result.approvalTiers[name] = { blocks: [], fields: {}, fieldNames: [], seenFields: new Set() };
     }
     return result.approvalTiers[name];
   }
 
-  function parseArrayItems(value) {
-    return value.split(',')
-      .map(item => item.trim().replace(/^["']|["']$/g, ''))
-      .filter(Boolean);
-  }
-
-  function assignArray(target, items) {
-    if (target.section === 'protected' && target.key === 'files') result.protectedFiles = [...items];
-    if (target.section === 'protected' && target.key === 'invariants') result.protectedInvariants = [...items];
-    if (target.section === 'editable' && target.key === 'paths') result.editablePaths = [...items];
-    if (target.section === 'editable' && target.key === 'harness_blocks') result.editableHarnessBlocks = [...items];
-    if (target.section === 'approval_tiers' && target.subSection) {
-      const tier = approvalTier(target.subSection);
-      tier.fields[target.key] = [...items];
-      tier.fieldNames.push(target.key);
-      if (target.key === 'blocks') tier.blocks = [...items];
-    }
-  }
-
-  function stripInlineComment(value) {
+  function findUnquotedChar(value, targetChar) {
     let inSingleQuote = false;
     let inDoubleQuote = false;
+    let escapeNext = false;
 
     for (let i = 0; i < value.length; i++) {
       const char = value[i];
+
+      if (escapeNext) {
+        escapeNext = false;
+        continue;
+      }
+
+      if (char === '\\' && inDoubleQuote) {
+        escapeNext = true;
+        continue;
+      }
 
       if (char === "'" && !inDoubleQuote) {
         inSingleQuote = !inSingleQuote;
@@ -300,12 +295,93 @@ function parseWardToml(content) {
         inDoubleQuote = !inDoubleQuote;
         continue;
       }
-      if (char === '#' && !inSingleQuote && !inDoubleQuote) {
-        return value.slice(0, i).trim();
+      if (char === targetChar && !inSingleQuote && !inDoubleQuote) {
+        return i;
       }
     }
 
-    return value.trim();
+    return -1;
+  }
+
+  function stripTomlComment(value) {
+    const commentStart = findUnquotedChar(value, '#');
+    return commentStart >= 0 ? value.slice(0, commentStart).trim() : value.trim();
+  }
+
+  function parseArrayItems(value) {
+    const items = [];
+    let currentItem = '';
+    let inSingleQuote = false;
+    let inDoubleQuote = false;
+    let escapeNext = false;
+
+    function pushCurrentItem() {
+      const normalized = currentItem.trim().replace(/^["']|["']$/g, '');
+      if (normalized) items.push(normalized);
+      currentItem = '';
+    }
+
+    for (let i = 0; i < value.length; i++) {
+      const char = value[i];
+
+      if (escapeNext) {
+        currentItem += char;
+        escapeNext = false;
+        continue;
+      }
+
+      if (char === '\\' && inDoubleQuote) {
+        currentItem += char;
+        escapeNext = true;
+        continue;
+      }
+
+      if (char === "'" && !inDoubleQuote) {
+        inSingleQuote = !inSingleQuote;
+        currentItem += char;
+        continue;
+      }
+      if (char === '"' && !inSingleQuote) {
+        inDoubleQuote = !inDoubleQuote;
+        currentItem += char;
+        continue;
+      }
+
+      if (char === ',' && !inSingleQuote && !inDoubleQuote) {
+        pushCurrentItem();
+        continue;
+      }
+
+      currentItem += char;
+    }
+
+    pushCurrentItem();
+    return items;
+  }
+
+  function assignApprovalTierField(tierName, key, value) {
+    const tier = approvalTier(tierName);
+    if (tier.seenFields.has(key)) {
+      result.duplicateApprovalTierFields.push({ tierName, field: key });
+      return;
+    }
+
+    tier.seenFields.add(key);
+    tier.fieldNames.push(key);
+    tier.fields[key] = value;
+    if (key === 'blocks' && Array.isArray(value)) {
+      tier.blocks = [...value];
+    }
+  }
+
+  function assignArray(target, items) {
+    if (target.section === 'protected' && target.key === 'files') result.protectedFiles = [...items];
+    if (target.section === 'protected' && target.key === 'invariants') result.protectedInvariants = [...items];
+    if (target.section === 'editable' && target.key === 'paths') result.editablePaths = [...items];
+    if (target.section === 'editable' && target.key === 'harness_blocks') result.editableHarnessBlocks = [...items];
+    if (target.section === 'approval_tiers' && target.subSection && target.allowAssignment) {
+      assignApprovalTierField(target.subSection, target.key, [...items]);
+    }
   }
 
   function parseTierScalar(value) {
@@ -321,33 +397,38 @@ function parseWardToml(content) {
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    const trimmed = line.trim();
+    const trimmed = stripTomlComment(line);
 
     // Skip comments and empty lines
-    if (trimmed.startsWith('#') || trimmed === '') continue;
+    if (trimmed === '') continue;
 
     // Section headers
-    if (/^\[meta\]/.test(trimmed)) { currentSection = 'meta'; currentSubSection = null; continue; }
-    if (/^\[protected\]/.test(trimmed)) { currentSection = 'protected'; currentSubSection = null; result.hasProtected = true; continue; }
-    if (/^\[editable\]/.test(trimmed)) { currentSection = 'editable'; currentSubSection = null; result.hasEditable = true; continue; }
-    if (/^\[approval_tiers\]/.test(trimmed)) { currentSection = 'approval_tiers'; currentSubSection = null; result.hasApprovalTiers = true; continue; }
+    if (/^\[meta\]$/.test(trimmed)) { currentSection = 'meta'; currentSubSection = null; allowCurrentTierAssignments = true; continue; }
+    if (/^\[protected\]$/.test(trimmed)) { currentSection = 'protected'; currentSubSection = null; allowCurrentTierAssignments = true; result.hasProtected = true; continue; }
+    if (/^\[editable\]$/.test(trimmed)) { currentSection = 'editable'; currentSubSection = null; allowCurrentTierAssignments = true; result.hasEditable = true; continue; }
+    if (/^\[approval_tiers\]$/.test(trimmed)) { currentSection = 'approval_tiers'; currentSubSection = null; allowCurrentTierAssignments = true; result.hasApprovalTiers = true; continue; }
     const approvalTierMatch = trimmed.match(/^\[approval_tiers\.([A-Za-z0-9_-]+)\]$/);
     if (approvalTierMatch) {
       const tierName = approvalTierMatch[1];
       currentSection = 'approval_tiers';
       currentSubSection = tierName;
       result.hasApprovalTiers = true;
+      const isDuplicateTable = Object.prototype.hasOwnProperty.call(result.approvalTiers, tierName);
+      allowCurrentTierAssignments = !isDuplicateTable;
+      if (isDuplicateTable) {
+        result.duplicateApprovalTierTables.push(tierName);
+      }
       approvalTier(tierName);
       if (tierName === 'auto') result.hasAutoTier = true;
       if (tierName === 'human_review') result.hasHumanReviewTier = true;
       if (!APPROVAL_TIER_RULES[tierName]) result.unknownApprovalTiers.push(tierName);
       continue;
     }
-    if (/^\[audit\]/.test(trimmed)) { currentSection = 'audit'; currentSubSection = null; continue; }
-    if (/^\[\w/.test(trimmed) && /^\[/.test(trimmed)) { currentSection = 'other'; currentSubSection = null; continue; }
+    if (/^\[audit\]$/.test(trimmed)) { currentSection = 'audit'; currentSubSection = null; allowCurrentTierAssignments = true; continue; }
+    if (/^\[\w/.test(trimmed) && /^\[/.test(trimmed)) { currentSection = 'other'; currentSubSection = null; allowCurrentTierAssignments = true; continue; }
 
     if (inArray) {
-      const closingBracket = trimmed.indexOf(']');
+      const closingBracket = findUnquotedChar(trimmed, ']');
       if (closingBracket >= 0) {
         arrayBuffer.push(...parseArrayItems(trimmed.slice(0, closingBracket)));
         assignArray(arrayTarget, arrayBuffer);
@@ -362,8 +443,8 @@ function parseWardToml(content) {
 
     const arrayMatch = trimmed.match(/^([A-Za-z0-9_-]+)\s*=\s*\[(.*)$/);
     if (arrayMatch) {
-      const target = { section: currentSection, subSection: currentSubSection, key: arrayMatch[1] };
-      const closingBracket = arrayMatch[2].indexOf(']');
+      const target = { section: currentSection, subSection: currentSubSection, key: arrayMatch[1], allowAssignment: allowCurrentTierAssignments };
+      const closingBracket = findUnquotedChar(arrayMatch[2], ']');
       if (closingBracket >= 0) {
         assignArray(target, parseArrayItems(arrayMatch[2].slice(0, closingBracket)));
       } else {
@@ -378,7 +459,7 @@ function parseWardToml(content) {
     const kvMatch = trimmed.match(/^([A-Za-z0-9_-]+)\s*=\s*(.+)$/);
     if (kvMatch) {
       const key = kvMatch[1];
-      const rawValue = stripInlineComment(kvMatch[2]);
+      const rawValue = kvMatch[2].trim();
       const value = rawValue.replace(/^["']|["']$/g, '');
       if (currentSection === 'meta') {
         result.hasMeta = true;
@@ -386,10 +467,8 @@ function parseWardToml(content) {
         if (key === 'person') result.metaPerson = value;
         if (key === 'version') result.metaVersion = value;
       }
-      if (currentSection === 'approval_tiers' && currentSubSection) {
-        const tier = approvalTier(currentSubSection);
-        tier.fields[key] = parseTierScalar(rawValue);
-        tier.fieldNames.push(key);
+      if (currentSection === 'approval_tiers' && currentSubSection && allowCurrentTierAssignments) {
+        assignApprovalTierField(currentSubSection, key, parseTierScalar(rawValue));
       }
     }
   }
@@ -405,6 +484,22 @@ function validateApprovalTiers(parsed) {
       'ward.toml',
       `approval_tiers.${tierName}`,
       `Unknown approval tier "${tierName}".`
+    ));
+  }
+
+  for (const tierName of parsed.duplicateApprovalTierTables) {
+    violations.push(violation(
+      'ward.toml',
+      `approval_tiers.${tierName}`,
+      `Duplicate approval tier table declaration for approval_tiers.${tierName}. Duplicate tier tables are ambiguous and forbidden.`
+    ));
+  }
+
+  for (const duplicateField of parsed.duplicateApprovalTierFields) {
+    violations.push(violation(
+      'ward.toml',
+      `approval_tiers.${duplicateField.tierName}.${duplicateField.field}`,
+      `Duplicate field "${duplicateField.field}" declared in approval_tiers.${duplicateField.tierName}. Duplicate approval-tier fields are ambiguous and forbidden.`
     ));
   }
 
