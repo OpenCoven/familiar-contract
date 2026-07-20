@@ -1,6 +1,6 @@
 # Validator — familiar-contract
 
-A zero-dependency Node.js CLI that checks a familiar directory for familiar-contract v0.4.0 structural conformance.
+A zero-dependency Node.js CLI that checks one claimant directory for the familiar-contract v0.4.0 structural requirements.
 
 ## Requirements
 
@@ -21,7 +21,7 @@ node validate.js ../examples/sage
 # Validate the minimal Lumen example
 node validate.js ../examples/minimal
 
-# Validate your own familiar
+# Validate your own claimant directory
 node validate.js /path/to/your/familiar
 ```
 
@@ -75,14 +75,17 @@ There are no warnings for missing required files; `MEMORY.md` absence is a failu
 - Whether the Ward is actually enforced at runtime (that requires a Ward daemon)
 - Whether the familiar's behavior matches its declared purpose (behavioral compliance requires runtime evaluation)
 
-This validator checks **structural conformance** — the presence and format of required declarations. Full conformance also requires runtime Ward enforcement beyond this file-level check, and missing `MEMORY.md` is a violation, not a warning.
+This validator checks whether one claimant directory satisfies the required file-level declarations for v0.4.0. That claimant-directory run is necessary, but not sufficient, for a structural-conformance claim: you must also run `bash tests/conformance/run-conformance.sh` so the bundled reference validator is shown to accept the positive fixtures and reject the negative fixtures for the same contract version. Full conformance additionally requires runtime Ward enforcement beyond this file-level check, and missing `MEMORY.md` is a violation, not a warning.
 
 ## For CI Integration
 
 ```yaml
 # .github/workflows/familiar-validate.yml
-- name: Validate familiar
+- name: Validate claimant directory
   run: node validators/validate.js ./my-familiar-directory
+
+- name: Run bundled conformance suite
+  run: bash tests/conformance/run-conformance.sh
 ```
 
-Exit code 1 on failure will fail the CI step.
+Both steps must pass for a reproducible v0.4.0 structural-conformance claim. The first checks the claimant directory; the second verifies the bundled reference validator and fixtures. Exit code 1 on either step will fail CI.

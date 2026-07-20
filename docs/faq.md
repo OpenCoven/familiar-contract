@@ -275,7 +275,7 @@ The RFC also does not address security of the authority layer itself. If the War
 **A:** Yes. The Familiar Contract is runtime-portable and stack-agnostic. You do not need OpenClaw, the Coven multi-familiar architecture, or any specific runtime to build a conformant familiar.
 
 What you need is: a familiar directory with the required files (`SOUL.md`, `IDENTITY.md`, `MEMORY.md`, `ward.toml`); a `ward.toml` that conforms to the published schema; and an enforcement mechanism — a Ward authority daemon — that is structurally separate from the familiar's own logic. The reference implementation uses a Rust authority daemon (the `coven` layer), but the RFC is explicit that "other implementations may choose different mechanisms; what is normative is the separation, not the implementation."
-The structural conformance suite (`tests/conformance/`) runs against any familiar directory and has no Coven dependencies. The validator (`validators/validate.js`) requires only Node.js. The schemas (`schemas/`) are standard JSON Schema and can be validated with any conforming schema validator.
+The structural conformance suite (`tests/conformance/`) has no Coven dependencies, but it does not by itself validate an arbitrary external directory. It verifies that the bundled reference validator accepts the positive fixtures and rejects the negative fixtures. Your own familiar directory still needs its own `node validators/validate.js ./your-directory` run. The validator (`validators/validate.js`) requires only Node.js. The schemas (`schemas/`) are standard JSON Schema and can be validated with any conforming schema validator.
 
 The parts of the spec that are Coven-specific — Doll proposals, Cave Board integration, multi-familiar routing — are referenced as context, not as requirements. A standalone familiar implementing a Ward daemon without any Coven infrastructure can be fully conformant with RFC-0001 v0.4.0.
 
@@ -285,7 +285,7 @@ The parts of the spec that are Coven-specific — Doll proposals, Cave Board int
 
 **A:** If you want to understand the design philosophy in more depth, read `docs/ward-primer.md` (the non-technical introduction to the Ward), `docs/five-properties.md` (each property in depth with architectural requirements), and `docs/ward-deep-dive.md` (the technical deep dive into Ward design).
 
-If you want to see structurally conformant familiar directories, browse `examples/sage/` (a full familiar with rich Ward configuration), `examples/minimal/` (the minimum required to pass structural conformance), and the fixtures under `tests/conformance/`. These examples and fixtures are structurally conformant only; full conformance additionally requires runtime Ward enforcement, not just a passing directory-level suite.
+If you want to see example familiar directories accepted by the validator, browse `examples/sage/` (a full familiar with rich Ward configuration), `examples/minimal/` (the minimum required to pass structural conformance), and the positive fixtures under `tests/conformance/positive/`. The negative fixtures under `tests/conformance/negative/` are intentionally nonconformant and exist to verify rejection behavior, not to serve as conformant examples. Full conformance additionally requires runtime Ward enforcement, not just a passing directory-level check.
 
 If you want to understand how the Familiar Contract relates to other agent specifications and frameworks, read `docs/comparison.md`.
 
