@@ -206,6 +206,33 @@ function validateIdentity(dirPath) {
 // ── ward.toml parser ──────────────────────────────────────────────────────────
 // Minimal TOML parser for the fields we need. Only handles the subset used in ward.toml.
 
+const APPROVAL_TIER_RULES = {
+  auto: {
+    gate: 'regression_suite',
+    approvalPath: 'AutoRegression',
+    vetoAllowed: true,
+    fields: ['blocks', 'gate', 'cave_board_card', 'human_veto_window_hours'],
+  },
+  familiar_review: {
+    gate: 'familiar_coherence_check',
+    approvalPath: 'FamiliarCoherence',
+    vetoAllowed: true,
+    fields: ['blocks', 'gate', 'cave_board_card', 'human_veto_window_hours'],
+  },
+  human_review: {
+    gate: 'human_approval',
+    approvalPath: 'HumanApproval',
+    vetoAllowed: false,
+    fields: ['blocks', 'gate', 'cave_board_card'],
+  },
+  human_required: {
+    gate: 'human_approval_with_rationale',
+    approvalPath: 'HumanApprovalWithRationale',
+    vetoAllowed: false,
+    fields: ['blocks', 'gate', 'cave_board_card', 'audit_log'],
+  },
+};
+
 function parseWardToml(content) {
   const result = {
     hasMeta: false,
@@ -217,9 +244,12 @@ function parseWardToml(content) {
     protectedInvariants: [],
     hasEditable: false,
     editablePaths: [],
+    editableHarnessBlocks: [],
     hasApprovalTiers: false,
     hasAutoTier: false,
     hasHumanReviewTier: false,
+    approvalTiers: {},
+    unknownApprovalTiers: [],
   };
 
   const lines = content.split('\n');
@@ -228,6 +258,42 @@ function parseWardToml(content) {
   let inArray = false;
   let arrayTarget = null;
   let arrayBuffer = [];
+
+  function approvalTier(name) {
+    if (!result.approvalTiers[name]) {
+      result.approvalTiers[name] = { blocks: [], fields: {}, fieldNames: [] };
+    }
+    return result.approvalTiers[name];
+  }
+
+  function parseArrayItems(value) {
+    return value.split(',')
+      .map(item => item.trim().replace(/^["']|["']$/g, ''))
+      .filter(Boolean);
+  }
+
+  function assignArray(target, items) {
+    if (target.section === 'protected' && target.key === 'files') result.protectedFiles = [...items];
+    if (target.section === 'protected' && target.key === 'invariants') result.protectedInvariants = [...items];
+    if (target.section === 'editable' && target.key === 'paths') result.editablePaths = [...items];
+    if (target.section === 'editable' && target.key === 'harness_blocks') result.editableHarnessBlocks = [...items];
+    if (target.section === 'approval_tiers' && target.subSection) {
+      const tier = approvalTier(target.subSection);
+      tier.fields[target.key] = [...items];
+      tier.fieldNames.push(target.key);
+      if (target.key === 'blocks') tier.blocks = [...items];
+    }
+  }
+
+  function parseTierScalar(value) {
+    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+      return value.slice(1, -1);
+    }
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    if (/^-?\d+$/.test(value)) return Number(value);
+    return value;
+  }
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
@@ -241,59 +307,51 @@ function parseWardToml(content) {
     if (/^\[protected\]/.test(trimmed)) { currentSection = 'protected'; currentSubSection = null; result.hasProtected = true; continue; }
     if (/^\[editable\]/.test(trimmed)) { currentSection = 'editable'; currentSubSection = null; result.hasEditable = true; continue; }
     if (/^\[approval_tiers\]/.test(trimmed)) { currentSection = 'approval_tiers'; currentSubSection = null; result.hasApprovalTiers = true; continue; }
-    if (/^\[approval_tiers\.auto\]/.test(trimmed)) { currentSubSection = 'auto'; result.hasAutoTier = true; continue; }
-    if (/^\[approval_tiers\.human_review\]/.test(trimmed)) { currentSubSection = 'human_review'; result.hasHumanReviewTier = true; continue; }
-    if (/^\[approval_tiers\.\w+\]/.test(trimmed)) { currentSubSection = 'other'; continue; }
+    const approvalTierMatch = trimmed.match(/^\[approval_tiers\.([A-Za-z0-9_-]+)\]$/);
+    if (approvalTierMatch) {
+      const tierName = approvalTierMatch[1];
+      currentSection = 'approval_tiers';
+      currentSubSection = tierName;
+      result.hasApprovalTiers = true;
+      approvalTier(tierName);
+      if (tierName === 'auto') result.hasAutoTier = true;
+      if (tierName === 'human_review') result.hasHumanReviewTier = true;
+      if (!APPROVAL_TIER_RULES[tierName]) result.unknownApprovalTiers.push(tierName);
+      continue;
+    }
     if (/^\[audit\]/.test(trimmed)) { currentSection = 'audit'; currentSubSection = null; continue; }
     if (/^\[\w/.test(trimmed) && /^\[/.test(trimmed)) { currentSection = 'other'; currentSubSection = null; continue; }
 
-    // Array start
-    if (!inArray && /=\s*\[/.test(trimmed) && !/\]$/.test(trimmed.replace(/\s*#.*/, ''))) {
-      inArray = true;
-      const keyMatch = trimmed.match(/^(\w+)\s*=/);
-      if (keyMatch) arrayTarget = { section: currentSection, key: keyMatch[1] };
-      arrayBuffer = [];
-      // Capture any items on the opening line
-      const inline = trimmed.replace(/^[^[]*\[/, '').trim();
-      if (inline) arrayBuffer.push(...inline.split(',').map(s => s.trim().replace(/^["']|["']$/g, '')).filter(Boolean));
-      continue;
-    }
-
-    // Array end
-    if (inArray && /^\]/.test(trimmed)) {
-      inArray = false;
-      if (arrayTarget) {
-        if (arrayTarget.section === 'protected' && arrayTarget.key === 'files') result.protectedFiles = [...arrayBuffer];
-        if (arrayTarget.section === 'protected' && arrayTarget.key === 'invariants') result.protectedInvariants = [...arrayBuffer];
-        if (arrayTarget.section === 'editable' && arrayTarget.key === 'paths') result.editablePaths = [...arrayBuffer];
-      }
-      arrayTarget = null;
-      arrayBuffer = [];
-      continue;
-    }
-
-    // Array item
     if (inArray) {
-      const item = trimmed.replace(/^["']|["'],?\s*$|["']$/g, '').trim();
-      if (item && !item.startsWith('#')) arrayBuffer.push(item);
+      const closingBracket = trimmed.indexOf(']');
+      if (closingBracket >= 0) {
+        arrayBuffer.push(...parseArrayItems(trimmed.slice(0, closingBracket)));
+        assignArray(arrayTarget, arrayBuffer);
+        inArray = false;
+        arrayTarget = null;
+        arrayBuffer = [];
+      } else {
+        arrayBuffer.push(...parseArrayItems(trimmed));
+      }
       continue;
     }
 
-    // Inline array (whole array on one line)
-    if (/=\s*\[.+\]/.test(trimmed)) {
-      const keyMatch = trimmed.match(/^(\w+)\s*=\s*\[(.+)\]/);
-      if (keyMatch) {
-        const key = keyMatch[1];
-        const items = keyMatch[2].split(',').map(s => s.trim().replace(/^["']|["']$/g, '')).filter(Boolean);
-        if (currentSection === 'protected' && key === 'files') result.protectedFiles = items;
-        if (currentSection === 'protected' && key === 'invariants') result.protectedInvariants = items;
-        if (currentSection === 'editable' && key === 'paths') result.editablePaths = items;
+    const arrayMatch = trimmed.match(/^([A-Za-z0-9_-]+)\s*=\s*\[(.*)$/);
+    if (arrayMatch) {
+      const target = { section: currentSection, subSection: currentSubSection, key: arrayMatch[1] };
+      const closingBracket = arrayMatch[2].indexOf(']');
+      if (closingBracket >= 0) {
+        assignArray(target, parseArrayItems(arrayMatch[2].slice(0, closingBracket)));
+      } else {
+        inArray = true;
+        arrayTarget = target;
+        arrayBuffer = parseArrayItems(arrayMatch[2]);
       }
       continue;
     }
 
     // Key-value pairs
-    const kvMatch = trimmed.match(/^(\w+)\s*=\s*["']?([^"'#\n]+?)["']?\s*(#.*)?$/);
+    const kvMatch = trimmed.match(/^([A-Za-z0-9_-]+)\s*=\s*["']?([^"'#\n]+?)["']?\s*(#.*)?$/);
     if (kvMatch) {
       const key = kvMatch[1];
       const value = kvMatch[2].trim();
@@ -303,10 +361,97 @@ function parseWardToml(content) {
         if (key === 'person') result.metaPerson = value;
         if (key === 'version') result.metaVersion = value;
       }
+      if (currentSection === 'approval_tiers' && currentSubSection) {
+        const tier = approvalTier(currentSubSection);
+        tier.fields[key] = parseTierScalar(value);
+        tier.fieldNames.push(key);
+      }
     }
   }
 
   return result;
+}
+
+function validateApprovalTiers(parsed) {
+  const violations = [];
+
+  for (const tierName of parsed.unknownApprovalTiers) {
+    violations.push(violation(
+      'ward.toml',
+      `approval_tiers.${tierName}`,
+      `Unknown approval tier "${tierName}".`
+    ));
+  }
+
+  for (const [tierName, tier] of Object.entries(parsed.approvalTiers)) {
+    const rule = APPROVAL_TIER_RULES[tierName];
+    if (!rule) continue;
+
+    for (const field of tier.fieldNames) {
+      if (!rule.fields.includes(field) && field !== 'human_veto_window_hours') {
+        violations.push(violation(
+          'ward.toml',
+          `approval_tiers.${tierName}.${field}`,
+          `Unknown field "${field}" for approval_tiers.${tierName}.`
+        ));
+      }
+    }
+
+    if (tier.fields.gate !== rule.gate) {
+      violations.push(violation(
+        'ward.toml',
+        `approval_tiers.${tierName}.gate`,
+        `Expected gate "${rule.gate}" for approval_tiers.${tierName}.`
+      ));
+    }
+
+    if (tier.blocks.length === 0) {
+      violations.push(violation(
+        'ward.toml',
+        `approval_tiers.${tierName}.blocks`,
+        'Approval tier blocks must not be empty.'
+      ));
+    }
+
+    const seenBlocks = new Set();
+    for (const block of tier.blocks) {
+      if (seenBlocks.has(block)) {
+        violations.push(violation(
+          'ward.toml',
+          `approval_tiers.${tierName}.blocks`,
+          `Duplicate block "${block}" in approval_tiers.${tierName}.blocks.`
+        ));
+      }
+      seenBlocks.add(block);
+
+      if (!parsed.editableHarnessBlocks.includes(block)) {
+        violations.push(violation(
+          'ward.toml',
+          `approval_tiers.${tierName}.blocks`,
+          `Harness block "${block}" is not declared in editable.harness_blocks.`
+        ));
+      }
+    }
+
+    if (Object.prototype.hasOwnProperty.call(tier.fields, 'human_veto_window_hours')) {
+      const vetoField = `approval_tiers.${tierName}.human_veto_window_hours`;
+      if (!rule.vetoAllowed) {
+        violations.push(violation(
+          'ward.toml',
+          vetoField,
+          'Synchronous veto windows are forbidden for this approval tier.'
+        ));
+      } else if (!Number.isInteger(tier.fields.human_veto_window_hours) || tier.fields.human_veto_window_hours <= 0) {
+        violations.push(violation(
+          'ward.toml',
+          vetoField,
+          'A veto window must be a positive integer number of hours.'
+        ));
+      }
+    }
+  }
+
+  return violations;
 }
 
 function validateWard(dirPath) {
@@ -371,6 +516,7 @@ function validateWard(dirPath) {
     if (!parsed.hasHumanReviewTier) {
       violations.push(violation('ward.toml', 'approval_tiers.human_review', '[approval_tiers.human_review] (Tier 2) not found. Human review tier is required.'));
     }
+    violations.push(...validateApprovalTiers(parsed));
   }
 
   return violations;
