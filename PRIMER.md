@@ -44,13 +44,13 @@ The Familiar Contract names the boundary. The Ward (the enforcement mechanism) i
 
 Three files:
 
-**`SOUL.md`** — who the familiar is. Name, purpose, vibe, what it is not. This is the human-readable identity document. See [`schemas/soul.schema.json`](../schemas/soul.schema.json) for the required fields.
+**`SOUL.md`** — who the familiar is. Name, purpose, vibe, what it is not. This is the human-readable identity document. See [`schemas/soul.schema.json`](schemas/soul.schema.json) for the required fields.
 
 **`IDENTITY.md`** — the machine-readable identity record. Name, pronouns, creature type, Coven membership (if any), emoji. Minimal structured data that a validator can check.
 
-**`ward.toml`** — the governance document. Protected files, editable files, approval tiers. This is what tells the self-improvement loop what it cannot touch. See [`schemas/ward.schema.json`](../schemas/ward.schema.json).
+**`ward.toml`** — the governance document. Protected files, editable files, approval tiers. This is what tells the self-improvement loop what it cannot touch. See [`schemas/ward.schema.json`](schemas/ward.schema.json).
 
-Start from [`examples/minimal/`](../examples/minimal/) — that's the floor. [`examples/sage/`](../examples/sage/) shows a richer structurally conformant familiar directory. Sage's runtime enforcement lives outside this repo fixture.
+Start from [`examples/minimal/`](examples/minimal/) — that's the floor. [`examples/sage/`](examples/sage/) shows a richer structurally conformant familiar directory. Sage's runtime enforcement lives outside this repo fixture.
 
 ---
 
@@ -78,7 +78,7 @@ A Ward is a `ward.toml` file that declares:
 - Which files are editable (proposals allowed)
 - What approval is required for each class of change
 
-The Ward spec is published separately. See [`docs/ward-primer.md`](../docs/ward-primer.md) for the short version.
+The Ward spec is published separately. See [`docs/ward-primer.md`](docs/ward-primer.md) for the short version.
 
 ---
 
@@ -93,8 +93,8 @@ You do not need to use OpenCoven's infrastructure to implement familiar-contract
 ## Where to go next
 
 - [`rfcs/RFC-0001-familiar-contract.md`](rfcs/RFC-0001-familiar-contract.md) — the normative specification (v0.4.0)
-- [`examples/minimal/`](../examples/minimal/) — the minimal structurally conformant familiar directory (Lumen)
-- [`examples/sage/`](../examples/sage/) — a richer structurally conformant familiar directory (Sage)
+- [`examples/minimal/`](examples/minimal/) — the minimal structurally conformant familiar directory (Lumen)
+- [`examples/sage/`](examples/sage/) — a richer structurally conformant familiar directory (Sage)
 - `node validators/validate.js ./your-directory` — validate your familiar
-- [`docs/faq.md`](../docs/faq.md) — common questions
-- [`docs/comparison.md`](../docs/comparison.md) — how this relates to other approaches
+- [`docs/faq.md`](docs/faq.md) — common questions
+- [`docs/comparison.md`](docs/comparison.md) — how this relates to other approaches

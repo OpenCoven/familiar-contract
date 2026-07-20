@@ -325,16 +325,18 @@ A `memory_entry_admitted` event **MUST** include an `entry_hash` for the admitte
 
 ### 6.1 Conformance test suite
 
-The directory `tests/conformance/` contains the executable structural test suite for this RFC. A familiar directory is **structurally conformant with v0.4.0** if and only if:
+The directory `tests/conformance/` contains the executable structural test suite for this RFC. A familiar directory is **structurally conformant with v0.4.0** if and only if **BOTH** of the following are true:
 
-- It passes every positive case in `tests/conformance/positive/`.
-- It fails every negative case in `tests/conformance/negative/` (i.e. demonstrates the validator catches the documented violation).
+- `node validators/validate.js <directory>` succeeds for the directory making the conformance claim.
+- `bash tests/conformance/run-conformance.sh` passes in this repository, demonstrating that the reference validator accepts every bundled positive case in `tests/conformance/positive/` and rejects every bundled negative case in `tests/conformance/negative/`.
 
-A claim of v0.4.0 structural conformance **MUST** be backed by a passing run of `bash tests/conformance/run-conformance.sh`.
+These checks establish the structural claim only. They do **NOT** by themselves prove authority-layer separation, Gate 4 unbypassability, audit-log behavior, identity-probe consistency, or any other runtime requirement for full conformance.
+
+A claim of v0.4.0 structural conformance **MUST** be backed by reproducible passing runs of both commands.
 
 ### 6.2 Validator
 
-The reference validator at `validators/validate.js` checks structural conformance (file presence, schema conformance, required sections). The validator **MUST NOT** be the sole conformance evidence; runtime enforcement (§5.1, §5.4) is **REQUIRED** for full conformance and is verified at the system level, not the file level.
+The reference validator at `validators/validate.js` checks structural conformance for one claimant directory (file presence, schema conformance, required sections). The validator **MUST NOT** be the sole conformance evidence; the repository conformance suite in §6.1 verifies that the reference validator catches the bundled positive and negative fixtures, and runtime enforcement (§5.1, §5.4) is still **REQUIRED** for full conformance and is verified at the system level, not the file level.
 
 ### 6.3 Versioning
 

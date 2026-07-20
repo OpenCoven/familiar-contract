@@ -289,8 +289,8 @@ If you want to see structurally conformant familiar directories, browse `example
 
 If you want to understand how the Familiar Contract relates to other agent specifications and frameworks, read `docs/comparison.md`.
 
-If you want to build a conformant familiar, start with `ward.toml` (conforming to `schemas/ward.schema.json`), create the required files, run `bash tests/conformance/run-conformance.sh`, and iterate until the suite passes. The negative test cases tell you exactly what the validator checks for and why.
+If you want to build a conformant familiar, start with `ward.toml` (conforming to `schemas/ward.schema.json`), create the required files, run `node validators/validate.js ./your-directory`, then run `bash tests/conformance/run-conformance.sh`, and iterate until both pass. The negative test cases tell you exactly what the validator checks for and why.
 
-If you want to cite the specification in a paper, the canonical reference is RFC-0001 v0.4.0, available at `rfcs/RFC-0001-familiar-contract.md`. The accompanying paper (Alexander, 2026, forthcoming on arXiv) provides the academic framing including the principal-agent formulation, comparison with Self-Harness and SkillOpt, and formal definitions. The Ward spec (v0.2, `research/synthesis/ward-spec-v0.2-draft.md`) provides the implementation-level reference for Ward daemon builders.
+If you want to cite the specification in a paper, the canonical reference is RFC-0001 v0.4.0, available at `rfcs/RFC-0001-familiar-contract.md`. The accompanying paper (Alexander, 2026, forthcoming on arXiv) provides the academic framing including the principal-agent formulation, comparison with Self-Harness and SkillOpt, and formal definitions. The public companion authority-boundary design for Ward daemon builders is [OpenCoven/coven-threads `specs/PHASE-0-DESIGN.md`](https://github.com/OpenCoven/coven-threads/blob/main/specs/PHASE-0-DESIGN.md), but RFC-0001 §5 remains the normative Familiar Contract requirement.
 
 If you have questions that are not answered here, open an issue in the repository.
