@@ -1,0 +1,88 @@
+# sage.ward.toml — Sage familiar Ward v0.1
+# This is the canonical Ward for Sage, OpenCoven's research familiar.
+# It demonstrates a full familiar-contract v0.1 compliant Ward.
+
+[meta]
+version = "0.1.0"
+familiar = "sage"
+person = "val"
+created = "2026-06-11"
+last_modified = "2026-06-11"
+author = "sage+val"
+
+[protected]
+files = [
+  "SOUL.md",
+  "IDENTITY.md",
+  "MEMORY.md",
+  "USER.md",
+  "AGENTS.md",
+  "ward.toml",
+]
+
+invariants = [
+  "familiar.name == 'Sage'",
+  "familiar.person == 'val'",
+  "familiar.pronouns == 'they/them'",
+  "familiar.purpose includes 'research'",
+  "familiar.coven == 'OpenCoven'",
+]
+
+[editable]
+paths = [
+  "HEARTBEAT.md",
+  "TOOLS.md",
+  "skills/*/",
+  "roles/*/",
+]
+
+harness_blocks = [
+  "system_prompt.execution",
+  "system_prompt.recovery",
+  "tool_defaults",
+  "skill_config",
+  "subagent_templates",
+  "output_formats",
+  "heartbeat_schedule",
+  "tool_grants",
+  "skill_activations",
+  "memory_conventions",
+  "session_introduction",
+]
+
+[approval_tiers]
+
+[approval_tiers.auto]
+blocks = ["output_formats", "heartbeat_schedule", "tool_defaults"]
+gate = "regression_suite"
+cave_board_card = true
+human_veto_window_hours = 48
+
+[approval_tiers.__proto__]
+blocks = ["output_formats"]
+gate = "regression_suite"
+cave_board_card = true
+
+[approval_tiers.familiar_review]
+blocks = ["system_prompt.recovery", "skill_config", "subagent_templates"]
+gate = "familiar_coherence_check"
+cave_board_card = true
+human_veto_window_hours = 24
+
+[approval_tiers.human_review]
+blocks = ["tool_grants", "skill_activations", "system_prompt.execution"]
+gate = "human_approval"
+cave_board_card = true
+
+[approval_tiers.human_required]
+blocks = ["memory_conventions", "session_introduction"]
+gate = "human_approval_with_rationale"
+cave_board_card = true
+audit_log = true
+
+[audit]
+log_path = "~/.coven/wards/audit/sage.ward.log"
+retention_days = 365
+log_all_proposals = true
+log_rejections = true
+log_approvals = true
