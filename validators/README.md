@@ -38,7 +38,7 @@ node validate.js --help
 | `SOUL.md` | `## I am <Name>`, `## Core Work`, `## What I Am Not`, `## My Boundaries`, purpose declaration | Named Identity, Defined Purpose |
 | `IDENTITY.md` | Name, `**Creature:**` field, purpose description | Named Identity |
 | `ward.toml` | `[meta]` with familiar + person + version, `[protected]` with SOUL.md/IDENTITY.md/MEMORY.md/ward.toml + invariants, `[editable]` with paths, `[approval_tiers]` with auto + human_review | Bounded Authority, Human Belonging |
-| `MEMORY.md` | Existence | Persistent Memory (warning if absent) |
+| `MEMORY.md` | Existence | Persistent Memory (required; missing is a violation) |
 | Cross-file | Name consistency between SOUL.md and ward.toml | Consistency |
 
 ## Output
@@ -67,7 +67,7 @@ Property Coverage:
 | `0` | PASS — all checks pass |
 | `1` | FAIL — one or more violations |
 
-Warnings (e.g., missing MEMORY.md) are displayed but do not cause a failure exit code.
+There are no warnings for missing required files; `MEMORY.md` absence is a failure.
 
 ## What It Does Not Check
 
@@ -75,7 +75,7 @@ Warnings (e.g., missing MEMORY.md) are displayed but do not cause a failure exit
 - Whether the Ward is actually enforced at runtime (that requires a Ward daemon)
 - Whether the familiar's behavior matches its declared purpose (behavioral compliance requires runtime evaluation)
 
-This validator checks **structural conformance** — the presence and format of required declarations. Full conformance also requires runtime Ward enforcement beyond this file-level check.
+This validator checks **structural conformance** — the presence and format of required declarations. Full conformance also requires runtime Ward enforcement beyond this file-level check, and missing `MEMORY.md` is a violation, not a warning.
 
 ## For CI Integration
 

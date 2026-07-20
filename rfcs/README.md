@@ -29,7 +29,7 @@ do not edit them in place.
 | Snapshot | Version | Status | Source |
 |---|---|---|---|
 | [RFC-0001-v0.3](RFC-0001-v0.3.md) | v0.3.0 | Historical snapshot | PR #3 head (`15f470146d7a9ab127c916b66e264130e8c4d1bb`) |
-| [RFC-0001-v0.2](RFC-0001-v0.2.md) | v0.2.0 | Historical snapshot | `origin/main` before stacked PR #3 |
+| [RFC-0001-v0.2](RFC-0001-v0.2.md) | v0.2.0 | Historical snapshot | `808ae167d8bfea7f2162f84b6f4c9269d319a9b1` |
 
 ## Process
 

@@ -20,7 +20,7 @@ This document defines the Familiar Contract: a normative specification for a cla
 
 The Familiar Contract addresses an architectural gap in current agent systems: the absence of a principled answer to the question *what is this agent not allowed to change about itself?* As recursive self-improvement loops (Self-Harness, Skill-Opt, sleep-time compute) become production-deployable, the absence of a protected surface is a design flaw, not an oversight.
 
-This RFC is the formal, testable, citable specification. The accompanying conformance suite at `tests/conformance/` is the spec made executable: a familiar directory that passes every positive case and fails every negative case is structurally conformant with v0.4.0.
+This RFC is the formal, testable, citable specification. A familiar directory is structurally conformant with v0.4.0 only if `node validators/validate.js <directory>` succeeds and `bash tests/conformance/run-conformance.sh` passes in this repository.
 
 ---
 

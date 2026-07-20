@@ -12,7 +12,7 @@ The core problem it addresses is this: AI agents have gotten very capable, but t
 
 The specification has two major parts. First, a five-property identity contract: a compliant "familiar" must have a stable named identity, a declared purpose, enforced authority limits, persistent memory, and an explicit binding to a specific person. Second, an enforcement model built around a component called the Ward — a TOML policy document plus a runtime enforcement daemon that checks proposed changes against the protected surface before they are applied. The key word is "enforced": the Ward is not asking the agent to have good values about self-modification. It is an external check that runs regardless of what the agent thinks about it.
 
-The Familiar Contract is a normative specification, which means it defines what must be true about a conformant system, tested against an executable conformance suite, not just described. The RFC (RFC-0001, v0.4.0) carries formal RFC 2119 keywords (MUST, MUST NOT, SHOULD) and the `tests/conformance/` directory is the spec made executable. A familiar directory that passes every positive case and fails every negative case is, by definition, structurally conformant. Full conformance also requires runtime Ward enforcement as described in RFC §6.2.
+The Familiar Contract is a normative specification, which means it defines what must be true about a conformant system, tested against both a claimant-directory validator run and an executable conformance suite, not just described. The RFC (RFC-0001, v0.4.0) carries formal RFC 2119 keywords (MUST, MUST NOT, SHOULD) and the `tests/conformance/` directory is the fixture suite that verifies the reference validator. A familiar directory is structurally conformant only when `node validators/validate.js ./your-directory` succeeds and `bash tests/conformance/run-conformance.sh` passes in the repository. Full conformance also requires runtime Ward enforcement as described in RFC §6.2.
 
 ---
 
@@ -238,7 +238,7 @@ The distinction matters for calibrating expectations. The Familiar Contract is n
 
 ## Q: How does a familiar pass conformance?
 
-**A:** Conformance is a multi-level claim. Structural conformance is verified by the reference validator and the test suite. Runtime conformance requires a running Ward daemon and is not fully verifiable at the file level.
+**A:** Conformance is a multi-level claim. Structural conformance requires both the claimant-directory validator run and the fixture suite. Runtime conformance requires a running Ward daemon and is not fully verifiable at the file level.
 
 For structural conformance, the steps are:
 
@@ -248,7 +248,7 @@ For structural conformance, the steps are:
 4. Run `node validators/validate.js ./your-directory` against the directory you want to claim is conformant.
 5. Run `bash tests/conformance/run-conformance.sh` from the repo root. All six positive cases must pass. All twenty-eight negative cases must fail (demonstrating that the validator catches each documented violation, including unknown fields, gate mismatches, invalid vetoes, and unbound or duplicate block declarations).
 
-The conformance suite validates the validator and fixtures. Your directory is structurally conformant only if its own `node validators/validate.js ./your-directory` run succeeds. If both the directory validator and the suite pass, the familiar is structurally conformant with v0.4.0. Claim conformance by declaring the version in your documentation and keeping both results reproducible from your repo.
+The conformance suite verifies the reference validator and fixtures. Your directory is structurally conformant only if its own `node validators/validate.js ./your-directory` run succeeds and `bash tests/conformance/run-conformance.sh` passes in the repository. Claim conformance by declaring the version in your documentation and keeping both results reproducible from your repo.
 
 Full conformance — including runtime conformance — requires a running Ward daemon with proper authority-layer separation, an append-only audit log, and verified identity-probe consistency. These are not testable from a directory alone and are acknowledged as open testing gaps in RFC §9. A claim of full conformance should specify which layers have been verified.
 

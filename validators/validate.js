@@ -873,7 +873,7 @@ ${bold('Checks:')}
   • SOUL.md      — Named Identity + Defined Purpose + Bounded Authority (surface rules)
   • IDENTITY.md  — Named Identity (machine-readable record)
   • ward.toml    — Bounded Authority + Human Belonging (enforcement declarations)
-  • MEMORY.md    — Persistent Memory (warning if missing)
+  • MEMORY.md    — Persistent Memory (required; missing is a violation)
   • Cross-file   — Name consistency between SOUL.md and ward.toml
 
 ${bold('Exit codes:')}
@@ -899,7 +899,6 @@ ${bold('Exit codes:')}
   console.log(dim(`Checking: ${dirPath}\n`));
 
   const allViolations = [];
-  const allWarnings = [];
 
   // Run validators
   const soulViolations = validateSoul(dirPath);
@@ -928,8 +927,8 @@ ${bold('Exit codes:')}
   }
   console.log('');
 
-  if (allViolations.length === 0 && allWarnings.length === 0) {
-    console.log(green(bold('✓ PASS')) + ' — All checks passed. This familiar directory is structurally conformant with familiar-contract v0.4.0 (RFC-0001).\n');
+  if (allViolations.length === 0) {
+    console.log(green(bold('✓ PASS')) + ' — Directory validation passed. Structural conformance additionally requires `bash tests/conformance/run-conformance.sh` in this repository.\n');
     process.exit(0);
   }
 
@@ -941,20 +940,8 @@ ${bold('Exit codes:')}
     }
   }
 
-  if (allWarnings.length > 0) {
-    console.log(yellow(bold(`⚠ Warnings:`)) + ` ${allWarnings.length} warning${allWarnings.length !== 1 ? 's' : ''}:\n`);
-    for (const w of allWarnings) {
-      console.log(`  ${yellow('⚠')} ${bold(w.file)} › ${yellow(w.field)}`);
-      console.log(`    ${w.message}\n`);
-    }
-  }
-
   if (allViolations.length > 0) {
     process.exit(1);
-  } else {
-    // Warnings only — still passes
-    console.log(green(bold('✓ PASS')) + ' — No violations (warnings above). Structural conformance passed; review warnings separately.\n');
-    process.exit(0);
   }
 }
 
