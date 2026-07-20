@@ -242,6 +242,41 @@ A Ward **MUST** include the `auto` and `human_review` tiers. A Ward **SHOULD** i
 
 A Ward **MUST NOT** define a tier that auto-promotes proposals targeting the protected surface.
 
+#### 5.3.1 Approval-tier compilation
+
+The TOML approval-tier tables are portable declarations, not runtime authority
+objects. Before accepting a Ward, the authority layer **MUST** compile each
+declaration deterministically:
+
+| Declaration | Typed approval path | Required gate |
+|---|---|---|
+| `approval_tiers.auto` | `AutoRegression` | `regression_suite` |
+| `approval_tiers.familiar_review` | `FamiliarCoherence` | `familiar_coherence_check` |
+| `approval_tiers.human_review` | `HumanApproval` | `human_approval` |
+| `approval_tiers.human_required` | `HumanApprovalWithRationale` | `human_approval_with_rationale` |
+
+Each `blocks` entry **MUST** name a `SurfaceRegionId` declared in
+`editable.harness_blocks`, and the runtime **MUST** bind that identifier to a
+deterministic extractor before loading the Ward. A descriptor or label alone
+**MUST NOT** authorize promotion.
+
+`human_veto_window_hours` **MAY** appear only on `auto` and
+`familiar_review`. A veto window **MUST** use delayed apply: when it expires,
+the authority layer **MUST** replay the evidence and re-run Gate 4 before any
+write. Provisional apply followed by rollback **DOES NOT** conform to this RFC.
+
+Unknown tiers or tier fields; missing or mismatched gates; duplicate, unbound,
+or empty blocks; invalid veto placement, type, or duration; or any declaration
+without one deterministic typed result **MUST** cause Ward loading to fail
+closed.
+
+The channel by which a proposal is loaded remains independent of its compiled
+approval path. The authority layer **MUST** apply a compiled approval path to a
+proposal only after Gates 1 and 2 establish that the proposal does not touch
+the protected surface.
+Principal-authorized protected updates occur through the separate audited
+Ward-update path; they are not approval-tier proposals.
+
 ### 5.4 Enforcement gates
 
 The Ward authority layer **MUST** enforce four gates on every proposal:
