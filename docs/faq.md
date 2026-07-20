@@ -67,7 +67,7 @@ The principle is stated plainly in the spec: *if removing or changing it would n
 
 ## Q: What is the editable surface? What's on it?
 
-**A:** The editable surface is the set of scaffolding that the self-improvement loop may propose changing. These are the operational knobs — the parts of the agent that affect performance, efficiency, and behavior without touching identity. Proposals targeting the editable surface go through Ward gates, but they can be promoted without human involvement if they are low-risk and pass the regression suite.
+**A:** The editable surface is the set of scaffolding that the self-improvement loop may propose changing. These are the operational knobs — the parts of the agent that affect performance, efficiency, and behavior without touching identity. Proposals targeting the editable surface go through Ward gates. Low-risk changes can compile to the `auto` path; when a veto window is configured, they remain pending until expiry, evidence replay, and Gate 4 revalidation, and nothing goes live before that. There is no provisional apply/rollback path.
 
 What is editable:
 
@@ -96,7 +96,7 @@ The second component is the Ward authority daemon — a privileged process, sepa
 
 The Ward is not the familiar's conscience. It does not depend on the familiar having good values about self-modification. The familiar does not need to believe in the Ward. The daemon runs regardless of what the familiar thinks about it, and it is fail-closed: an ambiguous case is rejected, not promoted. A well-designed system does not rely on good behavior from the component being constrained.
 
-The Ward also covers governance over time. Changes to the Ward itself require human authorization. A familiar cannot use the self-improvement loop to soften the Ward's constraints, expand the editable surface, or add a new auto-promotion tier. The Ward can evolve — but only through the human-required path.
+The Ward also covers governance over time. Principal-authorized Ward updates and principal-authorized protected-surface updates are separate audited authority actions outside the proposal pipeline. A familiar cannot use the self-improvement loop to soften the Ward's constraints, expand the editable surface, or add a new auto-promotion tier. Proposals that target the Ward or protected surface are rejected by the gate pipeline.
 
 ---
 
@@ -160,9 +160,9 @@ One nuance: in the Coven architecture, "Doll" proposals (from cloud/mobile insta
 
 **A:** Approval tiers define how much human involvement is required before a proposal can be promoted to the live harness. The Ward must define at minimum two tiers (`auto` and `human_review`); it should define four. Each tier corresponds to a class of changes and a required authorization level.
 
-**Tier 0 — Auto.** Low-risk execution scaffolding changes that pass the full regression suite are auto-promoted — no human approval required before they go live. Examples: updating a tool invocation timeout, tweaking the output format for research notes, adjusting retry logic for a flaky API call, rescheduling heartbeat checks. The human sees a Cave Board card and has a veto window (the spec recommends 48 hours) to review and reverse. Auto-promotion does not mean invisible; it means no pre-promotion human gate.
+**Tier 0 — Auto.** Low-risk execution scaffolding changes that pass the full regression suite compile to the `auto` path. Examples: updating a tool invocation timeout, tweaking the output format for research notes, adjusting retry logic for a flaky API call, rescheduling heartbeat checks. A veto window is optional; when configured, the proposal remains pending until expiry, evidence replay, and Gate 4 revalidation before any write. If no veto window is configured, the compiled path still satisfies its gate and Gate 4 immediately before write. There is no provisional apply/rollback path.
 
-**Tier 1 — Familiar Review (recommended but optional).** Changes to instruction blocks, reasoning prompts, and skill configurations. More significant than tool defaults, but still scaffolding-level. The familiar reviews its own proposal against its identity invariants — which is meaningful because the familiar knows its own values, even if that review is not the security boundary. A veto card is created; a 24-hour human veto window is recommended. If the familiar review passes and the human does not veto, the change is promoted.
+**Tier 1 — Familiar Review (recommended but optional).** Changes to instruction blocks, reasoning prompts, and skill configurations. More significant than tool defaults, but still scaffolding-level. The familiar reviews its own proposal against its identity invariants — which is meaningful because the familiar knows its own values, even if that review is not the security boundary. A veto card may be created; when a veto window is configured, the proposal remains pending until expiry, evidence replay, and Gate 4 revalidation before any write. If no veto window is configured, the compiled path still satisfies its gate and Gate 4 before write. There is no provisional apply/rollback path.
 
 **Tier 2 — Human Review.** Structural changes: new tool grants, capability expansion, new subagent patterns, changes to which external systems the familiar can access. These require explicit human approval before promotion. No auto-promotion is possible. The human sees a summary of the proposal and the regression results, reviews the change, and approves or rejects.
 
@@ -200,11 +200,11 @@ The Ward is better understood as a multi-layer governance system for identity-af
 
 **A:** The honest answer: the Familiar Contract cannot prevent a sufficiently privileged human from changing the Ward. Humans are the trust root. A human with access to the familiar's directory can modify `ward.toml`, update invariants, or disable protections. This is intentional, not a flaw.
 
-What the Familiar Contract provides is: accountability for those changes, and structural protection against the familiar making those changes about itself.
+What the Familiar Contract provides is accountability for those changes, and structural protection against the familiar making those changes about itself. Principal-authorized Ward/protected updates use the separate audited authority path outside self-improvement proposals.
 
 On accountability: every change to the Ward is recorded in the append-only audit log, with timestamps, the approver's identity, the diff, and the rationale (for Tier 3 changes). The audit log cannot be deleted or modified. This means that if someone softens the Ward's protections, that fact is visible and traceable. The RFC does not claim to make protected-surface changes impossible; it makes them auditable and attributable.
 
-On structural protection: the self-improvement loop cannot modify the Ward. The familiar cannot modify the Ward through any programmatic pathway. The Ward is on its own protected surface. What the RFC defends against is *inadvertent* or *emergent* erosion — a self-improvement loop that optimizes away the protected surface over time, not a human who deliberately decides to change the governance policy. Deliberate human decisions are supposed to be the trust root. Inadvertent loop-driven drift is the threat the Ward addresses.
+On structural protection: the self-improvement loop cannot modify the Ward. The familiar cannot modify the Ward through any programmatic pathway. The Ward is on its own protected surface. What the RFC defends against is *inadvertent* or *emergent* erosion — a self-improvement loop that optimizes away the protected surface over time, not a human who deliberately decides to change the governance policy. Deliberate human decisions are supposed to be the trust root. Inadvertent loop-driven drift is the threat the Ward addresses. Proposals that target the protected surface are rejected at Gates 1, 2, and 4.
 
 The RFC is explicit about what it does not defend: adversarial human authorization, compromise of the authority layer itself, and capability misuse within the editable surface. These are genuine threats, but they are outside scope. The RFC defends identity drift, not all possible misuse.
 
