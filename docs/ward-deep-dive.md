@@ -165,8 +165,9 @@ The four gates are defense-in-depth. Each gate assumes the previous gates may ha
 
 **The regression suite requirement:** The spec requires at least one deterministic check category for auto-promotion. LLM-judge-only evidence cannot be the sole gate for Tier 0. This matters because LLM judges can be manipulated — a proposal that includes subtle prompt-engineering to influence the judge might pass LLM-based evaluation while failing deterministic checks. Requiring at least one category of deterministic checks (exact configuration value matches, tool invocation counts, specific output format requirements) provides a manipulation-resistant foundation.
 
-**Classification output:** Gate 3 emits both the independent load `Channel` and
-a typed approval path compiled from the Ward declaration: `AutoRegression`,
+**Classification output:** Gate 3 preserves and carries the independently
+determined load `Channel` through classification, and emits/selects only the
+typed approval path compiled from the Ward declaration: `AutoRegression`,
 `FamiliarCoherence`, `HumanApproval`, or `HumanApprovalWithRationale`. A block
 label is usable only when the daemon can bind it to a deterministic
 surface-region extractor. Protected-target proposals never reach this
