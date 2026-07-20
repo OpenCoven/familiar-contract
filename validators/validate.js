@@ -285,14 +285,38 @@ function parseWardToml(content) {
     }
   }
 
-  function parseTierScalar(value) {
-    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
-      return value.slice(1, -1);
+  function stripInlineComment(value) {
+    let inSingleQuote = false;
+    let inDoubleQuote = false;
+
+    for (let i = 0; i < value.length; i++) {
+      const char = value[i];
+
+      if (char === "'" && !inDoubleQuote) {
+        inSingleQuote = !inSingleQuote;
+        continue;
+      }
+      if (char === '"' && !inSingleQuote) {
+        inDoubleQuote = !inDoubleQuote;
+        continue;
+      }
+      if (char === '#' && !inSingleQuote && !inDoubleQuote) {
+        return value.slice(0, i).trim();
+      }
     }
-    if (value === 'true') return true;
-    if (value === 'false') return false;
-    if (/^-?\d+$/.test(value)) return Number(value);
-    return value;
+
+    return value.trim();
+  }
+
+  function parseTierScalar(value) {
+    const trimmed = value.trim();
+    if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
+      return trimmed.slice(1, -1);
+    }
+    if (trimmed === 'true') return true;
+    if (trimmed === 'false') return false;
+    if (/^-?\d+$/.test(trimmed)) return Number(trimmed);
+    return trimmed;
   }
 
   for (let i = 0; i < lines.length; i++) {
@@ -351,10 +375,11 @@ function parseWardToml(content) {
     }
 
     // Key-value pairs
-    const kvMatch = trimmed.match(/^([A-Za-z0-9_-]+)\s*=\s*["']?([^"'#\n]+?)["']?\s*(#.*)?$/);
+    const kvMatch = trimmed.match(/^([A-Za-z0-9_-]+)\s*=\s*(.+)$/);
     if (kvMatch) {
       const key = kvMatch[1];
-      const value = kvMatch[2].trim();
+      const rawValue = stripInlineComment(kvMatch[2]);
+      const value = rawValue.replace(/^["']|["']$/g, '');
       if (currentSection === 'meta') {
         result.hasMeta = true;
         if (key === 'familiar') result.metaFamiliar = value;
@@ -363,7 +388,7 @@ function parseWardToml(content) {
       }
       if (currentSection === 'approval_tiers' && currentSubSection) {
         const tier = approvalTier(currentSubSection);
-        tier.fields[key] = parseTierScalar(value);
+        tier.fields[key] = parseTierScalar(rawValue);
         tier.fieldNames.push(key);
       }
     }
