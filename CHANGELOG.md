@@ -15,7 +15,7 @@ This project uses [Semantic Versioning](https://semver.org/).
 - **RFC-0001 §5.6** — Added `memory_entry_admitted` and `principal_authorized_write` audit event vocabulary for falsifiable source attestations.
 - **RFC-0001 §5.6** — Required evidence fields at the provenance-chain anchors: `principal_authorized_write` and `ward_updated` events MUST carry `principal_authorization` (and `ward_updated` additionally `ward_version`/`ward_hash`); attestations resolving to events lacking them are unverified, and unresolvable attestation referents MUST be rejected.
 - **RFC-0001 §1.1** — Defined "Committed Ward state" and "Continuity-bearing" (with fail-closed classification default); scoped the Ward-manifest equivalent-form allowance to authority-layer runtime storage.
-- **RFC-0001 §3.4** — Attestation establishes provenance, not authorization: loop-originated entries additionally require explicit human authorization; ambiguous origin is treated as loop-originated.
+- **RFC-0001 §3.4** — Attestation establishes provenance, not authorization: loop-originated entries additionally require explicit human authorization, recorded on the admission event (§5.6); ambiguous origin is treated as loop-originated.
 - **RFC-0001 §4.1** — Genesis bootstrap note: closure is satisfiable from the first principal-authorized Ward write.
 - **RFC-0001 §5.4 / §9** — Gate 4 re-verifies Ward-manifest closure before promotion; documented runtime closure verification as an open testing gap.
 - **tests/conformance/negative/10-protected-missing-ward/** — Added negative fixture for a Ward manifest omitted from `[protected].files`.
