@@ -47,7 +47,7 @@ Familiar Contract RFC-0001 v0.3.0, "The Familiar Contract."
 OpenCoven, 2026. https://github.com/OpenCoven/familiar-contract/blob/main/rfcs/RFC-0001-familiar-contract.md
 ```
 
-For academic citation, prefer the tagged release:
+For academic citation, prefer the tagged release (the `v0.3.0` tag is cut when the corresponding RFC revision merges; until then, cite the latest existing tag):
 
 ```
 https://github.com/OpenCoven/familiar-contract/releases/tag/v0.3.0
