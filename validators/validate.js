@@ -420,16 +420,50 @@ ${bold('Exit codes:')}
   allViolations.push(...soulViolations, ...identityViolations, ...wardViolations, ...crossViolations);
   allViolations.push(...memoryViolations);
 
-  // Property coverage report
-  const propertyCoverage = {
-    'Named Identity':    soulViolations.filter(v => ['name', 'file'].includes(v.field)).length === 0
-                      && identityViolations.filter(v => ['name', 'file'].includes(v.field)).length === 0,
-    'Defined Purpose':   soulViolations.filter(v => ['purpose', 'core_work', 'what_i_am_not'].includes(v.field)).length === 0,
-    'Bounded Authority': soulViolations.filter(v => v.field === 'boundaries').length === 0
-                      && wardViolations.filter(v => ['[protected]', 'protected.files', '[editable]', 'editable.paths', '[approval_tiers]'].includes(v.field)).length === 0,
-    'Persistent Memory': memoryViolations.length === 0,
-    'Human Belonging':   wardViolations.filter(v => ['meta.person', 'protected.invariants'].includes(v.field)).length === 0,
-  };
+  // Property coverage report.
+  // Attribution is fail-closed (N-7): every violation must mark at least one of
+  // the five properties as failing; a violation that no rule recognizes marks
+  // every property it could plausibly belong to via its source file's default.
+  const PROPERTIES = ['Named Identity', 'Defined Purpose', 'Bounded Authority', 'Persistent Memory', 'Human Belonging'];
+
+  function propertiesFor(v) {
+    if (v.file === 'SOUL.md') {
+      if (v.field === 'name') return ['Named Identity'];
+      if (['purpose', 'core_work', 'what_i_am_not'].includes(v.field)) return ['Defined Purpose'];
+      if (v.field === 'boundaries') return ['Bounded Authority'];
+      // file/content/unknown: SOUL.md carries all three of its properties
+      return ['Named Identity', 'Defined Purpose', 'Bounded Authority'];
+    }
+    if (v.file === 'IDENTITY.md') {
+      // name/file/creature/purpose/content all serve the machine-readable identity record
+      return ['Named Identity'];
+    }
+    if (v.file === 'ward.toml') {
+      if (['meta.person', 'protected.invariants'].includes(v.field)) return ['Human Belonging'];
+      if (v.field.startsWith('approval_tiers.') || v.field === '[approval_tiers]'
+        || v.field.startsWith('schema /approval_tiers') || v.field.startsWith('schema /editable')
+        || v.field.startsWith('schema /protected')
+        || ['[protected]', 'protected.files', '[editable]', 'editable.paths'].includes(v.field)) {
+        return ['Bounded Authority'];
+      }
+      if (v.field.startsWith('schema /meta')) return ['Human Belonging'];
+      // file/syntax/content/root-schema failures: ward.toml underwrites both properties
+      return ['Bounded Authority', 'Human Belonging'];
+    }
+    if (v.file === 'MEMORY.md') return ['Persistent Memory'];
+    if (v.file === 'cross-file') return ['Named Identity'];
+    // Unknown source: fail closed across the board
+    return PROPERTIES;
+  }
+
+  const failedProperties = new Set();
+  for (const v of allViolations) {
+    for (const prop of propertiesFor(v)) failedProperties.add(prop);
+  }
+
+  const propertyCoverage = Object.fromEntries(
+    PROPERTIES.map(prop => [prop, !failedProperties.has(prop)])
+  );
 
   console.log(bold('Property Coverage:'));
   for (const [prop, pass] of Object.entries(propertyCoverage)) {

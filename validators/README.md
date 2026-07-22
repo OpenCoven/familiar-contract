@@ -44,6 +44,8 @@ node validators/validate.js --help
 
 ## Output
 
+The Property Coverage block attributes every violation to the five properties fail-closed: a FAIL run always marks at least one property ✗, and a violation no attribution rule recognizes marks every property its source file underwrites (e.g. an unreadable `ward.toml` marks both Bounded Authority and Human Belonging).
+
 ```
 familiar-contract validator v0.4.0
 Checking: /path/to/familiar
