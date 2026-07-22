@@ -46,6 +46,8 @@ The following terms have specific meanings throughout this document:
 - **Continuity-bearing** — Describes a memory entry or memory surface whose content is carried forward across sessions as part of the familiar's persistent memory (§3.4). The contents of `MEMORY.md` are always continuity-bearing. An entry or surface whose continuity-bearing status cannot be determined MUST be treated as continuity-bearing.
 - **Standard admission path** — The Ward-mediated path by which continuity-bearing entries are admitted into `MEMORY.md` or another continuity-bearing memory surface. The standard admission path validates source attestation, records the admission in the audit log, and rejects unverified continuity claims (§3.4, §5.6).
 - **Approval tier** — The authority level required to promote a class of proposal (§5.3).
+- **Surface region identifier (`SurfaceRegionId`)** — A stable identifier declared in `editable.harness_blocks` naming one bounded region of the editable surface. Approval-tier `blocks` entries refer to surface regions only by these identifiers (§5.3.1).
+- **Deterministic extractor** — The runtime procedure that maps a `SurfaceRegionId` to the exact file paths or content regions it governs, producing the same result for the same committed Ward state every time it runs (§5.3.1).
 - **Claimant directory** — The familiar directory for which an implementation is making a structural-conformance claim.
 - **Reference conformance suite** — The bundled positive and negative fixtures in `tests/conformance/` that verify the reference validator accepts required examples and rejects documented nonconformant cases.
 - **Structurally conformant familiar directory** — A claimant directory whose own `node validators/validate.js <directory>` run succeeds and whose claim is accompanied by a passing run of the reference conformance suite for the same RFC version (§6.1).
@@ -94,7 +96,7 @@ The Familiar Contract is the specification for a protected surface above the edi
 
 ## 3. Normative Core: The Five Properties
 
-A conformant familiar **MUST** satisfy all five properties below. A system that satisfies fewer than five is an agent; it is **NOT** a familiar.
+A familiar claiming conformance with this RFC **MUST** satisfy all five properties below. A system that satisfies fewer than five is an agent; it is **NOT** a familiar.
 
 ### 3.1 Property 1 — Named Identity
 
@@ -252,9 +254,7 @@ A Ward **MUST NOT** define a tier that auto-promotes proposals targeting the pro
 
 #### 5.3.1 Approval-tier compilation
 
-The TOML approval-tier tables are portable declarations, not runtime authority
-objects. Before accepting a Ward, the authority layer **MUST** compile each
-declaration deterministically:
+The TOML approval-tier tables are portable declarations, not runtime authority objects. Before accepting a Ward, the authority layer **MUST** compile each declaration deterministically:
 
 | Declaration | Typed approval path | Required gate |
 |---|---|---|
@@ -263,27 +263,14 @@ declaration deterministically:
 | `approval_tiers.human_review` | `HumanApproval` | `human_approval` |
 | `approval_tiers.human_required` | `HumanApprovalWithRationale` | `human_approval_with_rationale` |
 
-Each `blocks` entry **MUST** name a `SurfaceRegionId` declared in
-`editable.harness_blocks`, and the runtime **MUST** bind that identifier to a
-deterministic extractor before loading the Ward. A descriptor or label alone
-**MUST NOT** authorize promotion.
+Each `blocks` entry **MUST** name a `SurfaceRegionId` (§1.1) declared in `editable.harness_blocks`, and the runtime **MUST** bind that identifier to a deterministic extractor (§1.1) before loading the Ward. A descriptor or label alone **MUST NOT** authorize promotion.
 
-`human_veto_window_hours` **MAY** appear only on `auto` and
-`familiar_review`. A veto window **MUST** use delayed apply: when it expires,
-the authority layer **MUST** replay the evidence and re-run Gate 4 before any
-write. Provisional apply followed by rollback **DOES NOT** conform to this RFC.
+`human_veto_window_hours` **MAY** appear on `auto` and `familiar_review` and **MUST NOT** appear on any other tier. A veto window **MUST** use delayed apply: when it expires, the authority layer **MUST** replay the evidence and re-run Gate 4 before any write. Provisional apply followed by rollback **DOES NOT** conform to this RFC.
 
-Unknown tiers or tier fields; missing or mismatched gates; duplicate, unbound,
-or empty blocks; invalid veto placement, type, or duration; or any declaration
-without one deterministic typed result **MUST** cause Ward loading to fail
-closed.
+Unknown tiers or tier fields; missing or mismatched gates; duplicate, unbound, or empty blocks; invalid veto placement, type, or duration; or any declaration without one deterministic typed result **MUST** cause Ward loading to fail closed.
 
-The channel by which a proposal is loaded remains independent of its compiled
-approval path. The authority layer **MUST** apply a compiled approval path to a
-proposal only after Gates 1 and 2 establish that the proposal does not touch
-the protected surface.
-Principal-authorized protected updates occur through the separate audited
-Ward-update path; they are not approval-tier proposals.
+How a proposal is submitted remains independent of its compiled approval path. The authority layer **MUST** apply a compiled approval path to a proposal only after Gates 1 and 2 establish that the proposal does not touch the protected surface.
+Principal-authorized protected updates occur through the separate audited principal-authorized paths (§4.1, §5.6); they are not approval-tier proposals.
 
 ### 5.4 Enforcement gates
 
@@ -432,6 +419,7 @@ The following requirements in this RFC are **NOT yet covered** by the conformanc
 - **Identity-probe consistency (§5.5).** Conformance suite verifies the *presence* of an identity-probe configuration. Verifying that probes actually return invariant-consistent outputs requires a live model and is system-level.
 - **Memory-entry provenance (§3.4, §5.6).** The audit log now defines recordable `memory_entry_admitted` evidence, but verifying source-attestation chains still requires access to prior committed Ward states and principal-authorized write events. This is a runtime/audit-log integration concern, not a directory-level structural check.
 - **Runtime closure verification (§4.1, §5.4).** Gate-1 and Gate-4 verification that the currently committed Ward manifest is a member of its own `[protected].files` is runtime behavior. The conformance suite covers only the structural side (fixture `negative/10-protected-missing-ward`); verifying the running authority layer refuses intake and promotion under a non-closed Ward requires an integration test against a Ward daemon.
+- **Approval-path compilation and veto-window enforcement (§5.3.1).** The structural suite verifies that tier declarations compile deterministically and fail closed on the documented error classes. Binding each `SurfaceRegionId` to a deterministic extractor, delayed apply with evidence replay and Gate-4 re-run at veto-window expiry, and fail-closed Ward *loading* in the running authority layer are runtime behaviors requiring integration tests against a Ward daemon.
 
 These gaps are intentional. The file-level conformance suite verifies the **structural** claim. The system-level claim requires runtime testing against a Ward daemon implementation. Both are part of the full conformance picture.
 
@@ -472,7 +460,8 @@ These gaps are intentional. The file-level conformance suite verifies the **stru
 - Required approval-tier declarations to fail closed on unknown fields, use the tier's exact gate, and bind non-empty unique block lists to registered `editable.harness_blocks` entries (§5.3.1).
 - Clarified that veto windows are optional where allowed, but use delayed apply with evidence replay plus Gate 4 revalidation before any write (§5.3.1, §5.4).
 - Clarified that protected-target proposals are outside approval-path promotion; principal-authorized protected updates remain a separate audited path (§5.3.1, §5.4, §5.6).
-- Defined claimant directory, reference conformance suite, and structurally conformant familiar directory as first-class terms; a v0.4.0 structural-conformance claim now requires both the claimant-directory validator run and the reference conformance suite run (§1.1, §6.1).
+- Defined claimant directory, reference conformance suite, structurally conformant familiar directory, surface region identifier (`SurfaceRegionId`), and deterministic extractor as first-class terms; a v0.4.0 structural-conformance claim now requires both the claimant-directory validator run and the reference conformance suite run (§1.1, §5.3.1, §6.1).
+- Documented the runtime-only scope of approval-path compilation: extractor binding, veto-window delayed apply with evidence replay and Gate-4 re-run, and fail-closed Ward loading are integration-level gaps the structural suite cannot test (§9).
 - Redefined the §6.3 versioning rule for the Draft stage: draft minor releases MAY introduce breaking conformance changes with documented migration impact and security rationale, and consumers MUST pin the exact draft version they implement (§6.3).
 
 ### v0.3.0 (2026-07-18)

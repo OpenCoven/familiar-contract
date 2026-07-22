@@ -284,7 +284,7 @@ The parts of the spec that are Coven-specific — Doll proposals, Cave Board int
 
 ## Q: Where do I go from here?
 
-**A:** If you want to understand the design philosophy in more depth, read `docs/ward-primer.md` (the non-technical introduction to the Ward), `docs/five-properties.md` (each property in depth with architectural requirements), and `docs/ward-deep-dive.md` (the technical deep dive into Ward design).
+**A:** If you want to understand the design philosophy in more depth, read `docs/ward-primer.md` (the non-technical introduction to the Ward), `docs/five-properties.md` (each property in depth with architectural requirements), and `docs/ward-deep-dive.md` (the technical deep dive into Ward design, pinned to the v0.3.0 snapshot of the RFC).
 
 If you want to see example familiar directories accepted by the validator, browse `examples/sage/` (a full familiar with rich Ward configuration), `examples/minimal/` (the minimum required to pass structural conformance), and the positive fixtures under `tests/conformance/positive/`. The negative fixtures under `tests/conformance/negative/` are intentionally nonconformant and exist to verify rejection behavior, not to serve as conformant examples. Full conformance additionally requires runtime Ward enforcement, not just a passing directory-level check.
 

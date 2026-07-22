@@ -1,6 +1,6 @@
 # The Ward: A Deep Dive
 
-*This document is for someone who read the RFC abstract and wants to understand why the Ward is designed the way it is — not just what it does, but the reasoning behind each design decision. If you want the short version, start with `docs/ward-primer.md`. If you want the normative spec, read `rfcs/RFC-0001-familiar-contract.md`.*
+*This document is for someone who read the RFC abstract and wants to understand why the Ward is designed the way it is — not just what it does, but the reasoning behind each design decision. It is pinned to RFC-0001 v0.3.0 (`rfcs/RFC-0001-v0.3.md`); the approval-tier compiler added in v0.4.0 (§5.3.1) is not yet covered here. If you want the short version, start with `docs/ward-primer.md`. If you want the normative spec, read `rfcs/RFC-0001-familiar-contract.md`.*
 
 ---
 

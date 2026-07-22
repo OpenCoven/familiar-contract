@@ -21,7 +21,9 @@ This project uses [Semantic Versioning](https://semver.org/).
 - **RFC-0001 §5.3.1 / §5.4** — Protected-target proposals are explicitly outside approval-path promotion; principal-authorized protected updates remain a separate audited path.
 - **README.md, rfcs/README.md, SPEC.md, docs/faq.md, tests/conformance/README.md, validators/README.md, validators/validate.js** — Updated current-version references to v0.4.0.
 - **validators/validate.js** — Replaced the hand-written Ward parser with standards-compliant TOML parsing and Ajv JSON Schema validation before semantic checks.
-- **RFC-0001 §1.1 / §6.1** — Defined claimant directory, reference conformance suite, and structurally conformant familiar directory as first-class terms; a v0.4.0 structural-conformance claim now requires both the claimant-directory validator run and the reference conformance suite run.
+- **RFC-0001 §1.1 / §6.1** — Defined claimant directory, reference conformance suite, structurally conformant familiar directory, surface region identifier (`SurfaceRegionId`), and deterministic extractor as first-class terms; a v0.4.0 structural-conformance claim now requires both the claimant-directory validator run and the reference conformance suite run.
+- **RFC-0001 §9** — Added an open-gap bullet for approval-path compilation: extractor binding, veto-window delayed apply with evidence replay and Gate-4 re-run, and fail-closed Ward loading are runtime behaviors outside the structural suite.
+- **examples/, tests/conformance/positive/** — Updated `examples/minimal`, `examples/sage`, and positive fixtures 01–05 `ward.toml` files to declare `editable.harness_blocks` and bind tier `blocks` to registered entries (minimal also drops `system_prompt.recovery`), keeping the suite green across the breaking declaration change.
 - **RFC-0001 §6.3** — Redefined the versioning rule for the Draft stage: draft minor releases MAY introduce breaking conformance changes with documented migration impact and security rationale, and consumers MUST pin the exact draft version they implement.
 
 ### Migration
