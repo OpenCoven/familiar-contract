@@ -321,7 +321,7 @@ What is normative is not that the Ward never changes, but that changes to the Wa
 
 ## 10. Open questions
 
-RFC-0001 v0.3.0 is a solid foundation. It is not the last word. v0.3.0 closed two earlier gaps — Ward-manifest closure (`ward.toml` must be a member of its own `[protected].files`) and falsifiable memory-entry provenance (§3.4, §5.6). The following are genuine open questions that future revisions will need to address.
+RFC-0001 v0.3.1 is a solid foundation. It is not the last word. v0.3.0 closed two earlier gaps — Ward-manifest closure (`ward.toml` must be a member of its own `[protected].files`) and falsifiable memory-entry provenance (§3.4, §5.6). The following are genuine open questions that future revisions will need to address.
 
 ### Authority layer conformance testing
 
@@ -359,4 +359,4 @@ Regression suites are currently familiar-specific and opaque to the conformance 
 
 *The Ward is the structural answer to a structural problem. Self-improvement loops are real, they are in production, and they can drift an agent's identity over time without a principled enforcement boundary. The Ward provides that boundary — not through agent cooperation, but through authority-layer enforcement that holds regardless of what the agent thinks about it. That distinction is what the Familiar Contract is built on.*
 
-*RFC-0001 v0.3.0 — 2026-07-18. `rfcs/RFC-0001-familiar-contract.md`.*
+*RFC-0001 v0.3.1 — 2026-07-21. `rfcs/RFC-0001-familiar-contract.md`.*

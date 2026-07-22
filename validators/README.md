@@ -1,6 +1,6 @@
 # Validator — familiar-contract
 
-A zero-dependency Node.js CLI that checks a familiar directory for familiar-contract v0.3.0 compliance.
+A zero-dependency Node.js CLI that checks a familiar directory for familiar-contract v0.3.1 compliance.
 
 ## Requirements
 
@@ -44,7 +44,7 @@ node validate.js --help
 ## Output
 
 ```
-familiar-contract validator v0.3.0
+familiar-contract validator v0.3.1
 Checking: /path/to/familiar
 
 Property Coverage:

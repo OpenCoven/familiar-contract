@@ -1,6 +1,6 @@
-# Familiar Contract v0.3.0 Conformance Suite
+# Familiar Contract v0.3.1 Conformance Suite
 
-This directory is the testable form of the Familiar Contract: a set of fixture familiars that encode the five normative properties as executable validator expectations. It uses the current repository validator as the conformance oracle while documenting where v0.3.0 expectations are stricter than the current implementation.
+This directory is the testable form of the Familiar Contract: a set of fixture familiars that encode the five normative properties as executable validator expectations. It uses the current repository validator as the conformance oracle while documenting where v0.3.1 expectations are stricter than the current implementation.
 
 Run the full suite from the repository root:
 
@@ -10,4 +10,4 @@ bash tests/conformance/run-conformance.sh
 
 Convention: `positive/<n>-<name>/` cases should PASS when run with `node validators/validate.js <case>`. `negative/<n>-<name>/` cases should FAIL for the documented reason in that case's `CASE.md`.
 
-A claim of v0.3.0 compliance = passing every positive case and failing every negative case.
+A claim of v0.3.1 compliance = passing every positive case and failing every negative case.

@@ -12,7 +12,7 @@ The core problem it addresses is this: AI agents have gotten very capable, but t
 
 The specification has two major parts. First, a five-property identity contract: a compliant "familiar" must have a stable named identity, a declared purpose, enforced authority limits, persistent memory, and an explicit binding to a specific person. Second, an enforcement model built around a component called the Ward — a TOML policy document plus a runtime enforcement daemon that checks proposed changes against the protected surface before they are applied. The key word is "enforced": the Ward is not asking the agent to have good values about self-modification. It is an external check that runs regardless of what the agent thinks about it.
 
-The Familiar Contract is a normative specification, which means it defines what must be true about a compliant system, tested against an executable conformance suite, not just described. The RFC (RFC-0001, v0.3.0) carries formal RFC 2119 keywords (MUST, MUST NOT, SHOULD) and the `tests/conformance/` directory is the spec made executable. A system that passes every positive case and fails every negative case is, by definition, conformant.
+The Familiar Contract is a normative specification, which means it defines what must be true about a compliant system, tested against an executable conformance suite, not just described. The RFC (RFC-0001, v0.3.1) carries formal RFC 2119 keywords (MUST, MUST NOT, SHOULD) and the `tests/conformance/` directory is the spec made executable. A system that passes every positive case and fails every negative case is, by definition, conformant.
 
 ---
 
@@ -247,7 +247,7 @@ For structural conformance, the steps are:
 3. Ensure `ward.toml` conforms to `schemas/ward.schema.json`. The Ward must include `[meta]` (with `version`, `familiar`, `person`), `[protected]` (with `files` listing the four required protected files and an `invariants` array covering name and person), `[editable]`, and `[approval_tiers]` (with at minimum `auto` and `human_review` defined).
 4. Run `bash tests/conformance/run-conformance.sh` from the repo root. All five positive cases must pass. All ten negative cases must fail (demonstrating that the validator catches each documented violation).
 
-If the conformance run returns `0` for positive cases and the validator correctly rejects all negative cases, the familiar is structurally conformant with v0.3.0. Claim conformance by declaring the version in your documentation and keeping a passing conformance run reproducible from your repo.
+If the conformance run returns `0` for positive cases and the validator correctly rejects all negative cases, the familiar is structurally conformant with v0.3.1. Claim conformance by declaring the version in your documentation and keeping a passing conformance run reproducible from your repo.
 
 Full conformance — including runtime conformance — requires a running Ward daemon with proper authority-layer separation, an append-only audit log, and verified identity-probe consistency. These are not testable from a directory alone and are acknowledged as open testing gaps in RFC §9. A claim of full conformance should specify which layers have been verified.
 
@@ -276,7 +276,7 @@ The RFC also does not address security of the authority layer itself. If the War
 What you need is: a familiar directory with the required files (`SOUL.md`, `IDENTITY.md`, `MEMORY.md`, `ward.toml`); a `ward.toml` that conforms to the published schema; and an enforcement mechanism — a Ward authority daemon — that is structurally separate from the familiar's own logic. The reference implementation uses a Rust authority daemon (the `coven` layer), but the RFC is explicit that "other implementations may choose different mechanisms; what is normative is the separation, not the implementation."
 The structural conformance suite (`tests/conformance/`) runs against any familiar directory and has no Coven dependencies. The validator (`validators/validate.js`) requires only Node.js. The schemas (`schemas/`) are standard JSON Schema and can be validated with any conforming schema validator.
 
-The parts of the spec that are Coven-specific — Doll proposals, Cave Board integration, multi-familiar routing — are referenced as context, not as requirements. A standalone familiar implementing a Ward daemon without any Coven infrastructure can be fully conformant with RFC-0001 v0.3.0.
+The parts of the spec that are Coven-specific — Doll proposals, Cave Board integration, multi-familiar routing — are referenced as context, not as requirements. A standalone familiar implementing a Ward daemon without any Coven infrastructure can be fully conformant with RFC-0001 v0.3.1.
 
 ---
 
@@ -290,6 +290,6 @@ If you want to understand how the Familiar Contract relates to other agent speci
 
 If you want to build a conformant familiar, start with `ward.toml` (conforming to `schemas/ward.schema.json`), create the required files, run `bash tests/conformance/run-conformance.sh`, and iterate until the suite passes. The negative test cases tell you exactly what the validator checks for and why.
 
-If you want to cite the specification in a paper, the canonical reference is RFC-0001 v0.3.0, available at `rfcs/RFC-0001-familiar-contract.md`. The accompanying paper (Alexander, 2026, forthcoming on arXiv) provides the academic framing including the principal-agent formulation, comparison with Self-Harness and SkillOpt, and formal definitions. The Ward deep dive (`docs/ward-deep-dive.md`) provides the implementation-level reference for Ward daemon builders.
+If you want to cite the specification in a paper, the canonical reference is RFC-0001 v0.3.1, available at `rfcs/RFC-0001-familiar-contract.md`. The accompanying paper (Alexander, 2026, forthcoming on arXiv) provides the academic framing including the principal-agent formulation, comparison with Self-Harness and SkillOpt, and formal definitions. The Ward deep dive (`docs/ward-deep-dive.md`) provides the implementation-level reference for Ward daemon builders.
 
 If you have questions that are not answered here, open an issue in the repository.
