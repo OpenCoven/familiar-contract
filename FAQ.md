@@ -85,7 +85,7 @@ The familiar cannot change who it is. It can change how it works. That distincti
 
 Familiar-contract is the identity layer. The Sympathetic Familiar Architecture (Doll architecture) is a delegation and sandboxing pattern built on top of it. You can implement familiar-contract without the Doll architecture.
 
-The Doll architecture is part of the OpenCoven Ward spec (v0.2+) and is not required for v0.1 compliance.
+The Doll architecture is part of the OpenCoven Ward spec (v0.2+) and is not required for RFC-0001 conformance.
 
 ---
 

@@ -14,6 +14,7 @@ This project uses [Semantic Versioning](https://semver.org/).
 - **RFC-0001 §1.1** — Completed the *standard admission path* definition with the §3.4 loop-origin authorization step (clarification; no new requirement).
 - **RFC-0001 §5.6** — Annotated the evidence-field list with per-event-type MUST pointers, including `principal_authorization` on loop-originated `memory_entry_admitted` events (cross-reference; no new requirement).
 - **README.md, rfcs/README.md, SPEC.md, docs/faq.md, docs/ward-deep-dive.md, tests/conformance/README.md, validators/README.md, validators/validate.js** — Updated current-version references to v0.3.1.
+- **FAQ.md** — Reanchored a stale "v0.1 compliance" claim to RFC-0001 conformance.
 
 ---
 
