@@ -21,6 +21,8 @@ This project uses [Semantic Versioning](https://semver.org/).
 - **RFC-0001 §5.3.1 / §5.4** — Protected-target proposals are explicitly outside approval-path promotion; principal-authorized protected updates remain a separate audited path.
 - **README.md, rfcs/README.md, SPEC.md, docs/faq.md, tests/conformance/README.md, validators/README.md, validators/validate.js** — Updated current-version references to v0.4.0.
 - **validators/validate.js** — Replaced the hand-written Ward parser with standards-compliant TOML parsing and Ajv JSON Schema validation before semantic checks.
+- **RFC-0001 §1.1 / §6.1** — Defined claimant directory, reference conformance suite, and structurally conformant familiar directory as first-class terms; a v0.4.0 structural-conformance claim now requires both the claimant-directory validator run and the reference conformance suite run.
+- **RFC-0001 §6.3** — Redefined the versioning rule for the Draft stage: draft minor releases MAY introduce breaking conformance changes with documented migration impact and security rationale, and consumers MUST pin the exact draft version they implement.
 
 ### Migration
 
@@ -45,13 +47,21 @@ Prior v0.3-style ignored, ambiguous, or stringly typed declarations could create
 
 - **RFC-0001** — Added Property 4 provenance requirements for continuity-bearing memory entries, including standard admission path definition and audit-log dependency.
 - **RFC-0001 §5.6** — Added `memory_entry_admitted` and `principal_authorized_write` audit event vocabulary for falsifiable source attestations.
+- **RFC-0001 §5.6** — Required evidence fields at the provenance-chain anchors: `principal_authorized_write` and `ward_updated` events MUST carry `principal_authorization` (and `ward_updated` additionally `ward_version`/`ward_hash`); attestations resolving to events lacking them are unverified, and unresolvable attestation referents MUST be rejected.
+- **RFC-0001 §1.1** — Defined "Committed Ward state" and "Continuity-bearing" (with fail-closed classification default); scoped the Ward-manifest equivalent-form allowance to authority-layer runtime storage.
+- **RFC-0001 §3.4** — Attestation establishes provenance, not authorization: loop-originated entries additionally require explicit human authorization, recorded on the admission event (§5.6); ambiguous origin is treated as loop-originated.
+- **RFC-0001 §4.1** — Genesis bootstrap note: closure is satisfiable from the first principal-authorized Ward write.
+- **RFC-0001 §5.4 / §9** — Gate 4 re-verifies Ward-manifest closure before promotion; documented runtime closure verification as an open testing gap.
 - **tests/conformance/negative/10-protected-missing-ward/** — Added negative fixture for a Ward manifest omitted from `[protected].files`.
 
 ### Changed
 
 - **RFC-0001** — Bumped draft version to v0.3.0 for new backward-compatible normative requirements.
 - **RFC-0001 §4.1 / §5.4** — Strengthened Ward-manifest closure prose and Gate 1 fail-closed behavior.
+- **RFC-0001 §3.4 / §5.6** — Replaced the undefined "claiming Property 4 provenance" condition with "an implementation that provides a standard admission path (§1.1)".
+- **RFC-0001 §6.3** — Redefined semver categories: Major now covers *incompatible* changes to the five properties or existing conformance requirements; Minor covers backward-compatible normative additions (previously any change to MUST-level requirements read as Major).
 - **README.md, rfcs/README.md, SPEC.md, docs/faq.md, validators/validate.js** — Updated current-version references to v0.3.0.
+- **docs/ward-deep-dive.md** — Updated version references to v0.3.0 and reframed the open-questions horizon.
 
 ---
 

@@ -344,7 +344,7 @@ Ward evolves.
 
 ## 10. Open questions
 
-RFC-0001 v0.2.0 is a solid foundation. It is not the last word. The following are genuine open questions that v0.3 and beyond will need to address.
+RFC-0001 v0.3.0 is a solid foundation. It is not the last word. v0.3.0 closed two earlier gaps — Ward-manifest closure (`ward.toml` must be a member of its own `[protected].files`) and falsifiable memory-entry provenance (§3.4, §5.6). The following are genuine open questions that future revisions will need to address.
 
 ### Authority layer conformance testing
 
@@ -356,11 +356,11 @@ Similarly: verifying that Gate 4 cannot be skipped requires an integration test 
 
 ### Proposal format specification
 
-The RFC specifies what a proposal must contain (origin, targets, diff, metadata) but not the serialization format. Different self-improvement loop implementations will produce proposals in different formats. A v0.3 proposal format spec — or at least a normative schema — would improve interoperability between loops and Ward daemon implementations.
+The RFC specifies what a proposal must contain (origin, targets, diff, metadata) but not the serialization format. Different self-improvement loop implementations will produce proposals in different formats. A future proposal format spec — or at least a normative schema — would improve interoperability between loops and Ward daemon implementations.
 
 ### Identity probe standardization
 
-The RFC requires identity probes but specifies only a few example questions. The exact probe set matters: a minimal probe set might miss identity drift on dimensions that matter to a particular familiar. A v0.3 contribution could be a standardized identity probe library — a set of probe questions organized by invariant type, with recommended evaluation rubrics.
+The RFC requires identity probes but specifies only a few example questions. The exact probe set matters: a minimal probe set might miss identity drift on dimensions that matter to a particular familiar. A future contribution could be a standardized identity probe library — a set of probe questions organized by invariant type, with recommended evaluation rubrics.
 
 ### Multi-familiar proposal interactions
 
@@ -382,4 +382,4 @@ Regression suites are currently familiar-specific and opaque to the conformance 
 
 *The Ward is the structural answer to a structural problem. Self-improvement loops are real, they are in production, and they can drift an agent's identity over time without a principled enforcement boundary. The Ward provides that boundary — not through agent cooperation, but through authority-layer enforcement that holds regardless of what the agent thinks about it. That distinction is what the Familiar Contract is built on.*
 
-*RFC-0001 v0.2.0 — 2026-06-19. `rfcs/RFC-0001-v0.2.md`.*
+*RFC-0001 v0.3.0 — 2026-07-18. `rfcs/RFC-0001-v0.3.md`.*

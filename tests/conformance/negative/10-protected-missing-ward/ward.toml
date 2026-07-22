@@ -11,8 +11,9 @@ last_modified = "2026-06-11"
 author = "lumen+alex"
 
 [protected]
-# The minimum protected surface: SOUL.md, IDENTITY.md, MEMORY.md, and ward.toml itself.
-# Do not remove these. They define who the familiar is and who it belongs to.
+# NEGATIVE FIXTURE: deliberately omits ward.toml from the protected files list.
+# The Ward manifest must be a member of its own protected set (RFC-0001 §4.1);
+# the validator MUST fail this directory for exactly that reason.
 files = [
   "SOUL.md",
   "IDENTITY.md",
