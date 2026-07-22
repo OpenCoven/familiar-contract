@@ -7,6 +7,20 @@ This project uses [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.4.1] — 2026-07-21
+
+Draft patch (§6.3): clarifications only; no conformance requirements change.
+
+### Changed
+
+- **RFC-0001 §1.1** — Completed the *standard admission path* definition with the §3.4 loop-origin authorization step (clarification; no new requirement).
+- **RFC-0001 §5.6** — Annotated the evidence-field list with per-event-type MUST pointers, including `principal_authorization` on loop-originated `memory_entry_admitted` events (cross-reference; no new requirement).
+- **tests/conformance/negative/09-missing-memory/CASE.md** — Corrected the false claim that the validator reports missing `MEMORY.md` "as a warning only" (it is a violation since v0.2.0) and dropped the stale v0.2 anchor.
+- **tests/conformance/positive/05-tier-rich-ward/CASE.md** — Reanchored the tier-name citation from "the v0.2 RFC frame" to RFC-0001 §5.3.
+- **README.md, PRIMER.md, SPEC.md, rfcs/README.md, docs/faq.md, tests/conformance/README.md, validators/README.md, validators/validate.js, package.json** — Updated current-version references to v0.4.1.
+
+---
+
 ## [0.4.0] — 2026-07-19
 
 ### Added
