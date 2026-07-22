@@ -142,7 +142,7 @@ The amendment adds to §5.6, in substance:
 > `ward_hash`, `diff_hash`, and `entry_hash` in the log using the
 > constructions above, regardless of which implementation wrote them. An
 > entry whose recorded hash does not match recomputation MUST be treated as
-> tamper-evidence, not as a soft mismatch.
+> tamper evidence, not as a soft mismatch.
 
 ## Conformance coverage plan
 
