@@ -146,10 +146,9 @@ The amendment adds to §5.6, in substance:
 
 ## Conformance coverage plan
 
-New negative fixtures (validator + runtime obligations split per §8.2):
+New negative fixtures (split between structural schema/validator checks and runtime-only obligations per §8.2):
 
-1. Structural: audit entry with `entry_hash` of wrong length / non-lowercase
-   hex / bad algorithm discriminator → validator rejects.
+1. Structural (schema/validator): a `memory_entry_admitted` record whose `entry_hash` is not a 64-char lowercase-hex SHA-256 value → validator rejects.
 2. Runtime (documented as runtime-only obligations, like Gate-1
    preconditions): recorded `entry_hash` ≠ recomputed hash of admitted bytes
    → admission chain verification fails; attestation naming an unsupported
