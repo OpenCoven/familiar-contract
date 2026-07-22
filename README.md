@@ -2,7 +2,7 @@
 
 > **The Familiar Contract is an open specification for what an agent is allowed to be — not just what it can do, but what it cannot change about itself.**
 
-[![specification: v0.3.0](https://img.shields.io/badge/specification-v0.3.0-8b5cf6)](rfcs/RFC-0001-familiar-contract.md)
+[![specification: v0.4.0](https://img.shields.io/badge/specification-v0.4.0-8b5cf6)](rfcs/RFC-0001-familiar-contract.md)
 [![RFC-0001: Draft](https://img.shields.io/badge/RFC--0001-Draft-blue)](rfcs/RFC-0001-familiar-contract.md)
 [![license: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/OpenCoven/familiar-contract)
@@ -40,10 +40,11 @@ These are not soft design preferences. Each one has architectural implications, 
 ## How to Use This Spec
 
 **If you're building a familiar:**
-1. Read [`SPEC.md`](SPEC.md) — the normative core
-2. Copy an example from [`examples/`](examples/) — `minimal/` for the floor, `sage/` for a full compliant familiar
-3. Create `SOUL.md`, `IDENTITY.md`, and `ward.toml` for your familiar
-4. Validate with the CLI: `node validators/validate.js ./your-familiar-directory`
+1. Read [`rfcs/RFC-0001-familiar-contract.md`](rfcs/RFC-0001-familiar-contract.md) — the normative spec (v0.4.0)
+2. Copy an example from [`examples/`](examples/) — `minimal/` for the floor, `sage/` for a richer structurally conformant familiar directory
+3. Create `SOUL.md`, `IDENTITY.md`, `MEMORY.md`, and `ward.toml` for your familiar
+4. Run `npm install` to install the reference validator's TOML parser and JSON Schema validator.
+5. For a v0.4.0 structural-conformance claim, run both `node validators/validate.js ./your-directory` and `npm test`
 
 **If you're evaluating a familiar:**
 - Five properties. All five. Fewer than five is an agent, not a familiar.
@@ -58,10 +59,25 @@ These are not soft design preferences. Each one has architectural implications, 
 ## Quick Start
 
 ```bash
-# Validate a familiar directory
+# Install the reference validator dependencies
+npm install
+
+# Validate the claimant directory for your v0.4.0 claim
+node validators/validate.js ./your-directory
+
+# Verify the bundled reference validator + fixtures for the same v0.4.0 claim
+npm test
+```
+
+The validator checks one claimant directory for the required files and structure: `SOUL.md`, `IDENTITY.md`, `MEMORY.md`, and `ward.toml`. The conformance suite verifies that the bundled reference validator accepts the positive fixtures and rejects the negative fixtures. A structural-conformance claim is reproducible only when both commands pass for the same contract version.
+
+Examples:
+
+```bash
+# Validate the canonical Sage example as a claimant directory
 node validators/validate.js examples/sage
 
-# Validate the minimal example
+# Validate the minimal Lumen example as a claimant directory
 node validators/validate.js examples/minimal
 ```
 
@@ -72,10 +88,9 @@ See [`validators/README.md`](validators/README.md) for full CLI docs.
 ## Repository Contents
 
 ```
-SPEC.md                  ← The Familiar Contract (normative)
+rfcs/RFC-0001-familiar-contract.md ← The Familiar Contract (normative, v0.4.0)
 README.md                ← This file
 PRIMER.md                ← Builder's guide (for new readers)
-FAQ.md                   ← Common questions
 CHANGELOG.md             ← Version history
 schemas/
   soul.schema.json       ← JSON Schema for SOUL.md
@@ -83,16 +98,18 @@ schemas/
   ward.schema.json       ← JSON Schema for ward.toml
   role.schema.json       ← JSON Schema for ROLE.md
 examples/
-  sage/                  ← Sage (canonical compliant familiar)
-  minimal/               ← Lumen (minimal compliant familiar)
+  sage/                  ← Sage (canonical structurally conformant familiar directory)
+  minimal/               ← Lumen (minimal structurally conformant familiar directory)
 validators/
   validate.js            ← CLI validator
   README.md
 docs/
+  faq.md                 ← Common questions (canonical FAQ)
   five-properties.md     ← The five properties in depth
   why-identity-not-skills.md
   ward-primer.md
   comparison.md          ← How this relates to ECC, Multica, others
+SPEC.md                 ← Historical / superseded predecessor specification
 .github/
   CONTRIBUTING.md
 ```

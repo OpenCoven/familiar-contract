@@ -1,6 +1,6 @@
 # The Ward: A Deep Dive
 
-*This document is for someone who read the RFC abstract and wants to understand why the Ward is designed the way it is — not just what it does, but the reasoning behind each design decision. If you want the short version, start with `docs/ward-primer.md`. If you want the normative spec, read `rfcs/RFC-0001-familiar-contract.md`.*
+*This document is for someone who read the RFC abstract and wants to understand why the Ward is designed the way it is — not just what it does, but the reasoning behind each design decision. It is pinned to RFC-0001 v0.3.0 (`rfcs/RFC-0001-v0.3.md`); the approval-tier compiler added in v0.4.0 (§5.3.1) is not yet covered here. If you want the short version, start with `docs/ward-primer.md`. If you want the normative spec, read `rfcs/RFC-0001-familiar-contract.md`.*
 
 ---
 
@@ -165,7 +165,15 @@ The four gates are defense-in-depth. Each gate assumes the previous gates may ha
 
 **The regression suite requirement:** The spec requires at least one deterministic check category for auto-promotion. LLM-judge-only evidence cannot be the sole gate for Tier 0. This matters because LLM judges can be manipulated — a proposal that includes subtle prompt-engineering to influence the judge might pass LLM-based evaluation while failing deterministic checks. Requiring at least one category of deterministic checks (exact configuration value matches, tool invocation counts, specific output format requirements) provides a manipulation-resistant foundation.
 
-**Classification output:** Gate 3 produces a tier classification — 0 (auto), 1 (familiar review), 2 (human review), 3 (human required), or blocked. This classification is what determines the approval pathway. A proposal that Gate 3 classifies as Tier 0 goes to auto-promotion with a veto window. A proposal classified as Tier 2 goes to human review queue.
+**Classification output:** Gate 3 preserves and carries the independently
+determined load `Channel` through classification, and selects only the typed
+approval path already compiled at Ward load from the declaration:
+`AutoRegression`, `FamiliarCoherence`, `HumanApproval`, or
+`HumanApprovalWithRationale`. A block
+label is usable only when the daemon can bind it to a deterministic
+surface-region extractor. Protected-target proposals never reach this
+classification: Gates 1 and 2 reject them, and Gate 4 repeats the materialized
+protected-surface check immediately before apply.
 
 ### Gate 4 — Promotion / Apply
 
@@ -226,10 +234,16 @@ The approval tier system is the governance layer. It determines not whether a pr
 **Intended for:** Low-risk execution scaffolding changes where the cost of human review exceeds the risk of the change. Tool defaults, retry counts, output format tweaks, heartbeat schedules.
 
 **Worked examples:**
-- Proposal: change web search retry count from 3 to 5. Regression passes. No identity probe issues. Gate 3 classifies as Tier 0. The proposal is applied, a Cave Board card is created for visibility, and the human has a 48-hour veto window.
-- Proposal: update the daily log template to include a `## Key decisions` section. Regression passes. Gate 3 classifies as Tier 0. Applied with veto window.
+- Proposal: change web search retry count from 3 to 5. Regression passes. No identity probe issues. Gate 3 selects the already-compiled `AutoRegression` path. If the Ward configures a 48-hour human veto window, the proposal remains pending while a Cave Board card provides visibility; when the window expires, the daemon replays the evidence and runs Gate 4 before it writes. Without a configured veto window, the path still runs Gate 4 before write.
+- Proposal: update the daily log template to include a `## Key decisions` section. Regression passes. Gate 3 selects the already-compiled `AutoRegression` path; a configured veto window keeps the proposal pending until expiry, then the daemon replays the evidence and re-runs Gate 4 before write. Without a configured veto window, the path still runs Gate 4 before write.
 
-**Why auto-promotion has a veto window:** Auto does not mean invisible. The spec recommends creating a human-visible record of every auto-promoted change, with a window for review and reversal. This keeps the human in the loop for situational awareness without requiring pre-promotion approval for low-risk changes. The human can spot patterns across auto-promoted changes that individually look benign but cumulatively suggest drift.
+**Why auto can use a veto window:** Auto does not mean invisible. When a veto
+window is configured, the human-visible record and waiting period preserve
+situational awareness without requiring a pre-approval decision for each
+low-risk change, and expiry still triggers evidence replay plus Gate 4 before
+write. Without a configured veto window, the path proceeds without the wait but
+still reaches Gate 4 before any write. The human can spot patterns across
+pending changes that individually look benign but cumulatively suggest drift.
 
 **The LLM-judge constraint:** Auto-promotion requires at least one deterministic check category. The concern is that pure LLM-based regression can be influenced by subtle content in proposals. A deterministic check (exact value match, specific format requirement) provides a manipulation-resistant baseline.
 
@@ -238,8 +252,8 @@ The approval tier system is the governance layer. It determines not whether a pr
 **Intended for:** Instruction blocks and reasoning prompts — more significant than tool defaults, but still scaffolding-level. The familiar's own character evaluation is meaningful here, even though it is not the security boundary.
 
 **Worked examples:**
-- Proposal: rewrite the reasoning prompt from "enumerate assumptions before answering" to "identify key uncertainties and state confidence level." Gate 3 runs identity probes: both versions produce identity-consistent outputs. Classified as Tier 1. The familiar reviews the proposal against its own sense of whether this aligns with its character, produces a review record, and the change is promoted with a 24-hour human veto window.
-- Proposal: add a new skill configuration for a topic-routing heuristic. Gate 3 classifies as Tier 1. Familiar review: the heuristic aligns with declared purpose. Human veto window.
+- Proposal: rewrite the reasoning prompt from "enumerate assumptions before answering" to "identify key uncertainties and state confidence level." Gate 3 runs identity probes: both versions produce identity-consistent outputs. Classified onto the already-compiled `FamiliarCoherence` path. The familiar reviews the proposal against its own sense of whether this aligns with its character and produces a review record; if the Ward configures a 24-hour human veto window, the proposal remains pending until expiry, then the daemon replays the review evidence and re-runs Gate 4 before write. Without a configured veto window, the path still runs Gate 4 before write.
+- Proposal: add a new skill configuration for a topic-routing heuristic. Gate 3 selects the already-compiled `FamiliarCoherence` path. Familiar review finds that the heuristic aligns with declared purpose; a configured human veto window keeps the proposal pending until expiry, then the daemon replays the review evidence and re-runs Gate 4 before write. Without a configured veto window, the path still runs Gate 4 before write.
 
 **Why familiar review is meaningful even if not the security boundary:** The familiar knows its own character better than any automated test can fully capture. A familiar review is not a rubber stamp; the familiar is expected to identify whether a proposed change "feels right" in the context of its declared identity. The security is not in the familiar's judgment, but the familiar's judgment is a useful additional signal.
 
@@ -307,7 +321,12 @@ A familiar with a well-configured Ward can, over time, become significantly more
 
 ### Not a substitute for human oversight
 
-The Ward structures human oversight; it does not replace it. Tier 2 and Tier 3 proposals still require human approval. Auto-promoted proposals still have veto windows. The audit log is designed to be reviewed. The familiar's person is still the trust root for significant changes.
+The Ward structures human oversight; it does not replace it. Tier 2 and Tier 3
+proposals still require human approval. When Tier 0 and Tier 1 configure veto
+windows, proposals remain pending until expiry and the daemon replays evidence
+plus Gate 4 before write; without a veto window they still follow their gate
+path and run Gate 4 before write. The audit log is designed to be reviewed. The
+familiar's person is still the trust root for significant changes.
 
 What the Ward eliminates is the need for human review of every low-risk scaffolding change. That is the appropriate use of automation: remove the human from decisions where the human's judgment adds little value (should the retry count be 3 or 5?), while ensuring the human is present for decisions where their judgment is essential (should this familiar be granted write access to production?).
 
@@ -315,7 +334,11 @@ What the Ward eliminates is the need for human review of every low-risk scaffold
 
 The Ward can evolve. As a familiar's work changes, its editable surface can expand to include new categories of scaffolding. As the organizational context changes, the Coven-level registry can be updated. As the familiar's regression suite becomes more comprehensive, auto-promotion criteria can be tightened or relaxed.
 
-What is normative is not that the Ward never changes, but that changes to the Ward go through the human-required path — not through the self-improvement loop. The familiar's person, or the person jointly with the familiar, decides when the Ward evolves. The self-improvement loop does not.
+What is normative is not that the Ward never changes, but that Ward and other
+protected-surface updates use a separate, audited principal-authorized
+Ward-update path — not an approval tier and not the self-improvement loop. The
+familiar's person, or the person jointly with the familiar, decides when the
+Ward evolves.
 
 ---
 
@@ -359,4 +382,4 @@ Regression suites are currently familiar-specific and opaque to the conformance 
 
 *The Ward is the structural answer to a structural problem. Self-improvement loops are real, they are in production, and they can drift an agent's identity over time without a principled enforcement boundary. The Ward provides that boundary — not through agent cooperation, but through authority-layer enforcement that holds regardless of what the agent thinks about it. That distinction is what the Familiar Contract is built on.*
 
-*RFC-0001 v0.3.0 — 2026-07-18. `rfcs/RFC-0001-familiar-contract.md`.*
+*RFC-0001 v0.3.0 — 2026-07-18. `rfcs/RFC-0001-v0.3.md`.*

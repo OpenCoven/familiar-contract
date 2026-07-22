@@ -12,13 +12,15 @@
  * Output: PASS or list of violations with file + field + message
  * Exit code: 0 on pass, 1 on fail
  * 
- * No external dependencies required (optional: ajv for strict JSON Schema validation)
+ * Uses standards-compliant TOML parsing and JSON Schema validation for ward.toml.
  */
 
 'use strict';
 
 const fs = require('fs');
 const path = require('path');
+const TOML = require('@iarna/toml');
+const Ajv = require('ajv');
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -203,176 +205,113 @@ function validateIdentity(dirPath) {
   return violations;
 }
 
-// ── ward.toml parser ──────────────────────────────────────────────────────────
-// Minimal TOML parser for the fields we need. Only handles the subset used in ward.toml.
+// ── ward.toml validation ─────────────────────────────────────────────────────
+
+const wardSchema = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'schemas', 'ward.schema.json'), 'utf8'));
+const validateWardSchema = new Ajv({ allErrors: true, strict: false }).compile(wardSchema);
+
+const APPROVAL_PATHS = Object.freeze({
+  auto: 'AutoRegression',
+  familiar_review: 'FamiliarCoherence',
+  human_review: 'HumanApproval',
+  human_required: 'HumanApprovalWithRationale',
+});
+
+function isObject(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
 
 function parseWardToml(content) {
-  const result = {
-    hasMeta: false,
-    metaFamiliar: null,
-    metaPerson: null,
-    metaVersion: null,
-    hasProtected: false,
-    protectedFiles: [],
-    protectedInvariants: [],
-    hasEditable: false,
-    editablePaths: [],
-    hasApprovalTiers: false,
-    hasAutoTier: false,
-    hasHumanReviewTier: false,
-  };
+  try {
+    return { ward: TOML.parse(content), error: null };
+  } catch (error) {
+    return { ward: null, error };
+  }
+}
 
-  const lines = content.split('\n');
-  let currentSection = null;
-  let currentSubSection = null;
-  let inArray = false;
-  let arrayTarget = null;
-  let arrayBuffer = [];
+function schemaViolations(errors) {
+  return errors.map(error => {
+    const instancePath = error.instancePath || '/';
+    return violation(
+      'ward.toml',
+      `schema ${instancePath} [${error.keyword}]`,
+      `Schema validation failed at ${instancePath} (${error.keyword}): ${error.message}.`
+    );
+  });
+}
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    const trimmed = line.trim();
+function validateApprovalTiers(ward) {
+  const violations = [];
+  const editableBlocks = new Set(ward.editable.harness_blocks);
+  const blockApprovalPaths = new Map();
 
-    // Skip comments and empty lines
-    if (trimmed.startsWith('#') || trimmed === '') continue;
-
-    // Section headers
-    if (/^\[meta\]/.test(trimmed)) { currentSection = 'meta'; currentSubSection = null; continue; }
-    if (/^\[protected\]/.test(trimmed)) { currentSection = 'protected'; currentSubSection = null; result.hasProtected = true; continue; }
-    if (/^\[editable\]/.test(trimmed)) { currentSection = 'editable'; currentSubSection = null; result.hasEditable = true; continue; }
-    if (/^\[approval_tiers\]/.test(trimmed)) { currentSection = 'approval_tiers'; currentSubSection = null; result.hasApprovalTiers = true; continue; }
-    if (/^\[approval_tiers\.auto\]/.test(trimmed)) { currentSubSection = 'auto'; result.hasAutoTier = true; continue; }
-    if (/^\[approval_tiers\.human_review\]/.test(trimmed)) { currentSubSection = 'human_review'; result.hasHumanReviewTier = true; continue; }
-    if (/^\[approval_tiers\.\w+\]/.test(trimmed)) { currentSubSection = 'other'; continue; }
-    if (/^\[audit\]/.test(trimmed)) { currentSection = 'audit'; currentSubSection = null; continue; }
-    if (/^\[\w/.test(trimmed) && /^\[/.test(trimmed)) { currentSection = 'other'; currentSubSection = null; continue; }
-
-    // Array start
-    if (!inArray && /=\s*\[/.test(trimmed) && !/\]$/.test(trimmed.replace(/\s*#.*/, ''))) {
-      inArray = true;
-      const keyMatch = trimmed.match(/^(\w+)\s*=/);
-      if (keyMatch) arrayTarget = { section: currentSection, key: keyMatch[1] };
-      arrayBuffer = [];
-      // Capture any items on the opening line
-      const inline = trimmed.replace(/^[^[]*\[/, '').trim();
-      if (inline) arrayBuffer.push(...inline.split(',').map(s => s.trim().replace(/^["']|["']$/g, '')).filter(Boolean));
-      continue;
-    }
-
-    // Array end
-    if (inArray && /^\]/.test(trimmed)) {
-      inArray = false;
-      if (arrayTarget) {
-        if (arrayTarget.section === 'protected' && arrayTarget.key === 'files') result.protectedFiles = [...arrayBuffer];
-        if (arrayTarget.section === 'protected' && arrayTarget.key === 'invariants') result.protectedInvariants = [...arrayBuffer];
-        if (arrayTarget.section === 'editable' && arrayTarget.key === 'paths') result.editablePaths = [...arrayBuffer];
+  for (const [tierName, tier] of Object.entries(ward.approval_tiers)) {
+    for (const block of tier.blocks) {
+      const previousTier = blockApprovalPaths.get(block);
+      if (previousTier && previousTier.tierName !== tierName) {
+        violations.push(violation(
+          'ward.toml',
+          `approval_tiers.${tierName}.blocks`,
+          `Ambiguous SurfaceRegionId "${block}" is mapped to multiple ApprovalPaths: ${previousTier.tierName} (${previousTier.approvalPath}) and ${tierName} (${APPROVAL_PATHS[tierName]}).`
+        ));
+      } else {
+        blockApprovalPaths.set(block, { tierName, approvalPath: APPROVAL_PATHS[tierName] });
       }
-      arrayTarget = null;
-      arrayBuffer = [];
-      continue;
-    }
 
-    // Array item
-    if (inArray) {
-      const item = trimmed.replace(/^["']|["'],?\s*$|["']$/g, '').trim();
-      if (item && !item.startsWith('#')) arrayBuffer.push(item);
-      continue;
-    }
-
-    // Inline array (whole array on one line)
-    if (/=\s*\[.+\]/.test(trimmed)) {
-      const keyMatch = trimmed.match(/^(\w+)\s*=\s*\[(.+)\]/);
-      if (keyMatch) {
-        const key = keyMatch[1];
-        const items = keyMatch[2].split(',').map(s => s.trim().replace(/^["']|["']$/g, '')).filter(Boolean);
-        if (currentSection === 'protected' && key === 'files') result.protectedFiles = items;
-        if (currentSection === 'protected' && key === 'invariants') result.protectedInvariants = items;
-        if (currentSection === 'editable' && key === 'paths') result.editablePaths = items;
-      }
-      continue;
-    }
-
-    // Key-value pairs
-    const kvMatch = trimmed.match(/^(\w+)\s*=\s*["']?([^"'#\n]+?)["']?\s*(#.*)?$/);
-    if (kvMatch) {
-      const key = kvMatch[1];
-      const value = kvMatch[2].trim();
-      if (currentSection === 'meta') {
-        result.hasMeta = true;
-        if (key === 'familiar') result.metaFamiliar = value;
-        if (key === 'person') result.metaPerson = value;
-        if (key === 'version') result.metaVersion = value;
+      if (!editableBlocks.has(block)) {
+        violations.push(violation(
+          'ward.toml',
+          `approval_tiers.${tierName}.blocks`,
+          `Harness block "${block}" is not declared in editable.harness_blocks.`
+        ));
       }
     }
   }
 
-  return result;
+  return violations;
 }
 
 function validateWard(dirPath) {
   const filePath = path.join(dirPath, 'ward.toml');
-  const violations = [];
 
   if (!fs.existsSync(filePath)) {
     return [violation('ward.toml', 'file', 'ward.toml does not exist. Required for Bounded Authority and Human Belonging compliance.')];
   }
 
   const content = fs.readFileSync(filePath, 'utf8');
+  const parsed = parseWardToml(content);
+  if (parsed.error) {
+    return [violation('ward.toml', 'syntax', `TOML syntax violation: ${parsed.error.message}`)];
+  }
 
   if (content.trim().length < 50) {
-    violations.push(violation('ward.toml', 'content', 'ward.toml appears empty or too short.'));
-    return violations;
+    return [violation('ward.toml', 'content', 'ward.toml appears empty or too short.')];
   }
 
-  const parsed = parseWardToml(content);
-
-  if (!parsed.hasMeta) {
-    violations.push(violation('ward.toml', '[meta]', '[meta] section missing. Required: version, familiar, person.'));
-  } else {
-    if (!parsed.metaFamiliar) violations.push(violation('ward.toml', 'meta.familiar', 'meta.familiar is missing. Must match the familiar\'s name.'));
-    if (!parsed.metaPerson) violations.push(violation('ward.toml', 'meta.person', 'meta.person is missing. Human Belonging requires a declared person binding.'));
-    if (!parsed.metaVersion) violations.push(violation('ward.toml', 'meta.version', 'meta.version is missing. Ward must be versioned.'));
+  if (!validateWardSchema(parsed.ward)) {
+    return schemaViolations(validateWardSchema.errors || []);
   }
 
-  if (!parsed.hasProtected) {
-    violations.push(violation('ward.toml', '[protected]', '[protected] section missing. The protected surface must be declared.'));
-  } else {
-    const requiredProtected = ['SOUL.md', 'IDENTITY.md', 'MEMORY.md', 'ward.toml'];
-    for (const required of requiredProtected) {
-      if (!parsed.protectedFiles.includes(required)) {
-        violations.push(violation('ward.toml', 'protected.files', `${required} must be in the protected files list. It defines core familiar identity.`));
-      }
-    }
+  const violations = [];
+  const ward = parsed.ward;
+  const requiredProtected = ['SOUL.md', 'IDENTITY.md', 'MEMORY.md', 'ward.toml'];
 
-    if (parsed.protectedInvariants.length === 0) {
-      violations.push(violation('ward.toml', 'protected.invariants', 'No invariants declared. At minimum, familiar.name and familiar.person must be invariants.'));
-    } else {
-      const hasNameInvariant = parsed.protectedInvariants.some(inv => inv.includes('familiar.name'));
-      const hasPersonInvariant = parsed.protectedInvariants.some(inv => inv.includes('familiar.person'));
-      if (!hasNameInvariant) violations.push(violation('ward.toml', 'protected.invariants', 'No familiar.name invariant found. The familiar\'s name must be protected.'));
-      if (!hasPersonInvariant) violations.push(violation('ward.toml', 'protected.invariants', 'No familiar.person invariant found. The person binding must be protected.'));
+  for (const required of requiredProtected) {
+    if (!ward.protected.files.includes(required)) {
+      violations.push(violation('ward.toml', 'protected.files', `${required} must be in the protected files list. It defines core familiar identity.`));
     }
   }
 
-  if (!parsed.hasEditable) {
-    violations.push(violation('ward.toml', '[editable]', '[editable] section missing. The editable surface must be declared (even if minimal).'));
-  } else {
-    if (parsed.editablePaths.length === 0) {
-      violations.push(violation('ward.toml', 'editable.paths', 'editable.paths is empty. Declare at least one editable path (e.g., TOOLS.md, HEARTBEAT.md).'));
-    }
+  const hasNameInvariant = ward.protected.invariants.some(invariant => invariant.includes('familiar.name'));
+  const hasPersonInvariant = ward.protected.invariants.some(invariant => invariant.includes('familiar.person'));
+  if (!hasNameInvariant) violations.push(violation('ward.toml', 'protected.invariants', 'No familiar.name invariant found. The familiar\'s name must be protected.'));
+  if (!hasPersonInvariant) violations.push(violation('ward.toml', 'protected.invariants', 'No familiar.person invariant found. The person binding must be protected.'));
+
+  if (ward.editable.paths.length === 0) {
+    violations.push(violation('ward.toml', 'editable.paths', 'editable.paths is empty. Declare at least one editable path (e.g., TOOLS.md, HEARTBEAT.md).'));
   }
 
-  if (!parsed.hasApprovalTiers) {
-    violations.push(violation('ward.toml', '[approval_tiers]', '[approval_tiers] section missing. Approval tiers must be defined.'));
-  } else {
-    if (!parsed.hasAutoTier) {
-      violations.push(violation('ward.toml', 'approval_tiers.auto', '[approval_tiers.auto] (Tier 0) not found. Auto tier must be defined even if empty.'));
-    }
-    if (!parsed.hasHumanReviewTier) {
-      violations.push(violation('ward.toml', 'approval_tiers.human_review', '[approval_tiers.human_review] (Tier 2) not found. Human review tier is required.'));
-    }
-  }
-
+  violations.push(...validateApprovalTiers(ward));
   return violations;
 }
 
@@ -385,20 +324,19 @@ function validateCrossFile(dirPath) {
 
   if (!fs.existsSync(soulPath) || !fs.existsSync(wardPath)) return violations;
 
-  const soulContent = fs.readFileSync(soulPath, 'utf8');
-  const wardContent = fs.readFileSync(wardPath, 'utf8');
-  const soulParsed = parseSoul(soulContent);
-  const wardParsed = parseWardToml(wardContent);
+  const soulParsed = parseSoul(fs.readFileSync(soulPath, 'utf8'));
+  const wardParsed = parseWardToml(fs.readFileSync(wardPath, 'utf8'));
+  const wardFamiliar = wardParsed.ward && isObject(wardParsed.ward.meta)
+    ? wardParsed.ward.meta.familiar
+    : null;
 
-  // Check name consistency
-  if (soulParsed.name && wardParsed.metaFamiliar) {
+  if (soulParsed.name && typeof wardFamiliar === 'string') {
     const soulName = soulParsed.name.toLowerCase();
-    const wardFamiliar = wardParsed.metaFamiliar.toLowerCase();
-    if (soulName !== wardFamiliar) {
+    if (soulName !== wardFamiliar.toLowerCase()) {
       violations.push(violation(
         'cross-file',
         'name consistency',
-        `SOUL.md declares name "${soulParsed.name}" but ward.toml has familiar="${wardParsed.metaFamiliar}". These must match (case-insensitive).`
+        `SOUL.md declares name "${soulParsed.name}" but ward.toml has familiar="${wardFamiliar}". These must match (case-insensitive).`
       ));
     }
   }
@@ -433,6 +371,7 @@ function main() {
 ${bold('familiar-contract validator')} — checks a familiar directory for spec compliance
 
 ${bold('Usage:')}
+  npm install
   node validate.js <path-to-familiar-directory>
 
 ${bold('Examples:')}
@@ -443,8 +382,8 @@ ${bold('Examples:')}
 ${bold('Checks:')}
   • SOUL.md      — Named Identity + Defined Purpose + Bounded Authority (surface rules)
   • IDENTITY.md  — Named Identity (machine-readable record)
-  • ward.toml    — Bounded Authority + Human Belonging (enforcement declarations)
-  • MEMORY.md    — Persistent Memory (warning if missing)
+  • ward.toml    — TOML syntax + JSON Schema, then Bounded Authority + Human Belonging checks
+  • MEMORY.md    — Persistent Memory (required; missing is a violation)
   • Cross-file   — Name consistency between SOUL.md and ward.toml
 
 ${bold('Exit codes:')}
@@ -466,11 +405,10 @@ ${bold('Exit codes:')}
     process.exit(1);
   }
 
-  console.log(`\n${bold('familiar-contract validator')} ${dim('v0.3.0')}`);
+  console.log(`\n${bold('familiar-contract validator')} ${dim('v0.4.0')}`);
   console.log(dim(`Checking: ${dirPath}\n`));
 
   const allViolations = [];
-  const allWarnings = [];
 
   // Run validators
   const soulViolations = validateSoul(dirPath);
@@ -499,8 +437,8 @@ ${bold('Exit codes:')}
   }
   console.log('');
 
-  if (allViolations.length === 0 && allWarnings.length === 0) {
-    console.log(green(bold('✓ PASS')) + ' — All checks passed. This familiar is familiar-contract v0.3.0 compliant (RFC-0001).\n');
+  if (allViolations.length === 0) {
+    console.log(green(bold('✓ PASS')) + ' — Directory validation passed. Structural conformance additionally requires `npm test` in this repository.\n');
     process.exit(0);
   }
 
@@ -512,20 +450,8 @@ ${bold('Exit codes:')}
     }
   }
 
-  if (allWarnings.length > 0) {
-    console.log(yellow(bold(`⚠ Warnings:`)) + ` ${allWarnings.length} warning${allWarnings.length !== 1 ? 's' : ''}:\n`);
-    for (const w of allWarnings) {
-      console.log(`  ${yellow('⚠')} ${bold(w.file)} › ${yellow(w.field)}`);
-      console.log(`    ${w.message}\n`);
-    }
-  }
-
   if (allViolations.length > 0) {
     process.exit(1);
-  } else {
-    // Warnings only — still passes
-    console.log(green(bold('✓ PASS')) + ' — No violations (with warnings above). Address warnings to achieve full compliance.\n');
-    process.exit(0);
   }
 }
 

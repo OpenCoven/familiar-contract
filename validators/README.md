@@ -1,34 +1,35 @@
 # Validator — familiar-contract
 
-A zero-dependency Node.js CLI that checks a familiar directory for familiar-contract v0.1.0 compliance.
+A Node.js CLI that checks one claimant directory for the familiar-contract v0.4.0 structural requirements. It parses `ward.toml` with `@iarna/toml` and validates the resulting object against `schemas/ward.schema.json` with Ajv before evaluating Ward semantics.
 
 ## Requirements
 
-- Node.js 16+ (no npm install required — no external dependencies)
+- Node.js 16+
+- `npm install` from the repository root
 
 ## Usage
 
 ```bash
-node validate.js <path-to-familiar-directory>
+node validators/validate.js <path-to-familiar-directory>
 ```
 
 ### Examples
 
 ```bash
 # Validate the canonical Sage example
-node validate.js ../examples/sage
+node validators/validate.js examples/sage
 
 # Validate the minimal Lumen example
-node validate.js ../examples/minimal
+node validators/validate.js examples/minimal
 
-# Validate your own familiar
-node validate.js /path/to/your/familiar
+# Validate your own claimant directory
+node validators/validate.js /path/to/your/familiar
 ```
 
 ### Help
 
 ```bash
-node validate.js --help
+node validators/validate.js --help
 ```
 
 ## What It Checks
@@ -37,14 +38,14 @@ node validate.js --help
 |---|---|---|
 | `SOUL.md` | `## I am <Name>`, `## Core Work`, `## What I Am Not`, `## My Boundaries`, purpose declaration | Named Identity, Defined Purpose |
 | `IDENTITY.md` | Name, `**Creature:**` field, purpose description | Named Identity |
-| `ward.toml` | `[meta]` with familiar + person + version, `[protected]` with SOUL.md/IDENTITY.md/MEMORY.md/ward.toml + invariants, `[editable]` with paths, `[approval_tiers]` with auto + human_review | Bounded Authority, Human Belonging |
-| `MEMORY.md` | Existence | Persistent Memory (warning if absent) |
+| `ward.toml` | Standards-compliant TOML syntax and JSON Schema validation, then `[meta]` with familiar + person + version, `[protected]` with SOUL.md/IDENTITY.md/MEMORY.md/ward.toml + invariants, `[editable]` with paths, `[approval_tiers]` with auto + human_review | Bounded Authority, Human Belonging |
+| `MEMORY.md` | Existence | Persistent Memory (required; missing is a violation) |
 | Cross-file | Name consistency between SOUL.md and ward.toml | Consistency |
 
 ## Output
 
 ```
-familiar-contract validator v0.1.0
+familiar-contract validator v0.4.0
 Checking: /path/to/familiar
 
 Property Coverage:
@@ -67,7 +68,7 @@ Property Coverage:
 | `0` | PASS — all checks pass |
 | `1` | FAIL — one or more violations |
 
-Warnings (e.g., missing MEMORY.md) are displayed but do not cause a failure exit code.
+There are no warnings for missing required files; `MEMORY.md` absence is a failure.
 
 ## What It Does Not Check
 
@@ -75,14 +76,17 @@ Warnings (e.g., missing MEMORY.md) are displayed but do not cause a failure exit
 - Whether the Ward is actually enforced at runtime (that requires a Ward daemon)
 - Whether the familiar's behavior matches its declared purpose (behavioral compliance requires runtime evaluation)
 
-This validator checks **structural compliance** — the presence and format of required declarations. Full compliance requires both structural compliance and behavioral compliance.
+This validator checks whether one claimant directory satisfies the required file-level declarations for v0.4.0. That claimant-directory run is necessary, but not sufficient, for a structural-conformance claim: you must also run `bash tests/conformance/run-conformance.sh` so the bundled reference validator is shown to accept the positive fixtures and reject the negative fixtures for the same contract version. Full conformance additionally requires runtime Ward enforcement beyond this file-level check, and missing `MEMORY.md` is a violation, not a warning.
 
 ## For CI Integration
 
 ```yaml
 # .github/workflows/familiar-validate.yml
-- name: Validate familiar
-  run: node validators/validate.js ./my-familiar-directory
+- name: Validate claimant directory
+  run: npm ci && node validators/validate.js ./my-familiar-directory
+
+- name: Run bundled conformance suite
+  run: npm test
 ```
 
-Exit code 1 on failure will fail the CI step.
+Both steps must pass for a reproducible v0.4.0 structural-conformance claim. The first checks the claimant directory; the second verifies the bundled reference validator and fixtures. Exit code 1 on either step will fail CI.

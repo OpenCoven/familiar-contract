@@ -4,10 +4,10 @@
 |---|---|
 | **Number** | RFC-0001 |
 | **Title** | The Familiar Contract |
-| **Version** | 0.3.0 |
+| **Version** | 0.4.0 |
 | **Status** | Draft |
 | **Authors** | Valentina Alexander, Sage |
-| **Date** | 2026-07-18 |
+| **Date** | 2026-07-19 |
 | **Supersedes** | SPEC.md v0.1.0 (in-tree predecessor; non-RFC form) |
 | **License** | MIT |
 | **Conformance** | `tests/conformance/` |
@@ -20,7 +20,7 @@ This document defines the Familiar Contract: a normative specification for a cla
 
 The Familiar Contract addresses an architectural gap in current agent systems: the absence of a principled answer to the question *what is this agent not allowed to change about itself?* As recursive self-improvement loops (Self-Harness, Skill-Opt, sleep-time compute) become production-deployable, the absence of a protected surface is a design flaw, not an oversight.
 
-This RFC is the formal, testable, citable specification. The accompanying conformance suite at `tests/conformance/` is the spec made executable: a familiar that passes every positive case and fails every negative case is conformant with v0.3.0.
+This RFC is the formal, testable, citable specification. A familiar directory is structurally conformant with v0.4.0 only if `node validators/validate.js <directory>` succeeds and `bash tests/conformance/run-conformance.sh` passes in this repository.
 
 ---
 
@@ -46,7 +46,11 @@ The following terms have specific meanings throughout this document:
 - **Continuity-bearing** — Describes a memory entry or memory surface whose content is carried forward across sessions as part of the familiar's persistent memory (§3.4). The contents of `MEMORY.md` are always continuity-bearing. An entry or surface whose continuity-bearing status cannot be determined MUST be treated as continuity-bearing.
 - **Standard admission path** — The Ward-mediated path by which continuity-bearing entries are admitted into `MEMORY.md` or another continuity-bearing memory surface. The standard admission path validates source attestation, records the admission in the audit log, and rejects unverified continuity claims (§3.4, §5.6).
 - **Approval tier** — The authority level required to promote a class of proposal (§5.3).
-- **Conformant familiar** — A familiar whose directory passes all positive cases and fails all negative cases in `tests/conformance/`.
+- **Surface region identifier (`SurfaceRegionId`)** — A stable identifier declared in `editable.harness_blocks` naming one bounded region of the editable surface. Approval-tier `blocks` entries refer to surface regions only by these identifiers (§5.3.1).
+- **Deterministic extractor** — The runtime procedure that maps a `SurfaceRegionId` to the exact file paths or content regions it governs, producing the same result for the same committed Ward state every time it runs (§5.3.1).
+- **Claimant directory** — The familiar directory for which an implementation is making a structural-conformance claim.
+- **Reference conformance suite** — The bundled positive and negative fixtures in `tests/conformance/` that verify the reference validator accepts required examples and rejects documented nonconformant cases.
+- **Structurally conformant familiar directory** — A claimant directory whose own `node validators/validate.js <directory>` run succeeds and whose claim is accompanied by a passing run of the reference conformance suite for the same RFC version (§6.1).
 
 ### 1.2 Out of scope
 
@@ -92,7 +96,7 @@ The Familiar Contract is the specification for a protected surface above the edi
 
 ## 3. Normative Core: The Five Properties
 
-A conformant familiar **MUST** satisfy all five properties below. A system that satisfies fewer than five is an agent; it is **NOT** a familiar.
+A familiar claiming conformance with this RFC **MUST** satisfy all five properties below. A system that satisfies fewer than five is an agent; it is **NOT** a familiar.
 
 ### 3.1 Property 1 — Named Identity
 
@@ -248,6 +252,26 @@ A Ward **MUST** include the `auto` and `human_review` tiers. A Ward **SHOULD** i
 
 A Ward **MUST NOT** define a tier that auto-promotes proposals targeting the protected surface.
 
+#### 5.3.1 Approval-tier compilation
+
+The TOML approval-tier tables are portable declarations, not runtime authority objects. Before accepting a Ward, the authority layer **MUST** compile each declaration deterministically:
+
+| Declaration | Typed approval path | Required gate |
+|---|---|---|
+| `approval_tiers.auto` | `AutoRegression` | `regression_suite` |
+| `approval_tiers.familiar_review` | `FamiliarCoherence` | `familiar_coherence_check` |
+| `approval_tiers.human_review` | `HumanApproval` | `human_approval` |
+| `approval_tiers.human_required` | `HumanApprovalWithRationale` | `human_approval_with_rationale` |
+
+Each `blocks` entry **MUST** name a `SurfaceRegionId` (§1.1) declared in `editable.harness_blocks`, and the runtime **MUST** bind that identifier to a deterministic extractor (§1.1) before loading the Ward. A descriptor or label alone **MUST NOT** authorize promotion.
+
+`human_veto_window_hours` **MAY** appear on `auto` and `familiar_review` and **MUST NOT** appear on any other tier. A veto window **MUST** use delayed apply: when it expires, the authority layer **MUST** replay the evidence and re-run Gate 4 before any write. Provisional apply followed by rollback **DOES NOT** conform to this RFC.
+
+Unknown tiers or tier fields; missing or mismatched gates; duplicate, unbound, or empty blocks; invalid veto placement, type, or duration; or any declaration without one deterministic typed result **MUST** cause Ward loading to fail closed.
+
+How a proposal is submitted remains independent of its compiled approval path. The authority layer **MUST** apply a compiled approval path to a proposal only after Gates 1 and 2 establish that the proposal does not touch the protected surface.
+Principal-authorized protected updates occur through the separate audited principal-authorized paths (§4.1, §5.6); they are not approval-tier proposals.
+
 ### 5.4 Enforcement gates
 
 The Ward authority layer **MUST** enforce four gates on every proposal:
@@ -296,26 +320,30 @@ A `memory_entry_admitted` event **MUST** include an `entry_hash` for the admitte
 
 ### 6.1 Conformance test suite
 
-The directory `tests/conformance/` contains the executable form of this RFC. A familiar's directory is **conformant with v0.3.0** if and only if:
+The directory `tests/conformance/` contains the executable reference conformance suite for this RFC. A claimant directory is **structurally conformant with v0.4.0** if and only if **BOTH** of the following are true:
 
-- It passes every positive case in `tests/conformance/positive/`.
-- It fails every negative case in `tests/conformance/negative/` (i.e. demonstrates the validator catches the documented violation).
+- `node validators/validate.js <directory>` succeeds for the claimant directory making the conformance claim.
+- `bash tests/conformance/run-conformance.sh` passes in this repository, demonstrating that the reference validator accepts every bundled positive fixture in `tests/conformance/positive/` and rejects every bundled negative fixture in `tests/conformance/negative/`.
 
-A claim of v0.3.0 conformance **MUST** be backed by a passing run of `bash tests/conformance/run-conformance.sh`.
+The claimant directory does **NOT** itself "pass the fixture suite"; the reference suite verifies the validator's behavior against bundled fixtures, while the claimant-directory run verifies the directory making the claim. Together they establish the structural claim only. They do **NOT** by themselves prove authority-layer separation, Gate 4 unbypassability, audit-log behavior, identity-probe consistency, or any other runtime requirement for full conformance.
+
+A claim of v0.4.0 structural conformance **MUST** be backed by reproducible passing runs of both commands.
 
 ### 6.2 Validator
 
-The reference validator at `validators/validate.js` checks structural compliance (file presence, schema conformance, required sections). The validator **MUST NOT** be the sole conformance evidence; runtime enforcement (§5.1, §5.4) is **REQUIRED** for full conformance and is verified at the system level, not the file level.
+The reference validator at `validators/validate.js` checks structural conformance for one claimant directory (file presence, schema conformance, required sections). The validator **MUST NOT** be the sole conformance evidence; the repository conformance suite in §6.1 verifies that the reference validator catches the bundled positive and negative fixtures, and runtime enforcement (§5.1, §5.4) is still **REQUIRED** for full conformance and is verified at the system level, not the file level.
 
 ### 6.3 Versioning
 
-This RFC uses [Semantic Versioning](https://semver.org/):
+This RFC uses [Semantic Versioning](https://semver.org/) with an explicit draft rule:
 
-- **Patch** (`0.3.x`): Clarifications, non-normative edits, schema additions that do not change conformance requirements.
-- **Minor** (`0.x.0`): Backward-compatible normative additions, including new OPTIONAL properties and new MUST/SHOULD requirements that do not invalidate existing structurally conformant familiar directories.
-- **Major** (`x.0.0`): Incompatible changes to the five properties or to existing conformance requirements. Requires a new RFC that supersedes this one.
+- **Draft patch** (`0.y.z`, where `z > 0`): Clarifications, non-normative edits, and fixes that do not change conformance requirements while this RFC remains `Draft`.
+- **Patch** (`x.y.z`, where `x >= 1` and `z > 0`): Clarifications, non-normative edits, and fixes that do not change conformance requirements after this RFC reaches `1.0.0` or higher.
+- **Draft minor** (`0.y.0`): While `Status: Draft`, this RFC **MUST** remain below `1.0.0`. A `0.y.0` release **MAY** introduce backward-incompatible conformance changes, including changes that invalidate previously structurally conformant familiar directories. Each such release **MUST** document the migration impact and the security rationale. Consumers **MUST** pin the exact `0.y.0` version they implement.
+- **Stable minor** (`x.y.0`, where `x >= 1` and `y > 0`): Backward-compatible normative additions and compatible schema evolution.
+- **Stable major** (`x.0.0`, where `x >= 1`): Backward-incompatible changes to existing conformance requirements or to the five properties. Requires a new RFC that supersedes this one.
 
-A familiar claiming compliance with `v0.3.0` **MUST** satisfy the normative core as defined in this version. Future versions **SHOULD** preserve backward compatibility within a major version.
+A familiar claiming compliance with `v0.4.0` **MUST** satisfy the normative core as defined in this version. While this RFC remains `Draft`, clarifications and fixes that do not change conformance requirements **MUST** use a draft patch version bump; documented additive or breaking conformance changes **MUST** use a draft minor version bump. Once this RFC reaches `1.0.0` or higher, incompatible changes **MUST** use a major version bump; compatible additions **MUST** use a minor version bump; clarifications and fixes **MUST** use a patch version bump.
 
 ---
 
@@ -391,6 +419,7 @@ The following requirements in this RFC are **NOT yet covered** by the conformanc
 - **Identity-probe consistency (§5.5).** Conformance suite verifies the *presence* of an identity-probe configuration. Verifying that probes actually return invariant-consistent outputs requires a live model and is system-level.
 - **Memory-entry provenance (§3.4, §5.6).** The audit log now defines recordable `memory_entry_admitted` evidence, but verifying source-attestation chains still requires access to prior committed Ward states and principal-authorized write events. This is a runtime/audit-log integration concern, not a directory-level structural check.
 - **Runtime closure verification (§4.1, §5.4).** Gate-1 and Gate-4 verification that the currently committed Ward manifest is a member of its own `[protected].files` is runtime behavior. The conformance suite covers only the structural side (fixture `negative/10-protected-missing-ward`); verifying the running authority layer refuses intake and promotion under a non-closed Ward requires an integration test against a Ward daemon.
+- **Approval-path compilation and veto-window enforcement (§5.3.1).** The structural suite verifies that tier declarations compile deterministically and fail closed on the documented error classes. Binding each `SurfaceRegionId` to a deterministic extractor, delayed apply with evidence replay and Gate-4 re-run at veto-window expiry, and fail-closed Ward *loading* in the running authority layer are runtime behaviors requiring integration tests against a Ward daemon.
 
 These gaps are intentional. The file-level conformance suite verifies the **structural** claim. The system-level claim requires runtime testing against a Ward daemon implementation. Both are part of the full conformance picture.
 
@@ -404,7 +433,7 @@ These gaps are intentional. The file-level conformance suite verifies the **stru
 - **`schemas/soul.schema.json`** — Required structural fields of `SOUL.md`.
 - **`schemas/identity.schema.json`** — Required structural fields of `IDENTITY.md`.
 - **`schemas/ward.schema.json`** — Required structural fields of `ward.toml`.
-- **`tests/conformance/`** — Executable conformance suite for v0.3.0.
+- **`tests/conformance/`** — Executable conformance suite for v0.4.0.
 
 ### 10.2 Informative
 
@@ -423,6 +452,17 @@ These gaps are intentional. The file-level conformance suite verifies the **stru
 ---
 
 ## 11. Changelog
+
+### v0.4.0 (2026-07-19)
+
+- Added a normative approval-tier compiler mapping from Ward TOML declarations to typed daemon approval paths and registered surface-region identifiers (§5.3.1).
+- Expanded conformance coverage to 36 negative cases total, including malformed TOML, schema-invalid metadata, unknown tier fields, gate mismatches, invalid veto declarations, and unbound, duplicate, or mistyped block declarations.
+- Required approval-tier declarations to fail closed on unknown fields, use the tier's exact gate, and bind non-empty unique block lists to registered `editable.harness_blocks` entries (§5.3.1).
+- Clarified that veto windows are optional where allowed, but use delayed apply with evidence replay plus Gate 4 revalidation before any write (§5.3.1, §5.4).
+- Clarified that protected-target proposals are outside approval-path promotion; principal-authorized protected updates remain a separate audited path (§5.3.1, §5.4, §5.6).
+- Defined claimant directory, reference conformance suite, structurally conformant familiar directory, surface region identifier (`SurfaceRegionId`), and deterministic extractor as first-class terms; a v0.4.0 structural-conformance claim now requires both the claimant-directory validator run and the reference conformance suite run (§1.1, §5.3.1, §6.1).
+- Documented the runtime-only scope of approval-path compilation: extractor binding, veto-window delayed apply with evidence replay and Gate-4 re-run, and fail-closed Ward loading are integration-level gaps the structural suite cannot test (§9).
+- Redefined the §6.3 versioning rule for the Draft stage: draft minor releases MAY introduce breaking conformance changes with documented migration impact and security rationale, and consumers MUST pin the exact draft version they implement (§6.3).
 
 ### v0.3.0 (2026-07-18)
 
@@ -455,4 +495,4 @@ The original `SPEC.md` v0.1.0 — preserved for reproducibility. Superseded by t
 
 ---
 
-*RFC-0001 — Draft v0.3.0 — 2026-07-18. Maintained at `OpenCoven/familiar-contract`.*
+*RFC-0001 — Draft v0.4.0 — 2026-07-19. Maintained at `OpenCoven/familiar-contract`.*

@@ -1,8 +1,8 @@
-# The Familiar Contract — Specification v0.1.0 *(superseded)*
+# The Familiar Contract — Historical / superseded specification v0.1.0
 
-> **Status:** Superseded · **License:** MIT · **Version:** 0.1.0
+> **Status:** Historical / superseded · **License:** MIT · **Version:** 0.1.0
 >
-> ⚠️ **This document is preserved for reproducibility.** The current normative specification is [RFC-0001 v0.3.0](rfcs/RFC-0001-familiar-contract.md), which uses RFC 2119 keywords (MUST/SHOULD/MAY), references the conformance suite at [`tests/conformance/`](tests/conformance/), and hardens the authority-layer separation requirement.
+> ⚠️ **This document is preserved for reproducibility.** The current normative specification is [RFC-0001 v0.4.0](rfcs/RFC-0001-familiar-contract.md), which uses RFC 2119 keywords (MUST/SHOULD/MAY), references the conformance suite at [`tests/conformance/`](tests/conformance/), and hardens the authority-layer separation requirement.
 >
 > If you are looking for the current spec, go to [`rfcs/RFC-0001-familiar-contract.md`](rfcs/RFC-0001-familiar-contract.md). This file remains for historical and citation purposes.
 

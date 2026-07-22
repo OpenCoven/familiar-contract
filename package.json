@@ -1,0 +1,15 @@
+{
+  "name": "familiar-contract",
+  "version": "0.4.0",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "test": "bash tests/conformance/run-conformance.sh",
+    "conformance": "bash tests/conformance/run-conformance.sh",
+    "validate:examples": "node validators/validate.js examples/sage && node validators/validate.js examples/minimal"
+  },
+  "dependencies": {
+    "@iarna/toml": "2.2.5",
+    "ajv": "8.20.0"
+  }
+}

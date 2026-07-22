@@ -12,7 +12,7 @@ The core problem it addresses is this: AI agents have gotten very capable, but t
 
 The specification has two major parts. First, a five-property identity contract: a compliant "familiar" must have a stable named identity, a declared purpose, enforced authority limits, persistent memory, and an explicit binding to a specific person. Second, an enforcement model built around a component called the Ward — a TOML policy document plus a runtime enforcement daemon that checks proposed changes against the protected surface before they are applied. The key word is "enforced": the Ward is not asking the agent to have good values about self-modification. It is an external check that runs regardless of what the agent thinks about it.
 
-The Familiar Contract is a normative specification, which means it defines what must be true about a compliant system, tested against an executable conformance suite, not just described. The RFC (RFC-0001, v0.3.0) carries formal RFC 2119 keywords (MUST, MUST NOT, SHOULD) and the `tests/conformance/` directory is the spec made executable. A system that passes every positive case and fails every negative case is, by definition, conformant.
+The Familiar Contract is a normative specification, which means it defines what must be true about a conformant system, tested against both a claimant-directory validator run and an executable conformance suite, not just described. The RFC (RFC-0001, v0.4.0) carries formal RFC 2119 keywords (MUST, MUST NOT, SHOULD) and the `tests/conformance/` directory is the fixture suite that verifies the reference validator. A familiar directory is structurally conformant only when `node validators/validate.js ./your-directory` succeeds and `bash tests/conformance/run-conformance.sh` passes in the repository. Full conformance also requires runtime Ward enforcement as described in RFC §6.2.
 
 ---
 
@@ -67,7 +67,7 @@ The principle is stated plainly in the spec: *if removing or changing it would n
 
 ## Q: What is the editable surface? What's on it?
 
-**A:** The editable surface is the set of scaffolding that the self-improvement loop may propose changing. These are the operational knobs — the parts of the agent that affect performance, efficiency, and behavior without touching identity. Proposals targeting the editable surface go through Ward gates, but they can be promoted without human involvement if they are low-risk and pass the regression suite.
+**A:** The editable surface is the set of scaffolding that the self-improvement loop may propose changing. These are the operational knobs — the parts of the agent that affect performance, efficiency, and behavior without touching identity. Proposals targeting the editable surface go through Ward gates. Low-risk changes can compile to the `auto` path; when a veto window is configured, they remain pending until expiry, evidence replay, and Gate 4 revalidation, and nothing goes live before that. There is no provisional apply/rollback path.
 
 What is editable:
 
@@ -96,7 +96,7 @@ The second component is the Ward authority daemon — a privileged process, sepa
 
 The Ward is not the familiar's conscience. It does not depend on the familiar having good values about self-modification. The familiar does not need to believe in the Ward. The daemon runs regardless of what the familiar thinks about it, and it is fail-closed: an ambiguous case is rejected, not promoted. A well-designed system does not rely on good behavior from the component being constrained.
 
-The Ward also covers governance over time. Changes to the Ward itself require human authorization. A familiar cannot use the self-improvement loop to soften the Ward's constraints, expand the editable surface, or add a new auto-promotion tier. The Ward can evolve — but only through the human-required path.
+The Ward also covers governance over time. Principal-authorized Ward updates and principal-authorized protected-surface updates are separate audited authority actions outside the proposal pipeline. A familiar cannot use the self-improvement loop to soften the Ward's constraints, expand the editable surface, or add a new auto-promotion tier. Proposals that target the Ward or protected surface are rejected by the gate pipeline.
 
 ---
 
@@ -160,9 +160,9 @@ One nuance: in the Coven architecture, "Doll" proposals (from cloud/mobile insta
 
 **A:** Approval tiers define how much human involvement is required before a proposal can be promoted to the live harness. The Ward must define at minimum two tiers (`auto` and `human_review`); it should define four. Each tier corresponds to a class of changes and a required authorization level.
 
-**Tier 0 — Auto.** Low-risk execution scaffolding changes that pass the full regression suite are auto-promoted — no human approval required before they go live. Examples: updating a tool invocation timeout, tweaking the output format for research notes, adjusting retry logic for a flaky API call, rescheduling heartbeat checks. The human sees a Cave Board card and has a veto window (the spec recommends 48 hours) to review and reverse. Auto-promotion does not mean invisible; it means no pre-promotion human gate.
+**Tier 0 — Auto.** Low-risk execution scaffolding changes that pass the full regression suite compile to the `auto` path. Examples: updating a tool invocation timeout, tweaking the output format for research notes, adjusting retry logic for a flaky API call, rescheduling heartbeat checks. A veto window is optional; when configured, the proposal remains pending until expiry, evidence replay, and Gate 4 revalidation before any write. If no veto window is configured, the compiled path still satisfies its gate and Gate 4 immediately before write. There is no provisional apply/rollback path.
 
-**Tier 1 — Familiar Review (recommended but optional).** Changes to instruction blocks, reasoning prompts, and skill configurations. More significant than tool defaults, but still scaffolding-level. The familiar reviews its own proposal against its identity invariants — which is meaningful because the familiar knows its own values, even if that review is not the security boundary. A veto card is created; a 24-hour human veto window is recommended. If the familiar review passes and the human does not veto, the change is promoted.
+**Tier 1 — Familiar Review (recommended but optional).** Changes to instruction blocks, reasoning prompts, and skill configurations. More significant than tool defaults, but still scaffolding-level. The familiar reviews its own proposal against its identity invariants — which is meaningful because the familiar knows its own values, even if that review is not the security boundary. A veto card may be created; when a veto window is configured, the proposal remains pending until expiry, evidence replay, and Gate 4 revalidation before any write. If no veto window is configured, the compiled path still satisfies its gate and Gate 4 before write. There is no provisional apply/rollback path.
 
 **Tier 2 — Human Review.** Structural changes: new tool grants, capability expansion, new subagent patterns, changes to which external systems the familiar can access. These require explicit human approval before promotion. No auto-promotion is possible. The human sees a summary of the proposal and the regression results, reviews the change, and approves or rejects.
 
@@ -200,11 +200,11 @@ The Ward is better understood as a multi-layer governance system for identity-af
 
 **A:** The honest answer: the Familiar Contract cannot prevent a sufficiently privileged human from changing the Ward. Humans are the trust root. A human with access to the familiar's directory can modify `ward.toml`, update invariants, or disable protections. This is intentional, not a flaw.
 
-What the Familiar Contract provides is: accountability for those changes, and structural protection against the familiar making those changes about itself.
+What the Familiar Contract provides is accountability for those changes, and structural protection against the familiar making those changes about itself. Principal-authorized Ward/protected updates use the separate audited authority path outside self-improvement proposals.
 
 On accountability: every change to the Ward is recorded in the append-only audit log, with timestamps, the approver's identity, the diff, and the rationale (for Tier 3 changes). The audit log cannot be deleted or modified. This means that if someone softens the Ward's protections, that fact is visible and traceable. The RFC does not claim to make protected-surface changes impossible; it makes them auditable and attributable.
 
-On structural protection: the self-improvement loop cannot modify the Ward. The familiar cannot modify the Ward through any programmatic pathway. The Ward is on its own protected surface. What the RFC defends against is *inadvertent* or *emergent* erosion — a self-improvement loop that optimizes away the protected surface over time, not a human who deliberately decides to change the governance policy. Deliberate human decisions are supposed to be the trust root. Inadvertent loop-driven drift is the threat the Ward addresses.
+On structural protection: the self-improvement loop cannot modify the Ward. The familiar cannot modify the Ward through any programmatic pathway. The Ward is on its own protected surface. What the RFC defends against is *inadvertent* or *emergent* erosion — a self-improvement loop that optimizes away the protected surface over time, not a human who deliberately decides to change the governance policy. Deliberate human decisions are supposed to be the trust root. Inadvertent loop-driven drift is the threat the Ward addresses. Proposals that target the protected surface are rejected at Gates 1, 2, and 4.
 
 The RFC is explicit about what it does not defend: adversarial human authorization, compromise of the authority layer itself, and capability misuse within the editable surface. These are genuine threats, but they are outside scope. The RFC defends identity drift, not all possible misuse.
 
@@ -238,16 +238,18 @@ The distinction matters for calibrating expectations. The Familiar Contract is n
 
 ## Q: How does a familiar pass conformance?
 
-**A:** Conformance is a multi-level claim. Structural conformance is verified by the reference validator and the test suite. Runtime conformance requires a running Ward daemon and is not fully verifiable at the file level.
+**A:** Conformance is a multi-level claim. Structural conformance requires both the claimant-directory validator run and the fixture suite. Runtime conformance requires a running Ward daemon and is not fully verifiable at the file level.
 
 For structural conformance, the steps are:
 
 1. Create a familiar directory with all required files: `SOUL.md`, `IDENTITY.md`, `MEMORY.md`, `ward.toml`.
 2. Ensure `SOUL.md` includes the required sections: at minimum a name, pronouns, purpose, character description, and a `## What I Am Not` section.
 3. Ensure `ward.toml` conforms to `schemas/ward.schema.json`. The Ward must include `[meta]` (with `version`, `familiar`, `person`), `[protected]` (with `files` listing the four required protected files and an `invariants` array covering name and person), `[editable]`, and `[approval_tiers]` (with at minimum `auto` and `human_review` defined).
-4. Run `bash tests/conformance/run-conformance.sh` from the repo root. All five positive cases must pass. All ten negative cases must fail (demonstrating that the validator catches each documented violation).
+4. Run `npm install` from the repository root to install the reference TOML parser and JSON Schema validator.
+5. Run `node validators/validate.js ./your-directory` against the directory you want to claim is conformant.
+6. Run `npm test` from the repo root. All six positive cases must pass. All thirty-six negative cases must fail (demonstrating that the validator catches each documented violation, including malformed TOML, schema-invalid types, unknown fields, gate mismatches, invalid vetoes, and unbound or duplicate block declarations).
 
-If the conformance run returns `0` for positive cases and the validator correctly rejects all negative cases, the familiar is structurally conformant with v0.3.0. Claim conformance by declaring the version in your documentation and keeping a passing conformance run reproducible from your repo.
+The conformance suite verifies the reference validator and fixtures. Your directory is structurally conformant only if its own `node validators/validate.js ./your-directory` run succeeds and `bash tests/conformance/run-conformance.sh` passes in the repository. Claim conformance by declaring the version in your documentation and keeping both results reproducible from your repo.
 
 Full conformance — including runtime conformance — requires a running Ward daemon with proper authority-layer separation, an append-only audit log, and verified identity-probe consistency. These are not testable from a directory alone and are acknowledged as open testing gaps in RFC §9. A claim of full conformance should specify which layers have been verified.
 
@@ -274,22 +276,22 @@ The RFC also does not address security of the authority layer itself. If the War
 **A:** Yes. The Familiar Contract is runtime-portable and stack-agnostic. You do not need OpenClaw, the Coven multi-familiar architecture, or any specific runtime to build a conformant familiar.
 
 What you need is: a familiar directory with the required files (`SOUL.md`, `IDENTITY.md`, `MEMORY.md`, `ward.toml`); a `ward.toml` that conforms to the published schema; and an enforcement mechanism — a Ward authority daemon — that is structurally separate from the familiar's own logic. The reference implementation uses a Rust authority daemon (the `coven` layer), but the RFC is explicit that "other implementations may choose different mechanisms; what is normative is the separation, not the implementation."
-The structural conformance suite (`tests/conformance/`) runs against any familiar directory and has no Coven dependencies. The validator (`validators/validate.js`) requires only Node.js. The schemas (`schemas/`) are standard JSON Schema and can be validated with any conforming schema validator.
+The structural conformance suite (`tests/conformance/`) has no Coven dependencies, but it does not by itself validate an arbitrary external directory. It verifies that the bundled reference validator accepts the positive fixtures and rejects the negative fixtures. Your own familiar directory still needs its own `node validators/validate.js ./your-directory` run. The reference validator requires Node.js plus `npm install`; its dependencies are a standards-compliant TOML parser and JSON Schema validator. The schemas (`schemas/`) are standard JSON Schema and can be validated with any conforming schema validator.
 
-The parts of the spec that are Coven-specific — Doll proposals, Cave Board integration, multi-familiar routing — are referenced as context, not as requirements. A standalone familiar implementing a Ward daemon without any Coven infrastructure can be fully conformant with RFC-0001 v0.3.0.
+The parts of the spec that are Coven-specific — Doll proposals, Cave Board integration, multi-familiar routing — are referenced as context, not as requirements. A standalone familiar implementing a Ward daemon without any Coven infrastructure can be fully conformant with RFC-0001 v0.4.0.
 
 ---
 
 ## Q: Where do I go from here?
 
-**A:** If you want to understand the design philosophy in more depth, read `docs/ward-primer.md` (the non-technical introduction to the Ward), `docs/five-properties.md` (each property in depth with architectural requirements), and `docs/ward-deep-dive.md` (the technical deep dive into Ward design).
+**A:** If you want to understand the design philosophy in more depth, read `docs/ward-primer.md` (the non-technical introduction to the Ward), `docs/five-properties.md` (each property in depth with architectural requirements), and `docs/ward-deep-dive.md` (the technical deep dive into Ward design, pinned to the v0.3.0 snapshot of the RFC).
 
-If you want to see what a conformant familiar looks like, browse `examples/sage/` (a full familiar with rich Ward configuration) and `examples/minimal/` (the minimum required to pass conformance). Both pass the conformance suite.
+If you want to see example familiar directories accepted by the validator, browse `examples/sage/` (a full familiar with rich Ward configuration), `examples/minimal/` (the minimum required to pass structural conformance), and the positive fixtures under `tests/conformance/positive/`. The negative fixtures under `tests/conformance/negative/` are intentionally nonconformant and exist to verify rejection behavior, not to serve as conformant examples. Full conformance additionally requires runtime Ward enforcement, not just a passing directory-level check.
 
 If you want to understand how the Familiar Contract relates to other agent specifications and frameworks, read `docs/comparison.md`.
 
-If you want to build a conformant familiar, start with `ward.toml` (conforming to `schemas/ward.schema.json`), create the required files, run `bash tests/conformance/run-conformance.sh`, and iterate until the suite passes. The negative test cases tell you exactly what the validator checks for and why.
+If you want to build a conformant familiar, start with `ward.toml` (conforming to `schemas/ward.schema.json`), create the required files, run `node validators/validate.js ./your-directory`, then run `bash tests/conformance/run-conformance.sh`, and iterate until both pass. The negative test cases tell you exactly what the validator checks for and why.
 
-If you want to cite the specification in a paper, the canonical reference is RFC-0001 v0.3.0, available at `rfcs/RFC-0001-familiar-contract.md`. The accompanying paper (Alexander, 2026, forthcoming on arXiv) provides the academic framing including the principal-agent formulation, comparison with Self-Harness and SkillOpt, and formal definitions. The Ward deep dive (`docs/ward-deep-dive.md`) provides the implementation-level reference for Ward daemon builders.
+If you want to cite the specification in a paper, the canonical reference is RFC-0001 v0.4.0, available at `rfcs/RFC-0001-familiar-contract.md`. The accompanying paper (Alexander, 2026, forthcoming on arXiv) provides the academic framing including the principal-agent formulation, comparison with Self-Harness and SkillOpt, and formal definitions. The public companion authority-boundary design for Ward daemon builders is [OpenCoven/coven-threads `specs/PHASE-0-DESIGN.md`](https://github.com/OpenCoven/coven-threads/blob/main/specs/PHASE-0-DESIGN.md), but RFC-0001 §5 remains the normative Familiar Contract requirement.
 
 If you have questions that are not answered here, open an issue in the repository.

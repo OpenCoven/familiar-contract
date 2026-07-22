@@ -42,15 +42,17 @@ The Familiar Contract names the boundary. The Ward (the enforcement mechanism) i
 
 ## What you need to create a compliant familiar
 
-Three files:
+Four required files:
 
-**`SOUL.md`** — who the familiar is. Name, purpose, vibe, what it is not. This is the human-readable identity document. See [`schemas/soul.schema.json`](../schemas/soul.schema.json) for the required fields.
+**`SOUL.md`** — who the familiar is. Name, purpose, vibe, what it is not. This is the human-readable identity document. See [`schemas/soul.schema.json`](schemas/soul.schema.json) for the required fields.
 
 **`IDENTITY.md`** — the machine-readable identity record. Name, pronouns, creature type, Coven membership (if any), emoji. Minimal structured data that a validator can check.
 
-**`ward.toml`** — the governance document. Protected files, editable files, approval tiers. This is what tells the self-improvement loop what it cannot touch. See [`schemas/ward.schema.json`](../schemas/ward.schema.json).
+**`MEMORY.md`** — the familiar's persistent memory surface. It is required for structural conformance and must also appear on the Ward's protected surface.
 
-Start from [`examples/minimal/`](../examples/minimal/) — that's the floor. [`examples/sage/`](../examples/sage/) shows a full compliant familiar (Sage is a real familiar running on OpenCoven's infrastructure).
+**`ward.toml`** — the governance document. Protected files, editable files, approval tiers. This is what tells the self-improvement loop what it cannot touch. See [`schemas/ward.schema.json`](schemas/ward.schema.json).
+
+Start from [`examples/minimal/`](examples/minimal/) — that's the floor. [`examples/sage/`](examples/sage/) shows a richer structurally conformant familiar directory. Sage's runtime enforcement lives outside this repo fixture.
 
 ---
 
@@ -61,11 +63,11 @@ None in particular. The spec is runtime-portable by design.
 **Claude Code, Codex, Cursor, OpenHands** — all compatible. The spec operates at the identity and governance layer, not at the execution layer.
 
 What you need:
-- A way to store `SOUL.md`, `IDENTITY.md`, `ward.toml` as files accessible to the familiar
+- A way to store `SOUL.md`, `IDENTITY.md`, `MEMORY.md`, and `ward.toml` as files accessible to the familiar
 - A runtime that can inject `SOUL.md` content into the familiar's context at session start
 - An enforcement mechanism for the Ward (your own or based on the Ward spec)
 
-The validator in this repo checks schema compliance against the three required files. It does not require any specific runtime.
+The validator in this repo checks one claimant directory against the four required files. For a structural-conformance claim, pair that claimant-directory run with `bash tests/conformance/run-conformance.sh` from the same repository version. The validator checks your directory; the bundled conformance suite verifies that the reference validator accepts the positive fixtures and rejects the negative fixtures.
 
 ---
 
@@ -78,7 +80,7 @@ A Ward is a `ward.toml` file that declares:
 - Which files are editable (proposals allowed)
 - What approval is required for each class of change
 
-The Ward spec is published separately. See [`docs/ward-primer.md`](../docs/ward-primer.md) for the short version.
+The Ward spec is published separately. See [`docs/ward-primer.md`](docs/ward-primer.md) for the short version.
 
 ---
 
@@ -92,9 +94,10 @@ You do not need to use OpenCoven's infrastructure to implement familiar-contract
 
 ## Where to go next
 
-- [`SPEC.md`](../SPEC.md) — the normative specification
-- [`examples/minimal/`](../examples/minimal/) — the minimal compliant familiar (Lumen)
-- [`examples/sage/`](../examples/sage/) — a full compliant familiar (Sage)
-- `node validators/validate.js ./your-directory` — validate your familiar
-- [`FAQ.md`](../FAQ.md) — common questions
-- [`docs/comparison.md`](../docs/comparison.md) — how this relates to other approaches
+- [`rfcs/RFC-0001-familiar-contract.md`](rfcs/RFC-0001-familiar-contract.md) — the normative specification (v0.4.0)
+- [`examples/minimal/`](examples/minimal/) — the minimal structurally conformant familiar directory (Lumen)
+- [`examples/sage/`](examples/sage/) — a richer structurally conformant familiar directory (Sage)
+- `node validators/validate.js ./your-directory` — validate your claimant directory
+- `bash tests/conformance/run-conformance.sh` — verify the bundled reference validator + fixtures for the same contract version
+- [`docs/faq.md`](docs/faq.md) — common questions
+- [`docs/comparison.md`](docs/comparison.md) — how this relates to other approaches

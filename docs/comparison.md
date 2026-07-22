@@ -37,7 +37,7 @@ The key claim: the Familiar Contract is the only currently published open specif
 - No persistent memory architecture — execution traces are not the same as curated long-term memory
 - No self-improvement governance framework
 
-**Relationship to familiar-contract:** Structural gaps, different layers. ECC is an execution substrate; familiar-contract is an identity spec. ECC could theoretically *implement* familiar-contract compliance — a familiar running on ECC could have `SOUL.md`, `IDENTITY.md`, `ward.toml`. The specs are not competing; they are at different levels.
+**Relationship to familiar-contract:** Structural gaps, different layers. ECC is an execution substrate; familiar-contract is an identity spec. ECC could theoretically *implement* familiar-contract compliance — a familiar running on ECC could have `SOUL.md`, `IDENTITY.md`, `MEMORY.md`, and `ward.toml`. The specs are not competing; they are at different levels.
 
 **Why builders choose between them:** ECC is the choice if your primary concern is execution determinism and local auditability. Familiar-contract is the choice if your primary concern is agent identity, continuity, and protected self-improvement governance. They solve different problems. Both can be satisfied simultaneously.
 

@@ -30,15 +30,31 @@ The Ward is not enforced by the familiar. It is enforced by an authority process
 
 Not all proposed changes require the same level of human involvement:
 
-**Tier 0 — Auto:** Low-risk changes (output format tweaks, tool invocation defaults, heartbeat scheduling) that pass a regression suite are promoted automatically. A Cave Board card is created for visibility; the human has a 48-hour veto window.
+**Tier 0 — Auto:** Low-risk changes (output format tweaks, tool invocation
+defaults, heartbeat scheduling) enter `AutoRegression`. After deterministic
+regression evidence passes, a configured human veto window keeps the proposal
+pending until expiry; then the daemon replays the evidence and runs Gate 4 before
+write. Without a configured veto window, the path still follows its gate and
+runs Gate 4 before write.
 
-**Tier 1 — Familiar review:** Changes to instruction blocks, reasoning prompts, skill configurations. The familiar reviews its own proposal against its identity invariants. A human veto card is created; 24-hour window.
+**Tier 1 — Familiar review:** Changes to instruction blocks, reasoning prompts,
+and skill configurations enter `FamiliarCoherence`. The familiar review record
+is evidence, not authority; with a configured human veto window the proposal
+remains pending until expiry, then the daemon replays the review evidence and
+runs Gate 4 before write. Without a configured veto window, the path still follows
+its gate and runs Gate 4 before write.
 
 **Tier 2 — Human review:** Structural changes — new tool grants, capability expansion, new subagent patterns. Human must approve before promotion. No auto-promotion possible.
 
-**Tier 3 — Human required:** Changes adjacent to the protected surface. Human approval plus written rationale required. All stored in the Ward audit log.
+**Tier 3 — Human required:** Changes adjacent to the protected surface. Human
+approval plus written rationale required before promotion. All stored in the
+Ward audit log.
 
 **Blocked:** Any proposal that touches the protected surface. Rejected at intake. Repeated protected-surface proposals are surfaced as behavioral alerts.
+
+The TOML tier names are declarations that compile at Ward load to typed daemon
+approval paths. Unknown fields, gate drift, duplicate or undeclared blocks,
+and invalid veto settings make the Ward fail closed at load time.
 
 ---
 
@@ -99,7 +115,9 @@ This is architecturally important. A self-improvement loop that is "aligned" but
 
 **It does not replace human oversight.** The Ward structures oversight — right queues, right visibility, right veto windows. Val still makes the decisions on Tier 2+ changes. The Ward makes sure she sees them.
 
-**It is not static.** The Ward can be revised — but only through the human-required path. Val (or Val and Sage jointly) can update the Ward. The self-improvement loop cannot.
+**It is not static.** The Ward can be revised through a separate, audited
+principal-authorized Ward-update path. The self-improvement loop cannot submit
+that update as a proposal or authorize it through `human_required`.
 
 ---
 

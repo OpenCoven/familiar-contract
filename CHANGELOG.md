@@ -7,6 +7,42 @@ This project uses [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.4.0] — 2026-07-19
+
+### Added
+
+- **RFC-0001 §5.3.1** — Added a normative approval-tier compiler mapping from Ward TOML declarations to typed daemon approval paths and registered surface-region identifiers.
+- **tests/conformance/** — Expanded approval-tier conformance coverage to 36 negative cases total, including malformed TOML, schema-invalid metadata, unknown tier fields, gate mismatches, invalid veto declarations, and unbound, duplicate, or mistyped block declarations.
+
+### Changed
+
+- **RFC-0001 §5.3.1** — Tier declarations now fail closed on unknown fields and require the tier's exact gate plus non-empty, unique block lists bound to registered `editable.harness_blocks` entries.
+- **RFC-0001 §5.3.1 / §5.4** — Veto windows remain optional where allowed, but use delayed apply with evidence replay plus Gate 4 revalidation before any write.
+- **RFC-0001 §5.3.1 / §5.4** — Protected-target proposals are explicitly outside approval-path promotion; principal-authorized protected updates remain a separate audited path.
+- **README.md, rfcs/README.md, SPEC.md, docs/faq.md, tests/conformance/README.md, validators/README.md, validators/validate.js** — Updated current-version references to v0.4.0.
+- **validators/validate.js** — Replaced the hand-written Ward parser with standards-compliant TOML parsing and Ajv JSON Schema validation before semantic checks.
+- **RFC-0001 §1.1 / §6.1** — Defined claimant directory, reference conformance suite, structurally conformant familiar directory, surface region identifier (`SurfaceRegionId`), and deterministic extractor as first-class terms; a v0.4.0 structural-conformance claim now requires both the claimant-directory validator run and the reference conformance suite run.
+- **RFC-0001 §9** — Added an open-gap bullet for approval-path compilation: extractor binding, veto-window delayed apply with evidence replay and Gate-4 re-run, and fail-closed Ward loading are runtime behaviors outside the structural suite.
+- **examples/, tests/conformance/positive/** — Updated `examples/minimal`, `examples/sage`, and positive fixtures 01–05 `ward.toml` files to declare `editable.harness_blocks` and bind tier `blocks` to registered entries (minimal also drops `system_prompt.recovery`), keeping the suite green across the breaking declaration change.
+- **RFC-0001 §6.3** — Redefined the versioning rule for the Draft stage: draft minor releases MAY introduce breaking conformance changes with documented migration impact and security rationale, and consumers MUST pin the exact draft version they implement.
+
+### Migration
+
+Upgrading from v0.3.0 to v0.4.0 can invalidate previously accepted Ward declarations. Before compiling or deploying v0.4.0:
+
+1. Declare `editable.harness_blocks`.
+2. Ensure every tier block is a nonempty, unique string registered in `editable.harness_blocks`.
+3. Use the tier's exact gate for promotion; do not infer or alias gates.
+4. Remove unknown tier fields and unknown tier tables.
+5. Allow `human_veto_window_hours` only on `auto` and `familiar_review`, and only as a positive integer.
+6. Run `npm install`, then validate the Ward before upgrading.
+
+### Security rationale
+
+Prior v0.3-style ignored, ambiguous, or stringly typed declarations could create policy drift or bypasses. The v0.4 validator now rejects malformed TOML and schema-invalid values before semantic compilation, forcing deterministic, fail-closed authority declarations.
+
+---
+
 ## [0.3.0] — 2026-07-18
 
 ### Added
@@ -63,7 +99,7 @@ This project uses [Semantic Versioning](https://semver.org/).
 The RFC is now the canonical citation target:
 
 > Familiar Contract RFC-0001 v0.2.0, "The Familiar Contract."
-> OpenCoven, 2026. https://github.com/OpenCoven/familiar-contract/blob/main/rfcs/RFC-0001-familiar-contract.md
+> OpenCoven, 2026. https://github.com/OpenCoven/familiar-contract/blob/main/rfcs/RFC-0001-v0.2.md
 
 For academic citation, the tagged release at `v0.2.0` provides a stable URL.
 

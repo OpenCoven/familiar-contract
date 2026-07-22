@@ -32,8 +32,9 @@ pull requests against this repo. This is the agent-specific layer; read
 - **Validate before you submit.** Every JSON Schema must be valid, and every
   example/fixture in the repo must validate against its schema:
   ```sh
-  # example — use whatever validator the repo scripts provide
-  find schemas -name '*.schema.json' -print0 | xargs -0 -n1 <json-schema-validate>
+  npm install
+  node -e "for (const f of require('fs').readdirSync('schemas')) JSON.parse(require('fs').readFileSync('schemas/' + f, 'utf8'))"
+  npm test
   ```
 - **Backward compatibility matters.** The contract is consumed by real agents.
   Prefer additive changes; a breaking change to identity/role/soul/ward needs an
