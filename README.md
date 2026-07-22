@@ -2,7 +2,7 @@
 
 > **The Familiar Contract is an open specification for what an agent is allowed to be — not just what it can do, but what it cannot change about itself.**
 
-[![specification: v0.4.0](https://img.shields.io/badge/specification-v0.4.0-8b5cf6)](rfcs/RFC-0001-familiar-contract.md)
+[![specification: v0.4.1](https://img.shields.io/badge/specification-v0.4.1-8b5cf6)](rfcs/RFC-0001-familiar-contract.md)
 [![RFC-0001: Draft](https://img.shields.io/badge/RFC--0001-Draft-blue)](rfcs/RFC-0001-familiar-contract.md)
 [![license: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/OpenCoven/familiar-contract)
@@ -40,11 +40,11 @@ These are not soft design preferences. Each one has architectural implications, 
 ## How to Use This Spec
 
 **If you're building a familiar:**
-1. Read [`rfcs/RFC-0001-familiar-contract.md`](rfcs/RFC-0001-familiar-contract.md) — the normative spec (v0.4.0)
+1. Read [`rfcs/RFC-0001-familiar-contract.md`](rfcs/RFC-0001-familiar-contract.md) — the normative spec (v0.4.1)
 2. Copy an example from [`examples/`](examples/) — `minimal/` for the floor, `sage/` for a richer structurally conformant familiar directory
 3. Create `SOUL.md`, `IDENTITY.md`, `MEMORY.md`, and `ward.toml` for your familiar
 4. Run `npm install` to install the reference validator's TOML parser and JSON Schema validator.
-5. For a v0.4.0 structural-conformance claim, run both `node validators/validate.js ./your-directory` and `npm test`
+5. For a v0.4.1 structural-conformance claim, run both `node validators/validate.js ./your-directory` and `npm test`
 
 **If you're evaluating a familiar:**
 - Five properties. All five. Fewer than five is an agent, not a familiar.
@@ -62,10 +62,10 @@ These are not soft design preferences. Each one has architectural implications, 
 # Install the reference validator dependencies
 npm install
 
-# Validate the claimant directory for your v0.4.0 claim
+# Validate the claimant directory for your v0.4.1 claim
 node validators/validate.js ./your-directory
 
-# Verify the bundled reference validator + fixtures for the same v0.4.0 claim
+# Verify the bundled reference validator + fixtures for the same v0.4.1 claim
 npm test
 ```
 
@@ -88,7 +88,7 @@ See [`validators/README.md`](validators/README.md) for full CLI docs.
 ## Repository Contents
 
 ```
-rfcs/RFC-0001-familiar-contract.md ← The Familiar Contract (normative, v0.4.0)
+rfcs/RFC-0001-familiar-contract.md ← The Familiar Contract (normative, v0.4.1)
 README.md                ← This file
 PRIMER.md                ← Builder's guide (for new readers)
 CHANGELOG.md             ← Version history
