@@ -13,7 +13,7 @@ Draft minor, classified under the **v0.4.1** §6.3 rule per the incoming §6.3.1
 
 ### Added
 
-- **RFC-0001 §6.3.1** — Amendment freeze for the versioning rule: a release changing §6.3 **MUST NOT** contain any other normative change, **MUST** be classified under the §6.3 rule ratified in the most recent prior release (never the rule it introduces), a changed rule governs only later releases, and ambiguous classification under the prior rule **MUST** take the larger bump. Closes the self-ratification pattern (v0.4.0 review finding A-1; first flagged as A-7 in the v0.3.0 review).
+- **RFC-0001 §6.3.1** — Amendment freeze for the versioning rule: a release changing §6.3 **MUST NOT** contain any other normative change (current-version anchor substitutions inside otherwise-unchanged normative sentences excepted), **MUST** be classified under the §6.3 rule ratified in the most recent prior release (never the rule it introduces), a changed rule governs only later releases, and ambiguous classification under the prior rule **MUST** take the larger bump. Closes the self-ratification pattern (v0.4.0 review finding A-1; first flagged as A-7 in the v0.3.0 review).
 - **RFC-0001 §9** — Testing-gap bullet for §6.3.1 (release-process property; verified in release history and review, not by the file-level suite).
 - **rfcs/RFC-0001-v0.4.md** — Historical snapshot of the final v0.4.x text (exact copy of tag `v0.4.1`).
 
