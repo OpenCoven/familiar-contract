@@ -1,6 +1,6 @@
 # Validator — familiar-contract
 
-A Node.js CLI that checks one claimant directory for the familiar-contract v0.4.1 structural requirements. It parses `ward.toml` with `@iarna/toml` and validates the resulting object against `schemas/ward.schema.json` with Ajv before evaluating Ward semantics.
+A Node.js CLI that checks one claimant directory for the familiar-contract v0.5.0 structural requirements. It parses `ward.toml` with `@iarna/toml` and validates the resulting object against `schemas/ward.schema.json` with Ajv before evaluating Ward semantics.
 
 ## Requirements
 
@@ -47,7 +47,7 @@ node validators/validate.js --help
 The Property Coverage block attributes every violation to the five properties fail-closed: a FAIL run always marks at least one property ✗, and a violation no attribution rule recognizes marks every property its source file underwrites (e.g. an unreadable `ward.toml` marks both Bounded Authority and Human Belonging).
 
 ```
-familiar-contract validator v0.4.1
+familiar-contract validator v0.5.0
 Checking: /path/to/familiar
 
 Property Coverage:
@@ -78,7 +78,7 @@ There are no warnings for missing required files; `MEMORY.md` absence is a failu
 - Whether the Ward is actually enforced at runtime (that requires a Ward daemon)
 - Whether the familiar's behavior matches its declared purpose (behavioral compliance requires runtime evaluation)
 
-This validator checks whether one claimant directory satisfies the required file-level declarations for v0.4.1. That claimant-directory run is necessary, but not sufficient, for a structural-conformance claim: you must also run `bash tests/conformance/run-conformance.sh` so the bundled reference validator is shown to accept the positive fixtures and reject the negative fixtures for the same contract version. Full conformance additionally requires runtime Ward enforcement beyond this file-level check, and missing `MEMORY.md` is a violation, not a warning.
+This validator checks whether one claimant directory satisfies the required file-level declarations for v0.5.0. That claimant-directory run is necessary, but not sufficient, for a structural-conformance claim: you must also run `bash tests/conformance/run-conformance.sh` so the bundled reference validator is shown to accept the positive fixtures and reject the negative fixtures for the same contract version. Full conformance additionally requires runtime Ward enforcement beyond this file-level check, and missing `MEMORY.md` is a violation, not a warning.
 
 ## For CI Integration
 
@@ -91,4 +91,4 @@ This validator checks whether one claimant directory satisfies the required file
   run: npm test
 ```
 
-Both steps must pass for a reproducible v0.4.1 structural-conformance claim. The first checks the claimant directory; the second verifies the bundled reference validator and fixtures. Exit code 1 on either step will fail CI.
+Both steps must pass for a reproducible v0.5.0 structural-conformance claim. The first checks the claimant directory; the second verifies the bundled reference validator and fixtures. Exit code 1 on either step will fail CI.

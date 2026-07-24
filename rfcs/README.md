@@ -18,7 +18,7 @@ The RFC is the spec. The schemas are the machine-readable form. The conformance 
 
 | Number | Title | Version | Status | Notes |
 |---|---|---|---|---|
-| [RFC-0001](RFC-0001-familiar-contract.md) | The Familiar Contract | v0.4.1 | Draft | Canonical current draft |
+| [RFC-0001](RFC-0001-familiar-contract.md) | The Familiar Contract | v0.5.0 | Draft | Canonical current draft |
 
 ## Historical snapshots
 
@@ -28,6 +28,7 @@ do not edit them in place.
 
 | Snapshot | Version | Status | Source |
 |---|---|---|---|
+| [RFC-0001-v0.4](RFC-0001-v0.4.md) | v0.4.1 | Historical snapshot | tag `v0.4.1` (main `8a2dfd2`) |
 | [RFC-0001-v0.3](RFC-0001-v0.3.md) | v0.3.0 | Historical snapshot | tag `v0.3.0` (main `710036e`) |
 | [RFC-0001-v0.2](RFC-0001-v0.2.md) | v0.2.0 | Historical snapshot | `808ae167d8bfea7f2162f84b6f4c9269d319a9b1` |
 
@@ -49,21 +50,21 @@ Proposed → Draft → Review → Accepted → (Superseded)
 
 **Numbering:** RFCs are numbered in the order they enter `Draft` status. Numbers are not reused.
 
-**Draft versioning:** While an RFC remains `Draft`, it **MUST** stay below `1.0.0`. Draft patch versions (`0.y.z`, `z > 0`) are for clarifications and fixes that do not change conformance requirements. Draft minor versions (`0.y.0`) **MAY** introduce backward-incompatible or additive conformance changes, but each such release **MUST** document migration impact and security rationale, and consumers **MUST** pin the exact version they implement. Once an RFC reaches `1.0.0` or higher, standard SemVer applies: major for incompatible changes, minor for backward-compatible additions, patch for clarifications and fixes.
+**Draft versioning:** While an RFC remains `Draft`, it **MUST** stay below `1.0.0`. Draft patch versions (`0.y.z`, `z > 0`) are for clarifications and fixes that do not change conformance requirements. Draft minor versions (`0.y.0`) **MAY** introduce backward-incompatible or additive conformance changes, but each such release **MUST** document migration impact and security rationale, and consumers **MUST** pin the exact version they implement. A release that changes the versioning rule itself (RFC-0001 §6.3) **MUST** ship with no other normative change and **MUST** be classified under the previously ratified rule, never the rule it introduces (RFC-0001 §6.3.1). Once an RFC reaches `1.0.0` or higher, standard SemVer applies: major for incompatible changes, minor for backward-compatible additions, patch for clarifications and fixes.
 
 **Conformance:** Every normative requirement (a sentence containing MUST or SHOULD) in an Accepted RFC SHOULD have a corresponding test in `tests/conformance/`. RFCs that lack conformance coverage may still be Accepted, but the gap is documented in the RFC itself under an "Open testing gaps" section.
 
 ## How to cite an RFC
 
 ```
-Familiar Contract RFC-0001 v0.4.1, "The Familiar Contract."
+Familiar Contract RFC-0001 v0.5.0, "The Familiar Contract."
 OpenCoven, 2026. https://github.com/OpenCoven/familiar-contract/blob/main/rfcs/RFC-0001-familiar-contract.md
 ```
 
 For academic citation, prefer the tagged release (the version tag is cut when the corresponding RFC revision merges; until then, cite the latest existing tag):
 
 ```
-https://github.com/OpenCoven/familiar-contract/releases/tag/v0.4.1
+https://github.com/OpenCoven/familiar-contract/releases/tag/v0.5.0
 ```
 
 ## License
