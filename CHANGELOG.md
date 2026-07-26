@@ -7,6 +7,24 @@ This project uses [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.5.0] — 2026-07-24
+
+Draft minor, classified under the **v0.4.1** §6.3 rule per the incoming §6.3.1 freeze: one additive normative change, shipped alone. No directory-level conformance requirements change.
+
+### Added
+
+- **RFC-0001 §6.3.1** — Amendment freeze for the versioning rule: a release changing §6.3 **MUST NOT** contain any other normative change (current-version anchor substitutions inside otherwise-unchanged normative sentences excepted), **MUST** be classified under the §6.3 rule ratified in the most recent prior release (never the rule it introduces), a changed rule governs only later releases, and ambiguous classification under the prior rule **MUST** take the larger bump. Closes the self-ratification pattern (v0.4.0 review finding A-1; first flagged as A-7 in the v0.3.0 review).
+- **RFC-0001 §9** — Testing-gap bullet for §6.3.1 (release-process property; verified in release history and review, not by the file-level suite).
+- **rfcs/RFC-0001-v0.4.md** — Historical snapshot of the final v0.4.x text (exact copy of tag `v0.4.1`).
+
+### Changed
+
+- **Migration impact:** none. Directories structurally conformant with v0.4.1 remain structurally conformant with v0.5.0; the new MUSTs bind the RFC's own release process, not implementations.
+- **Security rationale:** §6.3 is the specification's own authority boundary; a release blessed by the versioning rule it introduces is self-ratifying — the specification-layer analogue of the Ward-mutation loophole Gate 4 closes. The freeze makes the amendment rule a protected surface of the spec itself.
+- **README.md, PRIMER.md, SPEC.md, rfcs/README.md, docs/faq.md, tests/conformance/README.md, validators/README.md, validators/validate.js, schemas/ward.schema.json (description string), package.json** — Updated current-version references to v0.5.0.
+
+---
+
 ## [0.4.1] — 2026-07-21
 
 Draft patch (§6.3): clarifications only; no conformance requirements change.
