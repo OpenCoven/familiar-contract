@@ -13,7 +13,7 @@ Unlike the `positive/` and `negative/` familiar-directory lanes, each case here 
 | `03-proposal-approved.json` | A proposal-verdict event; `diff_hash` is null, which §5.6.1 permits on verdict events. |
 | `04-principal-authorized-write.json` | A principal-authorized write. **Worked vector:** `04-principal-authorized-write.surface` holds the post-write surface bytes; the checker recomputes SHA-256 over them and requires equality with `diff_hash` (§5.6.1). |
 
-Companion-vector convention: `<case>.entry` binds to `entry_hash`; `<case>.surface` binds to `diff_hash`. An independent implementation can use these files as known-good vectors for its own fingerprint code.
+Companion-vector convention: `<case>.entry` binds to `entry_hash`; `<case>.surface` binds to `diff_hash`. An independent implementation can use these files as known-good vectors for its own fingerprint code. The checker fails closed unless at least one vector of each kind was found and verified per run — a deleted or renamed companion file breaks the suite instead of silently skipping the §6.1 worked-vector demonstration.
 
 ## Negative cases (MUST fail schema validation)
 

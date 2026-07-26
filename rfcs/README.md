@@ -18,7 +18,7 @@ The RFC is the spec. The schemas are the machine-readable form. The conformance 
 
 | Number | Title | Version | Status | Notes |
 |---|---|---|---|---|
-| [RFC-0001](RFC-0001-familiar-contract.md) | The Familiar Contract | v0.6.0 | Draft | Canonical current draft |
+| [RFC-0001](RFC-0001-familiar-contract.md) | The Familiar Contract | v0.7.0 | Draft | Canonical current draft |
 
 ## Historical snapshots
 
@@ -28,6 +28,7 @@ do not edit them in place.
 
 | Snapshot | Version | Status | Source |
 |---|---|---|---|
+| [RFC-0001-v0.6](RFC-0001-v0.6.md) | v0.6.0 | Historical snapshot | tag `v0.6.0` (main `cade5a0`) |
 | [RFC-0001-v0.5](RFC-0001-v0.5.md) | v0.5.0 | Historical snapshot | tag `v0.5.0` (main `6ab88f8`) |
 | [RFC-0001-v0.4](RFC-0001-v0.4.md) | v0.4.1 | Historical snapshot | tag `v0.4.1` (main `8a2dfd2`) |
 | [RFC-0001-v0.3](RFC-0001-v0.3.md) | v0.3.0 | Historical snapshot | tag `v0.3.0` (main `710036e`) |
@@ -58,14 +59,14 @@ Proposed → Draft → Review → Accepted → (Superseded)
 ## How to cite an RFC
 
 ```
-Familiar Contract RFC-0001 v0.6.0, "The Familiar Contract."
+Familiar Contract RFC-0001 v0.7.0, "The Familiar Contract."
 OpenCoven, 2026. https://github.com/OpenCoven/familiar-contract/blob/main/rfcs/RFC-0001-familiar-contract.md
 ```
 
 For academic citation, prefer the tagged release (the version tag is cut when the corresponding RFC revision merges; until then, cite the latest existing tag):
 
 ```
-https://github.com/OpenCoven/familiar-contract/releases/tag/v0.6.0
+https://github.com/OpenCoven/familiar-contract/releases/tag/v0.7.0
 ```
 
 ## License
