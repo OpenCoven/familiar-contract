@@ -1,0 +1,8 @@
+{
+  "event_id": "evt-2026-07-26-0001",
+  "event_type": "memory_entry_admitted",
+  "familiar_id": "minimal",
+  "entry_hash": "sha256:16b7213c9fa7abbf93a96a9f34b6d753a9cac83309004a4f2576c76f07220d67",
+  "source_attestation": "principal_authorized_write:evt-2026-07-26-0000",
+  "timestamps": { "admitted": "2026-07-26T08:05:01Z" }
+}

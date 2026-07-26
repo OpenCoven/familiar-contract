@@ -1,0 +1,7 @@
+{
+  "event_id": "evt-100002",
+  "event_type": "memory_entry_admitted",
+  "familiar_id": "sage",
+  "entry_hash": "b5fb3976fc32805b9254b7171585d3ecfc1ff8e0359c5a5470c96e9c2b4ed30",
+  "source_attestation": "ward_updated:evt-000097"
+}

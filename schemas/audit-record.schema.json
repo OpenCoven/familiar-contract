@@ -1,0 +1,124 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/OpenCoven/familiar-contract/schemas/audit-record.schema.json",
+  "title": "Audit Record Schema",
+  "description": "JSON Schema for the textual (JSON) encoding of one RFC-0001 §5.6 audit-log record (familiar-contract v0.6 subset). Covers the seven event types named in §5.6 and enforces the §5.6.1 canonical encodings: hash-bearing fields are 64-character lowercase bare hexadecimal, never algorithm-prefixed strings; the hash algorithm is fixed by each field's definition (ward_hash: BLAKE3; diff_hash, entry_hash: SHA-256), so no discriminator field appears here. The record root remains open to implementation-specific extension fields, which conformance checking ignores; implementation-specific extension event types are outside this schema's scope. Runtime obligations (append-only behavior, recomputation as tamper evidence, fail-closed rejection of unsupported algorithms, referent resolution) are normative in §5.6/§5.6.1 and are not expressible here.",
+  "type": "object",
+  "required": ["event_id", "event_type", "familiar_id"],
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Unique identifier of this audit-log entry."
+    },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "proposal_submitted",
+        "proposal_approved",
+        "proposal_rejected",
+        "proposal_vetoed",
+        "ward_updated",
+        "memory_entry_admitted",
+        "principal_authorized_write"
+      ],
+      "description": "The RFC-0001 §5.6 named event-type set."
+    },
+    "proposal_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Present when the event is proposal-related (§5.6)."
+    },
+    "familiar_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The familiar whose surfaces this event concerns."
+    },
+    "ward_version": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Ward manifest version; with ward_hash, identifies a committed Ward state (§1.1). MUST for ward_updated events."
+    },
+    "ward_hash": {
+      "$ref": "#/definitions/hashHex",
+      "description": "BLAKE3 structural commitment to the committed authority state, per the §5.6.1 domain-tagged Merkle construction. MUST for ward_updated events."
+    },
+    "tier": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Approval tier of the proposal, when proposal-related (§5.3)."
+    },
+    "decision": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The decision recorded by this event."
+    },
+    "approver": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Identity of the approving party, when applicable."
+    },
+    "diff_hash": {
+      "oneOf": [
+        { "$ref": "#/definitions/hashHex" },
+        { "type": "null" }
+      ],
+      "description": "SHA-256 fingerprint of the exact post-write surface bytes (§5.6.1). Populated on apply events; MAY be null on proposal-verdict events."
+    },
+    "files_touched": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "description": "Surfaces touched by the audited action."
+    },
+    "entry_hash": {
+      "$ref": "#/definitions/hashHex",
+      "description": "SHA-256 fingerprint of the admitted memory entry's canonical bytes — the exact UTF-8 byte sequence appended to the memory surface (§5.6.1). MUST for memory_entry_admitted events."
+    },
+    "source_attestation": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Identifies the prior committed Ward state or principal-authorized write event justifying admission; MUST resolve in the append-only audit log (§5.6). MUST for memory_entry_admitted events."
+    },
+    "principal_authorization": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit principal authorization evidence. MUST for ward_updated and principal_authorized_write events, and for memory_entry_admitted events recording a loop-originated entry (§3.4, §5.6)."
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "event_type": { "const": "ward_updated" } },
+        "required": ["event_type"]
+      },
+      "then": {
+        "required": ["ward_version", "ward_hash", "principal_authorization"]
+      }
+    },
+    {
+      "if": {
+        "properties": { "event_type": { "const": "memory_entry_admitted" } },
+        "required": ["event_type"]
+      },
+      "then": {
+        "required": ["entry_hash", "source_attestation"]
+      }
+    },
+    {
+      "if": {
+        "properties": { "event_type": { "const": "principal_authorized_write" } },
+        "required": ["event_type"]
+      },
+      "then": {
+        "required": ["principal_authorization"]
+      }
+    }
+  ],
+  "definitions": {
+    "hashHex": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "Textual hash encoding per §5.6.1: exactly 64 lowercase hexadecimal characters (a raw 32-byte value), bare — no sha256:/blake3: prefix, no uppercase. The algorithm is fixed by the field's definition."
+    }
+  }
+}

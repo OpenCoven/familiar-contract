@@ -1,0 +1,10 @@
+{
+  "event_id": "evt-000097",
+  "event_type": "ward_updated",
+  "familiar_id": "sage",
+  "decision": "applied",
+  "ward_version": "3",
+  "ward_hash": "c8fe4585008aa1d49980d18c5cc991bc6d42891bd2117dd24360dc05b36518d9",
+  "principal_authorization": "val:2026-07-26T13:58:40Z:ward-update-signed",
+  "authorized_at": "2026-07-26T13:58:41Z"
+}

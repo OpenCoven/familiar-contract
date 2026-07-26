@@ -344,6 +344,53 @@ function validateCrossFile(dirPath) {
   return violations;
 }
 
+// ── audit-record sample validation (§5.6.1) ──────────────────────────────────
+// A claimant directory MAY bundle audit-record samples under audit/ as JSON
+// files. Absence is not a violation (the audit log is a runtime artifact), but
+// when audit/ is present every .json file in it MUST validate against
+// schemas/audit-record.schema.json, and an empty audit/ fails closed.
+
+const auditRecordSchema = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'schemas', 'audit-record.schema.json'), 'utf8'));
+const validateAuditRecordSchema = new Ajv({ allErrors: true, strict: false }).compile(auditRecordSchema);
+
+function validateAuditSamples(dirPath) {
+  const auditDir = path.join(dirPath, 'audit');
+  const violations = [];
+
+  if (!fs.existsSync(auditDir)) return violations;
+
+  if (!fs.statSync(auditDir).isDirectory()) {
+    return [violation('audit', 'path', 'audit exists but is not a directory. Bundle §5.6 audit-record samples as audit/*.json or omit audit/ entirely.')];
+  }
+
+  const files = fs.readdirSync(auditDir).filter((f) => f.endsWith('.json')).sort();
+  if (files.length === 0) {
+    return [violation('audit', 'samples', 'audit/ is present but contains no .json audit-record samples. Declare samples or omit the directory (fail closed, RFC-0001 §5.6.1).')];
+  }
+
+  for (const file of files) {
+    const rel = path.join('audit', file);
+    let parsed;
+    try {
+      parsed = JSON.parse(fs.readFileSync(path.join(auditDir, file), 'utf8'));
+    } catch (error) {
+      violations.push(violation(rel, 'syntax', `JSON syntax violation: ${error.message}`));
+      continue;
+    }
+    if (!isObject(parsed)) {
+      violations.push(violation(rel, 'shape', 'An audit-record sample must be a single JSON object (one §5.6 audit-log record per file).'));
+      continue;
+    }
+    if (!validateAuditRecordSchema(parsed)) {
+      for (const error of validateAuditRecordSchema.errors || []) {
+        violations.push(violation(rel, `schema ${error.instancePath || '/'} [${error.keyword}]`, error.message || 'schema violation'));
+      }
+    }
+  }
+
+  return violations;
+}
+
 // ── Memory check ──────────────────────────────────────────────────────────────
 
 function checkMemory(dirPath) {
@@ -384,6 +431,7 @@ ${bold('Checks:')}
   • IDENTITY.md  — Named Identity (machine-readable record)
   • ward.toml    — TOML syntax + JSON Schema, then Bounded Authority + Human Belonging checks
   • MEMORY.md    — Persistent Memory (required; missing is a violation)
+  • audit/*.json — Optional §5.6 audit-record samples (JSON Schema; §5.6.1 hash encodings)
   • Cross-file   — Name consistency between SOUL.md and ward.toml
 
 ${bold('Exit codes:')}
@@ -405,7 +453,7 @@ ${bold('Exit codes:')}
     process.exit(1);
   }
 
-  console.log(`\n${bold('familiar-contract validator')} ${dim('v0.5.0')}`);
+  console.log(`\n${bold('familiar-contract validator')} ${dim('v0.6.0')}`);
   console.log(dim(`Checking: ${dirPath}\n`));
 
   const allViolations = [];
@@ -416,9 +464,10 @@ ${bold('Exit codes:')}
   const wardViolations = validateWard(dirPath);
   const crossViolations = validateCrossFile(dirPath);
   const memoryViolations = checkMemory(dirPath);
+  const auditViolations = validateAuditSamples(dirPath);
 
   allViolations.push(...soulViolations, ...identityViolations, ...wardViolations, ...crossViolations);
-  allViolations.push(...memoryViolations);
+  allViolations.push(...memoryViolations, ...auditViolations);
 
   // Property coverage report.
   // Attribution is fail-closed (N-7): every violation must mark at least one of
@@ -451,6 +500,10 @@ ${bold('Exit codes:')}
       return ['Bounded Authority', 'Human Belonging'];
     }
     if (v.file === 'MEMORY.md') return ['Persistent Memory'];
+    if (v.file === 'audit' || v.file.startsWith('audit/') || v.file.startsWith('audit\\')) {
+      // §5.6.1 audit-record samples underwrite provenance (memory) and accountability (authority)
+      return ['Bounded Authority', 'Persistent Memory'];
+    }
     if (v.file === 'cross-file') return ['Named Identity'];
     // Unknown source: fail closed across the board
     return PROPERTIES;

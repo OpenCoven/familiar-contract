@@ -1,0 +1,11 @@
+{
+  "event_id": "evt-2026-07-26-0001",
+  "event_type": "ward_updated",
+  "familiar_id": "sage",
+  "ward_version": "0.1.0",
+  "ward_hash": "c8fe4585008aa1d49980d18c5cc991bc6d42891bd2117dd24360dc05b36518d9",
+  "principal_authorization": "val-alexander:2026-07-26:ward-commit",
+  "timestamps": {
+    "authorized": "2026-07-26T08:00:00Z"
+  }
+}

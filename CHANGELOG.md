@@ -7,6 +7,27 @@ This project uses [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.6.0] — 2026-07-26
+
+Draft minor under the **v0.5.0** §6.3 rule: additive normative conformance changes (new MUSTs on previously implementation-defined hash fields; a new audit-record lane in the reference conformance suite). Closes the A-6 residual from the v0.3.0 provenance review. Design basis: `docs/superpowers/specs/2026-07-22-hash-canonicalization-design.md` (bead `threads-5vn`).
+
+### Added
+
+- **RFC-0001 §5.6.1** — Hash algorithms and canonical encodings for the audit log's hash-bearing fields: structural commitments (`ward_hash`, multi-field/Merkle commitments) use BLAKE3 with domain-tagged, length-prefixed framing; content fingerprints (`diff_hash`, `entry_hash`) use SHA-256 over exactly specified input bytes; textual encodings are 64-character lowercase bare hex (prefixed forms prohibited) with an explicit `"blake3"`/`"sha256"` discriminator where a field's definition does not fix the algorithm. Implementations **MUST** reject attestations naming unsupported algorithms (never skip verification), **MUST** be able to recompute every recorded hash from the audit log and referenced surface bytes regardless of writing implementation, and **MUST** treat recomputation mismatches as tamper evidence.
+- **schemas/audit-record.schema.json** — Machine-readable form of the §5.6/§5.6.1 audit-record field constraints for textual (JSON) encodings.
+- **tests/conformance/audit-records/** — New conformance lane (4 positive, 7 negative single-record fixtures) checked by `validators/check-audit-records.js` under the same `npm test` entry point; positive fixtures carry worked test vectors — SHA-256 vectors verified by recomputation from companion byte files, and the BLAKE3 empty-weave reference vector `blake3("coven-threads:empty:v1")` computed from the reference construction.
+- **validators/validate.js** — Optional claimant-directory audit-record samples: `audit/*.json` validates against the schema when present; absence of `audit/` is not a violation, a present-but-empty `audit/` fails closed. Covered by fixtures `positive/07-audit-record-samples` (worked provenance chain whose SHA-256 vectors recompute from the fixture's own `MEMORY.md` bytes), `negative/37-bad-entry-hash`, and `negative/38-empty-audit-dir`.
+- **RFC-0001 §8.2 / §9** — Failure mode and testing-gap bullets for runtime hash obligations: recomputation-as-tamper-evidence, fail-closed unsupported-algorithm rejection, and cross-implementation `ward_hash` verification are runtime properties beyond the file-level suite.
+- **rfcs/RFC-0001-v0.5.md** — Historical snapshot of the final v0.5.x text (exact copy of tag `v0.5.0`).
+
+### Changed
+
+- **Migration impact:** none for the reference implementation (`coven-threads-core` and the `coven` daemon) — §5.6.1 codifies its deployed practice, grandfathering existing domain-tagged constructions (their `:v<N>` tags are their version). Other implementations of §5.6 must verify their hash fields recompute under the now-normative definitions. No claimant-directory changes are required; directories without `audit/` samples are unaffected. Consumers pinning v0.5.0 are unaffected.
+- **Security rationale:** unspecified hash constructions made provenance chains verifiable only by their writer — a foreign implementation or auditor had to trust, not verify, exactly where §5.6 exists to remove trust. Fixed constructions make tampering detectable across implementations; fail-closed algorithm handling prevents downgrade-by-unknown-algorithm; domain tags with length-prefix framing prevent cross-context collision and forgeable delimiter framing.
+- **README.md, PRIMER.md, SPEC.md, rfcs/README.md, docs/faq.md, tests/conformance/README.md, validators/README.md, validators/validate.js, schemas/ward.schema.json (description string), package.json** — Updated current-version references to v0.6.0.
+
+---
+
 ## [0.5.0] — 2026-07-24
 
 Draft minor, classified under the **v0.4.1** §6.3 rule per the incoming §6.3.1 freeze: one additive normative change, shipped alone. No directory-level conformance requirements change.

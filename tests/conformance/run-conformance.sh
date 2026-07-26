@@ -2,6 +2,8 @@
 # Runs the full conformance suite.
 # For each positive/<case>: `node validators/validate.js <case>` MUST exit 0
 # For each negative/<case>: `node validators/validate.js <case>` MUST exit non-zero
+# The audit-record lane: `node validators/check-audit-records.js` MUST exit 0
+# (positive records validate + worked vectors recompute; negative records fail).
 # Reports counts and exits 0 only if all cases behave as expected.
 
 set -u
@@ -69,9 +71,20 @@ for case_path in "$SUITE_DIR"/negative/*; do
   run_case "$case_path" "fail" "negative/$(basename "$case_path")"
 done
 
+printf '\n'
+
+audit_records_status="READY"
+if ! node "$ROOT_DIR/validators/check-audit-records.js"; then
+  audit_records_status="BROKEN"
+  unexpected=$((unexpected + 1))
+  details="${details}
+audit-record lane misbehaved (see check-audit-records.js output above)"
+fi
+
 printf '\nResults:\n'
 printf '  positive: %s/%s passed\n' "$positive_passed" "$positive_total"
 printf '  negative: %s/%s failed correctly\n' "$negative_failed" "$negative_total"
+printf '  audit-records: %s\n' "$audit_records_status"
 printf '  unexpected: %s\n' "$unexpected"
 
 if [ "$unexpected" -eq 0 ]; then

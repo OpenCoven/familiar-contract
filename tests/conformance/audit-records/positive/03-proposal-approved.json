@@ -1,0 +1,13 @@
+{
+  "event_id": "evt-000103",
+  "event_type": "proposal_approved",
+  "proposal_id": "prop-0042",
+  "familiar_id": "sage",
+  "tier": "human_approval",
+  "decision": "approved",
+  "approver": "val",
+  "diff_hash": null,
+  "files_touched": ["harness/system_prompt.tone"],
+  "submitted_at": "2026-07-26T13:40:00Z",
+  "decided_at": "2026-07-26T14:05:27Z"
+}

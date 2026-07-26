@@ -1,0 +1,6 @@
+{
+  "event_id": "evt-100004",
+  "event_type": "memory_entry_admitted",
+  "familiar_id": "sage",
+  "source_attestation": "ward_updated:evt-000097"
+}
