@@ -7,6 +7,26 @@ This project uses [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.7.0] — 2026-07-26
+
+Draft minor under the **v0.5.0** §6.3 rule (unchanged through v0.6.0): rescopes an existing normative MUST and promotes the reference `ward_hash` leaf construction to a normative definition. Closes both findings of the v0.6.0 post-merge review (beads `threads-8gg`, `threads-df9`).
+
+### Added
+
+- **RFC-0001 §5.6.1** — The `ward_hash` Merkle leaf `payload` is now defined: the thread's `thread:v2` leaf commitment (surface path, writer id, sorted deduplicated covered-channel tags, full tension-state commitment bytes, lexicographically sorted strand commitment bytes; every field big-endian-u64 length-prefixed). The reference implementation's construction is adopted as the **normative** definition of the payload bytes, restoring the design-basis D-2 delegation dropped in the v0.6.0 transposition; a change to the payload construction **MUST** change its embedded tag. Previously `ward_hash` was not recomputable from the RFC alone.
+- **RFC-0001 §10.1** — Normative reference to `coven-threads-core` (`weave.rs` `thread_leaf_bytes`, `manifest.rs` `merkle_root`) as the source of the §5.6.1 structural-commitment constructions.
+- **rfcs/RFC-0001-v0.6.md** — Historical snapshot of the final v0.6.x text (exact copy of tag `v0.6.0`).
+
+### Changed
+
+- **RFC-0001 §5.6.1 (cross-implementation verification)** — The recompute **MUST** is scoped by hash role: content fingerprints (`diff_hash`, `entry_hash`) remain recomputable from the audit log plus referenced surface bytes alone; `ward_hash` recomputation requires the committed authority state it commits to, which the log references but does not embed. A verifier holding only the log and surfaces **MUST** verify the field's textual encoding and **MUST NOT** treat missing committed state as a recomputation mismatch. The v0.6.0 wording overclaimed the `ward_hash` inputs (undischargeable as written); the §9 gap bullet is rescoped to match.
+- **validators/check-audit-records.js** — Fails closed unless at least one `.entry` and one `.surface` companion vector was found and verified per run: a deleted or renamed vector file now breaks the suite instead of silently skipping the §6.1 worked-vector demonstration.
+- **Migration impact:** none for the reference implementation — the leaf-payload definition codifies its deployed `thread:v2` construction, and the rescoped MUST matches what implementations could actually do. Directories structurally conformant with v0.6.0 are structurally conformant with v0.7.0; no claimant-directory changes. Foreign implementations gain a complete, citable `ward_hash` preimage definition where none existed. Consumers pinning v0.6.0 are unaffected.
+- **Security rationale:** an unrecomputable structural commitment invites trust-not-verify — the failure §5.6.1 exists to remove; the normative leaf-payload definition makes `ward_hash` independently checkable by anyone holding the committed state. Role-scoping the recompute MUST prevents false tamper alarms (a verifier treating "cannot recompute for lack of inputs" as tamper evidence trains operators to ignore the alarm that matters). The vector-coverage assertion closes a fail-open in the conformance machinery itself: the §6.1 claim is now enforced by the run, not by the continued presence of optional files.
+- **README.md, PRIMER.md, SPEC.md, rfcs/README.md, docs/faq.md, tests/conformance/README.md, validators/README.md, validators/validate.js, schemas/ward.schema.json + schemas/audit-record.schema.json (description strings), package.json** — Updated current-version references to v0.7.0.
+
+---
+
 ## [0.6.0] — 2026-07-26
 
 Draft minor under the **v0.5.0** §6.3 rule: additive normative conformance changes (new MUSTs on previously implementation-defined hash fields; a new audit-record lane in the reference conformance suite). Closes the A-6 residual from the v0.3.0 provenance review. Design basis: `docs/superpowers/specs/2026-07-22-hash-canonicalization-design.md` (bead `threads-5vn`).

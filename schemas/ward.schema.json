@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://github.com/OpenCoven/familiar-contract/schemas/ward.schema.json",
   "title": "ward.toml Schema",
-  "description": "JSON Schema for the core fields of a familiar's ward.toml document (familiar-contract v0.6 subset). Approval-tier tables are closed (additionalProperties: false) per RFC-0001 §5.3.1 fail-closed compilation; [meta] and the document root deliberately remain open to implementation-specific extension fields, which conformance checking ignores. The full Ward Specification defines additional fields for advanced governance and audit logging.",
+  "description": "JSON Schema for the core fields of a familiar's ward.toml document (familiar-contract v0.7 subset). Approval-tier tables are closed (additionalProperties: false) per RFC-0001 §5.3.1 fail-closed compilation; [meta] and the document root deliberately remain open to implementation-specific extension fields, which conformance checking ignores. The full Ward Specification defines additional fields for advanced governance and audit logging.",
   "type": "object",
   "required": ["meta", "protected", "editable", "approval_tiers"],
   "properties": {

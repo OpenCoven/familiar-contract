@@ -10,6 +10,9 @@
  *     corresponding record field (worked test vectors, §6.1):
  *       <case>.entry   → record.entry_hash
  *       <case>.surface → record.diff_hash
+ *     The lane fails closed unless at least one vector of each kind was
+ *     found and verified: a deleted or renamed companion file breaks the
+ *     run instead of silently skipping the §6.1 vector demonstration.
  *
  *   tests/conformance/audit-records/negative/<case>.json
  *     MUST fail schema validation.
@@ -65,6 +68,8 @@ function main() {
     process.exit(1);
   }
 
+  const vectorsVerified = Object.fromEntries(Object.keys(VECTOR_FIELDS).map((ext) => [ext, 0]));
+
   for (const casePath of positives) {
     const label = `audit-records/positive/${path.basename(casePath)}`;
     let record;
@@ -96,9 +101,24 @@ function main() {
           label,
           `vector ${path.basename(vectorPath)}: sha256 ${actual} != ${field} ${expected}`
         );
+      } else {
+        vectorsVerified[ext] += 1;
       }
     }
     if (vectorsOk) report(true, label);
+  }
+
+  // §6.1 fail-closed vector coverage: a passing run must actually have
+  // demonstrated worked-vector recomputation of each kind, so a missing or
+  // renamed companion file cannot silently disable the demonstration.
+  for (const [ext, field] of Object.entries(VECTOR_FIELDS)) {
+    if (vectorsVerified[ext] === 0) {
+      report(
+        false,
+        `audit-records/positive/*${ext}`,
+        `no ${ext} companion vector found and verified against ${field} — §6.1 requires the worked-vector demonstration`
+      );
+    }
   }
 
   for (const casePath of negatives) {

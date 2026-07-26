@@ -453,7 +453,7 @@ ${bold('Exit codes:')}
     process.exit(1);
   }
 
-  console.log(`\n${bold('familiar-contract validator')} ${dim('v0.6.0')}`);
+  console.log(`\n${bold('familiar-contract validator')} ${dim('v0.7.0')}`);
   console.log(dim(`Checking: ${dirPath}\n`));
 
   const allViolations = [];
