@@ -69,11 +69,5 @@
     }
   },
   "additionalProperties": true,
-  "notes": [
-    "Roles are additive. A familiar with a role satisfies all five Familiar Contract properties as its baseline; the role adds narrowing constraints.",
-    "A role cannot override or weaken the familiar's core identity (SOUL.md, IDENTITY.md).",
-    "A role cannot expand authority — only restrict it.",
-    "Roles are scoped to a project or context. They are not permanent identity changes.",
-    "For the full Roles Architecture, see the OpenCoven roles specification."
-  ]
+  "$comment": "Roles are additive. A familiar with a role satisfies all five Familiar Contract properties as its baseline; the role adds narrowing constraints. A role cannot override or weaken SOUL.md or IDENTITY.md, cannot expand authority, and is scoped to a project or context rather than a permanent identity change."
 }
