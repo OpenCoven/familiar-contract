@@ -1,0 +1,10 @@
+{
+  "event_id": "evt-000104",
+  "event_type": "principal_authorized_write",
+  "familiar_id": "sage",
+  "decision": "applied",
+  "principal_authorization": "val:2026-07-26T14:10:03Z:direct-write-authorized",
+  "diff_hash": "77dc7bf6d10bbb9a60cdd07ef7381a946cf9cebbddbb0435fbe883bd1cb77bac",
+  "files_touched": ["SOUL.md"],
+  "authorized_at": "2026-07-26T14:10:04Z"
+}

@@ -1,0 +1,7 @@
+{
+  "event_id": "evt-100006",
+  "event_type": "ward_updated",
+  "familiar_id": "sage",
+  "ward_version": "3",
+  "principal_authorization": "val:2026-07-26T13:58:40Z:ward-update-signed"
+}

@@ -1,0 +1,11 @@
+{
+  "event_id": "evt-000102",
+  "event_type": "memory_entry_admitted",
+  "familiar_id": "sage",
+  "decision": "admitted",
+  "entry_hash": "b5fb3976fc32805b9254b7171585d3ecfc1ff8e0359c5a5470c96e9c2b4ed300",
+  "source_attestation": "ward_updated:evt-000097",
+  "principal_authorization": "val:2026-07-26T14:02:11Z:approved-in-cave",
+  "files_touched": ["MEMORY.md"],
+  "admitted_at": "2026-07-26T14:02:12Z"
+}

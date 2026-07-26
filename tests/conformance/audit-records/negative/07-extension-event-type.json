@@ -1,0 +1,6 @@
+{
+  "event_id": "evt-100007",
+  "event_type": "compaction_ledger",
+  "familiar_id": "sage",
+  "decision": "compacted"
+}
