@@ -368,7 +368,7 @@ In a Coven with multiple familiars, a proposal from one familiar might interact 
 
 ### Doll proposal semantics
 
-The RFC mentions Doll proposals (from cloud/mobile instances of a familiar) with `origin.doll_id`, and notes that Doll proposals cannot be Tier 0 auto-promoted into a true familiar. The full specification of Doll proposal semantics — what authority a Doll has, how its proposals are evaluated differently, how the true familiar ratifies or rejects Doll-proposed changes — is future work that intersects with the full Voodoo Doll architecture specification.
+The RFC does not currently specify Doll proposals. Dolls (cloud/mobile instances of a familiar) are a Coven architectural concept, and the intended semantics — that a Doll proposal carries an origin discriminator identifying its source, and cannot be Tier 0 auto-promoted into a true familiar — are not yet in any normative text. The full specification of Doll proposal semantics — what authority a Doll has, how its proposals are evaluated differently, how the true familiar ratifies or rejects Doll-proposed changes — is future work that intersects with the full Voodoo Doll architecture specification.
 
 ### Audit log format standardization
 
