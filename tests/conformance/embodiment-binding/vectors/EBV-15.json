@@ -1,0 +1,42 @@
+{
+  "vectorId": "EBV-15",
+  "issue": "OpenCoven/familiar-contract#17",
+  "title": "tampered declaration/bundle digest",
+  "given": {
+    "committedIdentityDeclarationDigest": "994a4be083e17bbf0261c39883576837fbff6ddc796dbf8c29bd0b19369c922d",
+    "rehydratedDeclarationManifestDigest": "65f7c47961e9ba029ee3956384269db35c223386adef82f98f4adca9cde46b4b"
+  },
+  "expect": [
+    {
+      "question": "historical_rehydration",
+      "verdict": "invalid",
+      "reason": "digest_mismatch"
+    }
+  ],
+  "verification": {
+    "schema": "familiar.embodiment_verification.v1",
+    "verificationId": "01JBBVERIFEB15A0000000000000A",
+    "question": "historical_rehydration",
+    "subject": {
+      "kind": "binding",
+      "bindingId": "01JBBBIND0001A0000000000000A",
+      "bindingDigest": "7c84d38947e632d419829cd4c94ad84f6ac333b4aeed28c75d0210c7825b5090"
+    },
+    "verdict": "invalid",
+    "reason": "digest_mismatch",
+    "evidence": {
+      "identityDigestRecomputed": false,
+      "integrityRecomputed": true,
+      "lineageVerified": true,
+      "bundleStatus": "present",
+      "bundleComponentsChecked": [
+        "identity-declaration-manifest"
+      ],
+      "observedStatus": "active",
+      "redacted": false
+    },
+    "checkedAt": "2026-08-30T14:02:11Z",
+    "verifierId": "coven-resolver-prod",
+    "policyVersion": "identity-lifecycle:1.0.0"
+  }
+}

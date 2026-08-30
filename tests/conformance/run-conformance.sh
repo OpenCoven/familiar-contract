@@ -81,10 +81,19 @@ if ! node "$ROOT_DIR/validators/check-audit-records.js"; then
 audit-record lane misbehaved (see check-audit-records.js output above)"
 fi
 
+embodiment_status="READY"
+if ! node "$ROOT_DIR/validators/check-embodiment-binding.js"; then
+  embodiment_status="BROKEN"
+  unexpected=$((unexpected + 1))
+  details="${details}
+embodiment-binding lane misbehaved (see check-embodiment-binding.js output above)"
+fi
+
 printf '\nResults:\n'
 printf '  positive: %s/%s passed\n' "$positive_passed" "$positive_total"
 printf '  negative: %s/%s failed correctly\n' "$negative_failed" "$negative_total"
 printf '  audit-records: %s\n' "$audit_records_status"
+printf '  embodiment-binding: %s\n' "$embodiment_status"
 printf '  unexpected: %s\n' "$unexpected"
 
 if [ "$unexpected" -eq 0 ]; then

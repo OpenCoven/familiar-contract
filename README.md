@@ -97,12 +97,23 @@ schemas/
   identity.schema.json   ← JSON Schema for IDENTITY.md
   ward.schema.json       ← JSON Schema for ward.toml
   role.schema.json       ← JSON Schema for ROLE.md
+  audit-record.schema.json ← JSON Schema for §5.6 audit-log records
+  coven-memory-schema.md ← coven-memory promotion schema (normative prose, v1)
+  familiar-embodiment-binding.schema.json
+                         ← JSON Schema for familiar.embodiment_binding.v1 (issue #17)
+  familiar-embodiment-verification.schema.json
+                         ← JSON Schema for familiar.embodiment_verification.v1
+  familiar-embodiment-binding.md
+                         ← Familiar Embodiment Binding profile (normative prose)
 examples/
   sage/                  ← Sage (canonical structurally conformant familiar directory)
   minimal/               ← Lumen (minimal structurally conformant familiar directory)
 validators/
   validate.js            ← CLI validator
+  check-audit-records.js ← Audit-record fixture lane checker
+  check-embodiment-binding.js ← Embodiment-binding lane checker
   README.md
+tests/conformance/       ← Executable conformance suite (positive/negative/audit-records/embodiment-binding)
 docs/
   faq.md                 ← Common questions (canonical FAQ)
   five-properties.md     ← The five properties in depth

@@ -1,0 +1,47 @@
+{
+  "vectorId": "EBV-17",
+  "issue": "OpenCoven/familiar-contract#17",
+  "title": "privacy-authorized vs unauthorized historical reads",
+  "given": {
+    "authorizedReader": "privacy-authorized; sensitive components erased under policy — degraded, never valid",
+    "unauthorizedCaller": "caller lacks bundle-read authorization — unverifiable, existence not disclosed beyond the refusal"
+  },
+  "expect": [
+    {
+      "question": "historical_rehydration",
+      "verdict": "degraded",
+      "reason": "bundle_erased"
+    },
+    {
+      "question": "historical_rehydration",
+      "verdict": "unverifiable",
+      "reason": "bundle_unauthorized"
+    }
+  ],
+  "verification": {
+    "schema": "familiar.embodiment_verification.v1",
+    "verificationId": "01JBBVERIFEB17A0000000000000A",
+    "question": "historical_rehydration",
+    "subject": {
+      "kind": "binding",
+      "bindingId": "01JBBBIND0008A0000000000000A",
+      "bindingDigest": "1111111111111111111111111111111111111111111111111111111111111111"
+    },
+    "verdict": "degraded",
+    "reason": "bundle_erased",
+    "evidence": {
+      "identityDigestRecomputed": false,
+      "integrityRecomputed": true,
+      "lineageVerified": true,
+      "bundleStatus": "erased",
+      "bundleComponentsChecked": [
+        "identity-declaration-manifest"
+      ],
+      "observedStatus": "active",
+      "redacted": true
+    },
+    "checkedAt": "2026-08-30T14:02:11Z",
+    "verifierId": "coven-resolver-prod",
+    "policyVersion": "identity-lifecycle:1.0.0"
+  }
+}

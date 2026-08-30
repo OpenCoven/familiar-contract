@@ -1,0 +1,23 @@
+{
+  "schema": "familiar.embodiment_verification.v1",
+  "verificationId": "01JBBVERIF0001A0000000000000A",
+  "question": "issuance_eligibility",
+  "subject": {
+    "kind": "alias",
+    "alias": "Charm"
+  },
+  "verdict": "valid",
+  "reason": "ok",
+  "evidence": {
+    "identityDigestRecomputed": true,
+    "integrityRecomputed": true,
+    "lineageVerified": true,
+    "bundleStatus": "not_applicable",
+    "bundleComponentsChecked": [],
+    "observedStatus": "active",
+    "redacted": false
+  },
+  "checkedAt": "2026-08-30T14:02:11Z",
+  "verifierId": "coven-resolver-prod",
+  "policyVersion": "identity-lifecycle:1.0.0"
+}

@@ -1,0 +1,26 @@
+{
+  "schema": "familiar.embodiment_verification.v1",
+  "verificationId": "01JBBVERIF0010A0000000000000A",
+  "question": "historical_rehydration",
+  "subject": {
+    "kind": "binding",
+    "bindingId": "01JBBBIND0008A0000000000000A",
+    "bindingDigest": "1111111111111111111111111111111111111111111111111111111111111111"
+  },
+  "verdict": "degraded",
+  "reason": "bundle_erased",
+  "evidence": {
+    "identityDigestRecomputed": false,
+    "integrityRecomputed": true,
+    "lineageVerified": true,
+    "bundleStatus": "erased",
+    "bundleComponentsChecked": [
+      "identity-declaration-manifest"
+    ],
+    "observedStatus": "active",
+    "redacted": true
+  },
+  "checkedAt": "2026-08-30T14:02:11Z",
+  "verifierId": "coven-resolver-prod",
+  "policyVersion": "identity-lifecycle:1.0.0"
+}

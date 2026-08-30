@@ -1,0 +1,41 @@
+{
+  "vectorId": "EBV-05",
+  "issue": "OpenCoven/familiar-contract#17",
+  "title": "revoked revision refusal",
+  "given": {
+    "familiarRootId": "01JBBFAMROOTA0000000000000A",
+    "identityRevisionId": "01JBBREV0001A00000000000000A",
+    "registryStatus": "revoked"
+  },
+  "expect": [
+    {
+      "question": "issuance_eligibility",
+      "verdict": "invalid",
+      "reason": "revision_revoked"
+    }
+  ],
+  "verification": {
+    "schema": "familiar.embodiment_verification.v1",
+    "verificationId": "01JBBVERIFEB05A0000000000000A",
+    "question": "issuance_eligibility",
+    "subject": {
+      "kind": "revision",
+      "familiarRootId": "01JBBFAMROOTA0000000000000A",
+      "identityRevisionId": "01JBBREV0001A00000000000000A"
+    },
+    "verdict": "invalid",
+    "reason": "revision_revoked",
+    "evidence": {
+      "identityDigestRecomputed": false,
+      "integrityRecomputed": false,
+      "lineageVerified": false,
+      "bundleStatus": "not_applicable",
+      "bundleComponentsChecked": [],
+      "observedStatus": "revoked",
+      "redacted": false
+    },
+    "checkedAt": "2026-08-30T14:02:11Z",
+    "verifierId": "coven-resolver-prod",
+    "policyVersion": "identity-lifecycle:1.0.0"
+  }
+}
