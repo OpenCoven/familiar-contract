@@ -1,0 +1,246 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/OpenCoven/familiar-contract/schemas/familiar-embodiment-binding.schema.json",
+  "title": "Familiar Embodiment Binding Schema (familiar.embodiment_binding.v1)",
+  "description": "JSON Schema for the textual (JSON) encoding of one Familiar Embodiment Binding (profile v1, OpenCoven/familiar-contract#17). A binding proves which familiar root and exact identity revision a concrete runtime session embodies: which familiar persisted into the execution, at which revision, under which principal and validity state. A binding carries digests and stable opaque references by default; it never copies sensitive declarations, memory, relationships, or personal data. It does not grant runtime capabilities, authorize protected actions, or author run lifecycle state — those are separate, correlated authorities. The bindingIntegrityDigest is a SHA-256 content fingerprint (RFC-0001 §5.6.1 content-fingerprint role) over the canonical encoding of the binding object with the bindingIntegrityDigest member removed; identityDeclarationDigest is a SHA-256 content fingerprint over the identity declaration manifest's canonical bytes. All identifiers are stable opaque strings. Unknown members are rejected (fail closed); extension requires a profile version bump.",
+  "type": "object",
+  "required": [
+    "schema",
+    "bindingId",
+    "familiarRootId",
+    "identityRevisionId",
+    "revisionIndex",
+    "identityDeclarationDigest",
+    "identityCanonicalization",
+    "lineage",
+    "recordedAt",
+    "validFrom",
+    "validUntil",
+    "status",
+    "principalId",
+    "projectScope",
+    "correlationTarget",
+    "correlationTargetType",
+    "bindingPurpose",
+    "issuedAt",
+    "policyVersion",
+    "resolverId",
+    "historicalBundle",
+    "bindingIntegrityDigest",
+    "privacyClass"
+  ],
+  "properties": {
+    "schema": {
+      "const": "familiar.embodiment_binding.v1",
+      "description": "Profile discriminator. Carries the profile and schema version; the presence of a second mutable version field would invite drift, so policy versioning is carried separately in policyVersion."
+    },
+    "bindingId": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Unique opaque identifier of this binding. Stable opaque reference; MUST NOT encode display names or personal data."
+    },
+    "familiarRootId": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Stable opaque familiar root identity — the continuity anchor that survives revision evolution. Alias resolution MUST produce exactly one root; a human-readable familiar name/alias is input convenience and never the root of trust."
+    },
+    "identityRevisionId": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Opaque identifier of the exact identity revision embodied. Selected at dispatch/session creation, not frozen when a routine is authored."
+    },
+    "revisionIndex": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Monotonic position of the revision in the root's revision sequence. 0 denotes the genesis revision."
+    },
+    "identityDeclarationDigest": {
+      "$ref": "#/definitions/sha256Hex",
+      "description": "Canonical identity declaration/bundle digest: SHA-256 over the identity declaration manifest's canonical bytes per identityCanonicalization. This is the normative identity digest boundary."
+    },
+    "identityCanonicalization": {
+      "const": "fc-identity-canonical:v1",
+      "description": "Versioned canonicalization rule used for identityDeclarationDigest (v1: UTF-8 canonical JSON of the identity declaration manifest — see schemas/familiar-embodiment-binding.md §7)."
+    },
+    "lineage": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["relationship", "priorRevisionId"],
+        "additionalProperties": false,
+        "properties": {
+          "relationship": {
+            "enum": ["genesis", "same_familiar", "fork", "succession", "restoration"],
+            "description": "Machine-verifiable relationship to the prior revision. Same-familiar continuity, fork/new-root distinction, and succession mapping MUST be verifiable from this evidence, never inferred from names or similar content."
+          },
+          "priorRevisionId": {
+            "type": ["string", "null"],
+            "minLength": 1,
+            "description": "Prior revision this entry continues from. MUST be a non-null opaque revision identifier for every relationship except genesis."
+          },
+          "priorRootId": {
+            "type": ["string", "null"],
+            "minLength": 1,
+            "description": "Root of the prior revision. MUST be a non-null opaque root identifier for fork and succession entries (cross-root); same_familiar and restoration continue the same root."
+          },
+          "evidenceDigest": {
+            "$ref": "#/definitions/sha256Hex",
+            "description": "Optional content-addressed reference to the lineage evidence record (e.g. the succession, fork, or restoration decision record) retained by the identity registry."
+          },
+          "recordedAt": {
+            "type": "string",
+            "minLength": 1,
+            "description": "RFC 3339 UTC recorded time of the lineage event."
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": { "relationship": { "const": "genesis" } },
+              "required": ["relationship"]
+            },
+            "then": {
+              "properties": { "priorRevisionId": { "type": "null" }, "priorRootId": { "type": "null" } }
+            }
+          },
+          {
+            "if": {
+              "properties": { "relationship": { "enum": ["same_familiar", "fork", "succession", "restoration"] } },
+              "required": ["relationship"]
+            },
+            "then": {
+              "properties": { "priorRevisionId": { "type": "string", "minLength": 1 } }
+            }
+          },
+          {
+            "if": {
+              "properties": { "relationship": { "enum": ["fork", "succession"] } },
+              "required": ["relationship"]
+            },
+            "then": {
+              "properties": { "priorRootId": { "type": "string", "minLength": 1 } },
+              "required": ["priorRootId"]
+            }
+          }
+        ]
+      },
+      "description": "Predecessor/root lineage evidence needed to verify same-familiar continuity. A genesis revision MUST carry either an empty array or a single genesis entry."
+    },
+    "recordedAt": {
+      "type": "string",
+      "minLength": 1,
+      "description": "RFC 3339 UTC recorded time — when the identity registry recorded the revision."
+    },
+    "validFrom": {
+      "type": "string",
+      "minLength": 1,
+      "description": "RFC 3339 UTC start of the revision's valid-time interval."
+    },
+    "validUntil": {
+      "type": ["string", "null"],
+      "description": "RFC 3339 UTC end of the revision's valid-time interval, or null for an open interval. Recorded time and valid time are interpreted per schemas/familiar-embodiment-binding.md §7.4."
+    },
+    "status": {
+      "enum": ["active", "retired", "revoked", "superseded"],
+      "description": "Ratified revision status vocabulary, observed at decision time. A resolver MUST NOT issue a binding whose decision-time status is not active; the non-active values exist so that refusal records and decision-time evidence share one vocabulary without retroactive mutation of committed bindings. When present, the status is the decision-time snapshot and is immutable after commit."
+    },
+    "principalId": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Authenticated principal to which the familiar is bound for this embodiment. Stable opaque identifier; the selected revision MUST be valid for execution under this principal."
+    },
+    "projectScope": {
+      "type": ["string", "null"],
+      "description": "Project/scope binding where relevant; null when the embodiment is not project-scoped."
+    },
+    "correlationTarget": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Session/run/attempt correlation target — the identifier of the execution this binding commits to."
+    },
+    "correlationTargetType": {
+      "enum": ["session", "run", "attempt"],
+      "description": "Type of the correlation target."
+    },
+    "bindingPurpose": {
+      "enum": ["direct", "automation", "psyche"],
+      "description": "Binding purpose/profile: direct Coven launches, scheduled automation runs, or Psyche-delegated work. Direct, automation, and Psyche sessions use one binding profile; purpose MUST NOT change identity meaning. New purposes require a profile version bump (closed enum, fail closed)."
+    },
+    "issuedAt": {
+      "type": "string",
+      "minLength": 1,
+      "description": "RFC 3339 UTC issued/decision timestamp — when the final validity check passed and the binding was committed."
+    },
+    "policyVersion": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Version of the validity/lifecycle policy under which this binding was issued. Verifiers MUST refuse results rendered under policy versions they do not support."
+    },
+    "resolverId": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Identity of the resolver/verifier that performed alias resolution and the final validity check."
+    },
+    "historicalBundle": {
+      "type": "object",
+      "required": ["contentAddress", "locator"],
+      "additionalProperties": false,
+      "properties": {
+        "contentAddress": {
+          "$ref": "#/definitions/sha256Hex",
+          "description": "Content address of the retained historical identity bundle: SHA-256 over the bundle manifest's canonical bytes. Enables content-addressed historical rehydration (schemas/familiar-embodiment-binding.md §9); the preimage is registry-retained and is not embedded here."
+        },
+        "locator": {
+          "type": ["string", "null"],
+          "description": "Retrieval locator for the retained bundle, or null when the locator is withheld (privacy minimization, erasure, or tombstone)."
+        }
+      },
+      "description": "Content-addressed historical bundle reference."
+    },
+    "bindingIntegrityDigest": {
+      "$ref": "#/definitions/sha256Hex",
+      "description": "Integrity/authentication field: SHA-256 content fingerprint over the canonical encoding of this binding object with the bindingIntegrityDigest member removed. Unkeyed in v1 — tamper-evident for corruption and drift; adversarial authentication (keyed commitment or signature) is a ratified-extension decision (see schemas/familiar-embodiment-binding.md §6.4). Committed binding bytes/digest MUST be verified before launch success is returned."
+    },
+    "privacyClass": {
+      "enum": ["standard", "sensitive", "tombstoned"],
+      "description": "Privacy/retention classification of the binding and its retained material. standard: opaque identifiers only. sensitive: retained material requires additional authorization for bundle reads. tombstoned: erasure has been applied; bundle components may be absent and verification degrades (fail closed, never overclaim)."
+    },
+    "supersededBy": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Identity revision that supersedes this revision. MUST be present when status is superseded."
+    }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": { "status": { "const": "superseded" } },
+        "required": ["status"]
+      },
+      "then": {
+        "required": ["supersededBy"]
+      }
+    },
+    {
+      "if": {
+        "properties": { "privacyClass": { "const": "tombstoned" } },
+        "required": ["privacyClass"]
+      },
+      "then": {
+        "properties": {
+          "historicalBundle": {
+            "properties": { "locator": { "type": "null" } }
+          }
+        }
+      }
+    }
+  ],
+  "definitions": {
+    "sha256Hex": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "Textual hash encoding per RFC-0001 §5.6.1: exactly 64 lowercase hexadecimal characters (a raw 32-byte SHA-256 value), bare — no sha256: prefix, no uppercase. Algorithm fixed by each field's definition; no discriminator field appears in this schema."
+    }
+  }
+}

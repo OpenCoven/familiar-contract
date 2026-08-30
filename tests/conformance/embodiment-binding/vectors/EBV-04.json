@@ -1,0 +1,40 @@
+{
+  "vectorId": "EBV-04",
+  "issue": "OpenCoven/familiar-contract#17",
+  "title": "stale cached revision refusal",
+  "given": {
+    "cacheAgeSeconds": 3600,
+    "cacheFreshnessBoundSeconds": 30
+  },
+  "expect": [
+    {
+      "question": "issuance_eligibility",
+      "verdict": "invalid",
+      "reason": "stale_cached_revision"
+    }
+  ],
+  "verification": {
+    "schema": "familiar.embodiment_verification.v1",
+    "verificationId": "01JBBVERIFEB04A0000000000000A",
+    "question": "issuance_eligibility",
+    "subject": {
+      "kind": "revision",
+      "familiarRootId": "01JBBFAMROOTA0000000000000A",
+      "identityRevisionId": "01JBBREV0001A00000000000000A"
+    },
+    "verdict": "invalid",
+    "reason": "stale_cached_revision",
+    "evidence": {
+      "identityDigestRecomputed": false,
+      "integrityRecomputed": false,
+      "lineageVerified": false,
+      "bundleStatus": "not_applicable",
+      "bundleComponentsChecked": [],
+      "observedStatus": null,
+      "redacted": false
+    },
+    "checkedAt": "2026-08-30T14:02:11Z",
+    "verifierId": "coven-resolver-prod",
+    "policyVersion": "identity-lifecycle:1.0.0"
+  }
+}

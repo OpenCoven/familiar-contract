@@ -1,0 +1,293 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/OpenCoven/familiar-contract/schemas/familiar-embodiment-verification.schema.json",
+  "title": "Familiar Embodiment Verification Result Schema (familiar.embodiment_verification.v1)",
+  "description": "JSON Schema for the textual (JSON) encoding of one Familiar Embodiment Verification Result (profile v1, OpenCoven/familiar-contract#17). Records the outcome of verifying an embodiment: alias resolution, issuance eligibility, or historical rehydration. Verdicts are explicit about degradation — a verifier MUST NOT overclaim historical continuity when required material is unavailable; it returns a degraded or unverifiable result. Revoked, invalid, unresolved, and cryptographically unverifiable revisions fail closed. This object is the explicit later-state record for revocation after binding commit: a committed binding is never retroactively mutated. Unknown members are rejected (fail closed).",
+  "type": "object",
+  "required": [
+    "schema",
+    "verificationId",
+    "question",
+    "subject",
+    "verdict",
+    "reason",
+    "evidence",
+    "checkedAt",
+    "verifierId",
+    "policyVersion"
+  ],
+  "properties": {
+    "schema": {
+      "const": "familiar.embodiment_verification.v1",
+      "description": "Profile discriminator; carries the verification-object schema version."
+    },
+    "verificationId": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Unique opaque identifier of this verification result."
+    },
+    "question": {
+      "enum": ["issuance_eligibility", "historical_rehydration"],
+      "description": "What was verified: whether a revision/binding is eligible for issuance now (alias resolution, validity, principal match), or what a historical run actually embodied and how much of that can be rehydrated. A later identity revision does not rewrite which revision a historical run embodied — the historical question is answered from committed bindings and retained material, not from current registry state."
+    },
+    "subject": {
+      "type": "object",
+      "required": ["kind"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": ["alias", "revision", "binding"],
+          "description": "What the verification was about: an alias input, an identity revision, or a committed binding."
+        },
+        "alias": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The alias as provided. Input convenience, never the root of trust. Records subject to minimization policy SHOULD reference the alias out-of-band instead of embedding it; embedding is a privacy decision recorded in privacyClass of the referenced binding where one exists."
+        },
+        "familiarRootId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Resolved stable opaque familiar root identity."
+        },
+        "identityRevisionId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Exact identity revision evaluated."
+        },
+        "bindingId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Committed binding evaluated."
+        },
+        "bindingDigest": {
+          "$ref": "#/definitions/sha256Hex",
+          "description": "SHA-256 over the canonical encoding of the evaluated binding (the exact binding snapshot verified — the TOCTOU anchor)."
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "kind": { "const": "alias" } }, "required": ["kind"] },
+          "then": { "required": ["alias"] }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "revision" } }, "required": ["kind"] },
+          "then": { "required": ["familiarRootId", "identityRevisionId"] }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "binding" } }, "required": ["kind"] },
+          "then": { "required": ["bindingId", "bindingDigest"] }
+        }
+      ],
+      "description": "The subject evaluated by this verification."
+    },
+    "verdict": {
+      "enum": ["valid", "degraded", "unverifiable", "invalid"],
+      "description": "verdict vocabulary. valid: fully verified. degraded: verified core with reduced evidence — continuity is attested only within the retained evidence's limits. unverifiable: required material is unavailable or an unsupported algorithm/policy prevents verification; fail closed, never treated as valid. invalid: affirmative negative evidence (revoked, stale, mismatched, ambiguous, unauthorized); fail closed."
+    },
+    "reason": {
+      "enum": [
+        "ok",
+        "alias_ambiguous",
+        "alias_unresolved",
+        "stale_cached_revision",
+        "revision_revoked",
+        "revision_retired",
+        "revision_superseded",
+        "principal_mismatch",
+        "scope_mismatch",
+        "digest_mismatch",
+        "integrity_mismatch",
+        "lineage_unverifiable",
+        "bundle_missing",
+        "bundle_unauthorized",
+        "bundle_erased",
+        "revocation_race",
+        "policy_rejected",
+        "algorithm_unsupported"
+      ],
+      "description": "Ratified reason vocabulary. alias_ambiguous: alias resolution produced more than one root — refuse ambiguity. alias_unresolved: alias matches no root. stale_cached_revision: a stale resolver cache cannot silently produce an active binding. revision_revoked / revision_retired / revision_superseded: lifecycle state at decision time. principal_mismatch / scope_mismatch: the revision is not valid under the current principal or scope. digest_mismatch / integrity_mismatch: recomputation failed — tamper evidence, not a soft mismatch. lineage_unverifiable: same-familiar continuity cannot be machine-verified. bundle_missing / bundle_unauthorized / bundle_erased: rehydration evidence states. revocation_race: revocation detected between final validity check and binding commit. policy_rejected: the governing policy refuses this issuance. algorithm_unsupported: a named hash algorithm or canonicalization is not supported — reject, never skip."
+    },
+    "evidence": {
+      "type": "object",
+      "required": [
+        "identityDigestRecomputed",
+        "integrityRecomputed",
+        "lineageVerified",
+        "bundleStatus",
+        "observedStatus",
+        "redacted"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "identityDigestRecomputed": {
+          "type": "boolean",
+          "description": "True only when the identity declaration digest was recomputed from retained canonical bytes and matched."
+        },
+        "integrityRecomputed": {
+          "type": "boolean",
+          "description": "True only when the binding integrity digest was recomputed over the canonical binding encoding and matched."
+        },
+        "lineageVerified": {
+          "type": "boolean",
+          "description": "True only when the lineage evidence chain was verified — same-familiar continuity and fork/succession semantics are machine-verifiable, not inferred from names or similar content."
+        },
+        "bundleStatus": {
+          "enum": ["present", "partial", "erased", "missing", "unauthorized", "not_applicable"],
+          "description": "Retained historical bundle state for this verification: present (full retained bundle), partial (some components missing — degraded), erased (sensitive components erased under privacy policy; minimum integrity/audit evidence remains), missing (no retained bundle), unauthorized (caller not privacy-authorized to read the bundle), not_applicable (verification question does not consult retained material)."
+        },
+        "bundleComponentsChecked": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "description": "Names of retained bundle components checked during rehydration."
+        },
+        "observedStatus": {
+          "enum": ["active", "retired", "revoked", "superseded", null],
+          "description": "Revision status observed in the identity registry at checkedAt — later state, recorded here rather than by mutating any committed binding. Null when no registry state was consulted."
+        },
+        "redacted": {
+          "type": "boolean",
+          "description": "True when this record was redacted under minimization/erasure policy after being recorded; redaction MUST be recorded, never silent."
+        }
+      },
+      "description": "Evidence recorded by the verifier."
+    },
+    "checkedAt": {
+      "type": "string",
+      "minLength": 1,
+      "description": "RFC 3339 UTC time of the verification."
+    },
+    "verifierId": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Identity of the resolver/verifier that produced this result."
+    },
+    "policyVersion": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Version of the validity/lifecycle policy under which this verdict was rendered. Verifiers MUST refuse (reason policy_rejected) results rendered under policy versions they do not support."
+    }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": { "properties": { "verdict": { "const": "valid" } }, "required": ["verdict"] },
+      "then": {
+        "properties": {
+          "reason": { "const": "ok" },
+          "evidence": {
+            "properties": {
+              "identityDigestRecomputed": { "const": true },
+              "lineageVerified": { "const": true }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "verdict": { "const": "valid" },
+          "subject": { "properties": { "kind": { "const": "binding" } } }
+        },
+        "required": ["verdict"]
+      },
+      "then": {
+        "properties": {
+          "evidence": {
+            "properties": {
+              "integrityRecomputed": { "const": true }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "verdict": { "const": "valid" },
+          "question": { "const": "historical_rehydration" }
+        },
+        "required": ["verdict", "question"]
+      },
+      "then": {
+        "properties": {
+          "evidence": {
+            "properties": {
+              "bundleStatus": { "const": "present" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "verdict": { "const": "valid" },
+          "subject": { "properties": { "kind": { "enum": ["alias", "revision"] } } }
+        },
+        "required": ["verdict"]
+      },
+      "then": {
+        "properties": {
+          "evidence": {
+            "properties": {
+              "integrityRecomputed": { "const": false }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "verdict": { "enum": ["unverifiable", "invalid"] } }, "required": ["verdict"] },
+      "then": {
+        "properties": {
+          "reason": { "not": { "const": "ok" } }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "verdict": { "const": "degraded" } }, "required": ["verdict"] },
+      "then": {
+        "properties": {
+          "reason": { "not": { "const": "ok" } },
+          "evidence": {
+            "properties": {
+              "bundleStatus": { "enum": ["partial", "erased"] }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "question": { "const": "issuance_eligibility" } }, "required": ["question"] },
+      "then": {
+        "properties": {
+          "evidence": {
+            "properties": {
+              "bundleStatus": { "const": "not_applicable" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "question": { "const": "historical_rehydration" } }, "required": ["question"] },
+      "then": {
+        "properties": {
+          "evidence": {
+            "properties": {
+              "bundleStatus": { "enum": ["present", "partial", "erased", "missing", "unauthorized"] }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "definitions": {
+    "sha256Hex": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "Textual hash encoding per RFC-0001 §5.6.1: exactly 64 lowercase hexadecimal characters (a raw 32-byte SHA-256 value), bare — no sha256: prefix, no uppercase."
+    }
+  }
+}

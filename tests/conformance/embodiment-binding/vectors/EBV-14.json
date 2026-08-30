@@ -1,0 +1,40 @@
+{
+  "vectorId": "EBV-14",
+  "issue": "OpenCoven/familiar-contract#17",
+  "title": "principal mismatch",
+  "given": {
+    "bindingPrincipal": "prn-01J8ZKE1M4B7C2D6E8F0A2B4C6",
+    "requestingPrincipal": "prn-01J8ZKE1M4B7C2D6E8F0A2B4ZZ"
+  },
+  "expect": [
+    {
+      "question": "issuance_eligibility",
+      "verdict": "invalid",
+      "reason": "principal_mismatch"
+    }
+  ],
+  "verification": {
+    "schema": "familiar.embodiment_verification.v1",
+    "verificationId": "01JBBVERIFEB14A0000000000000A",
+    "question": "issuance_eligibility",
+    "subject": {
+      "kind": "binding",
+      "bindingId": "01JBBBIND0001A0000000000000A",
+      "bindingDigest": "7c84d38947e632d419829cd4c94ad84f6ac333b4aeed28c75d0210c7825b5090"
+    },
+    "verdict": "invalid",
+    "reason": "principal_mismatch",
+    "evidence": {
+      "identityDigestRecomputed": true,
+      "integrityRecomputed": true,
+      "lineageVerified": true,
+      "bundleStatus": "not_applicable",
+      "bundleComponentsChecked": [],
+      "observedStatus": "active",
+      "redacted": false
+    },
+    "checkedAt": "2026-08-30T14:02:11Z",
+    "verifierId": "coven-resolver-prod",
+    "policyVersion": "identity-lifecycle:1.0.0"
+  }
+}

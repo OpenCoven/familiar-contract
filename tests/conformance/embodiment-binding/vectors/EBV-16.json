@@ -1,0 +1,40 @@
+{
+  "vectorId": "EBV-16",
+  "issue": "OpenCoven/familiar-contract#17",
+  "title": "missing historical bundle — unverifiable, never overclaimed",
+  "given": {
+    "bindingId": "01JBBBIND0001A0000000000000A",
+    "retainedBundle": null
+  },
+  "expect": [
+    {
+      "question": "historical_rehydration",
+      "verdict": "unverifiable",
+      "reason": "bundle_missing"
+    }
+  ],
+  "verification": {
+    "schema": "familiar.embodiment_verification.v1",
+    "verificationId": "01JBBVERIFEB16A0000000000000A",
+    "question": "historical_rehydration",
+    "subject": {
+      "kind": "binding",
+      "bindingId": "01JBBBIND0001A0000000000000A",
+      "bindingDigest": "7c84d38947e632d419829cd4c94ad84f6ac333b4aeed28c75d0210c7825b5090"
+    },
+    "verdict": "unverifiable",
+    "reason": "bundle_missing",
+    "evidence": {
+      "identityDigestRecomputed": false,
+      "integrityRecomputed": true,
+      "lineageVerified": false,
+      "bundleStatus": "missing",
+      "bundleComponentsChecked": [],
+      "observedStatus": null,
+      "redacted": false
+    },
+    "checkedAt": "2026-08-30T14:02:11Z",
+    "verifierId": "coven-resolver-prod",
+    "policyVersion": "identity-lifecycle:1.0.0"
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "vectorId": "EBV-03",
+  "issue": "OpenCoven/familiar-contract#17",
+  "title": "ambiguous alias refusal",
+  "given": {
+    "alias": "Charm",
+    "resolvedRoots": [
+      "01JBBFAMROOTA0000000000000A",
+      "01JBBFAMROOTB0000000000000B"
+    ]
+  },
+  "expect": [
+    {
+      "question": "issuance_eligibility",
+      "verdict": "invalid",
+      "reason": "alias_ambiguous"
+    }
+  ],
+  "verification": {
+    "schema": "familiar.embodiment_verification.v1",
+    "verificationId": "01JBBVERIFEB03A0000000000000A",
+    "question": "issuance_eligibility",
+    "subject": {
+      "kind": "alias",
+      "alias": "Charm"
+    },
+    "verdict": "invalid",
+    "reason": "alias_ambiguous",
+    "evidence": {
+      "identityDigestRecomputed": false,
+      "integrityRecomputed": false,
+      "lineageVerified": false,
+      "bundleStatus": "not_applicable",
+      "bundleComponentsChecked": [],
+      "observedStatus": null,
+      "redacted": false
+    },
+    "checkedAt": "2026-08-30T14:02:11Z",
+    "verifierId": "coven-resolver-prod",
+    "policyVersion": "identity-lifecycle:1.0.0"
+  }
+}

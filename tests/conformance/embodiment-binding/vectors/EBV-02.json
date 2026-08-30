@@ -1,0 +1,42 @@
+{
+  "vectorId": "EBV-02",
+  "issue": "OpenCoven/familiar-contract#17",
+  "title": "alias resolves to one root",
+  "given": {
+    "alias": "Charm",
+    "resolvedRoots": [
+      "01JBBFAMROOTA0000000000000A"
+    ]
+  },
+  "expect": [
+    {
+      "question": "issuance_eligibility",
+      "verdict": "valid",
+      "reason": "ok"
+    }
+  ],
+  "verification": {
+    "schema": "familiar.embodiment_verification.v1",
+    "verificationId": "01JBBVERIFEB02A0000000000000A",
+    "question": "issuance_eligibility",
+    "subject": {
+      "kind": "alias",
+      "alias": "Charm",
+      "familiarRootId": "01JBBFAMROOTA0000000000000A"
+    },
+    "verdict": "valid",
+    "reason": "ok",
+    "evidence": {
+      "identityDigestRecomputed": true,
+      "integrityRecomputed": false,
+      "lineageVerified": true,
+      "bundleStatus": "not_applicable",
+      "bundleComponentsChecked": [],
+      "observedStatus": "active",
+      "redacted": false
+    },
+    "checkedAt": "2026-08-30T14:02:11Z",
+    "verifierId": "coven-resolver-prod",
+    "policyVersion": "identity-lifecycle:1.0.0"
+  }
+}

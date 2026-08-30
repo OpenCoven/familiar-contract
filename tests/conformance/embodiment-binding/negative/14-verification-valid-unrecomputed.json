@@ -1,0 +1,24 @@
+{
+  "schema": "familiar.embodiment_verification.v1",
+  "verificationId": "01JBBVERIF0001A0000000000000A",
+  "question": "issuance_eligibility",
+  "subject": {
+    "kind": "binding",
+    "bindingId": "01JBBBIND0001A0000000000000A",
+    "bindingDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "verdict": "valid",
+  "reason": "ok",
+  "evidence": {
+    "identityDigestRecomputed": false,
+    "integrityRecomputed": true,
+    "lineageVerified": true,
+    "bundleStatus": "present",
+    "bundleComponentsChecked": [],
+    "observedStatus": "active",
+    "redacted": false
+  },
+  "checkedAt": "2026-08-30T14:02:11Z",
+  "verifierId": "coven-resolver-prod",
+  "policyVersion": "identity-lifecycle:1.0.0"
+}

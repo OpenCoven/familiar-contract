@@ -1,0 +1,40 @@
+{
+  "schema": "familiar.embodiment_binding.v1",
+  "bindingId": "01JBBBIND000NG0000000000000A",
+  "familiarRootId": "01JBBFAMROOTA0000000000000A",
+  "identityRevisionId": "01JBBREV0002A00000000000000A",
+  "revisionIndex": 2,
+  "identityDeclarationDigest": "994a4be083e17bbf0261c39883576837fbff6ddc796dbf8c29bd0b19369c922d",
+  "identityCanonicalization": "fc-identity-canonical:v1",
+  "lineage": [
+    {
+      "relationship": "genesis",
+      "priorRevisionId": null,
+      "recordedAt": "2026-05-04T09:00:00Z"
+    },
+    {
+      "relationship": "same_familiar",
+      "priorRevisionId": "01JBBREV0001A00000000000000A",
+      "recordedAt": "2026-07-01T10:00:00Z"
+    }
+  ],
+  "recordedAt": "2026-07-01T10:00:00Z",
+  "validFrom": "2026-07-01T10:00:00Z",
+  "validUntil": null,
+  "status": "active",
+  "principalId": "prn-01J8ZKE1M4B7C2D6E8F0A2B4C6",
+  "projectScope": null,
+  "correlationTarget": "sess-2026-08-30-charm-01",
+  "correlationTargetType": "session",
+  "bindingPurpose": "direct",
+  "issuedAt": "2026-08-30T14:02:11Z",
+  "policyVersion": "identity-lifecycle:1.0.0",
+  "resolverId": "coven-resolver-prod",
+  "historicalBundle": {
+    "contentAddress": "98bd95a617f04b9cc702cc8086a5aeffd3af76c3bfdeecbd69bdd981a6976944",
+    "locator": "coven-registry://bundles/01JBBBIND0001A0000000000000A"
+  },
+  "privacyClass": "standard",
+  "bindingIntegrityDigest": "e7b93e9e240de2d73ba71fedfda47eb040201c2e6ac3bf4e3ebcc9ab507914a8",
+  "resolverNote": "free text"
+}
