@@ -141,6 +141,9 @@ function validateHistoricalBundle(bundle, binding) {
   if (!isObject(bundle) || !validateIdentityBundleSchema(bundle)) {
     return [bindingViolation('E_BUNDLE_SCHEMA', 'historicalBundle', 'The detached historical bundle is malformed.')];
   }
+  if (!isTimestamp(bundle.recordedAt) || !isTimestamp(bundle.retention.recordedAt)) {
+    violations.push(bindingViolation('E_TIMESTAMP', 'historicalBundle.timestamps', 'Historical bundle timestamps must be strict RFC 3339 calendar date-times with an offset or Z.'));
+  }
   const idsMatch = bundle.familiarRootId === binding.familiar.familiarRootId
     && bundle.identityRevisionId === binding.familiar.identityRevisionId
     && bundle.lineagePosition === binding.familiar.lineagePosition;
@@ -200,7 +203,7 @@ function validateHistoricalBundle(bundle, binding) {
   return violations;
 }
 
-function validateEmbodimentBinding(binding, file, historicalBundle, trustedLedger) {
+function validateEmbodimentBinding(binding, file, historicalBundle, trustedLedger, historicalBundleSupplied = false) {
   const violations = [];
   if (!isObject(binding)) return [bindingViolation('E_SCHEMA', 'shape', 'An embodiment binding must be one JSON object.')];
   if (binding.schemaVersion !== '1.0.0') return [bindingViolation('E_VERSION', 'schemaVersion', 'Only familiar.embodiment_binding.v1 schemaVersion 1.0.0 is supported.')];
@@ -211,9 +214,10 @@ function validateEmbodimentBinding(binding, file, historicalBundle, trustedLedge
   }
 
   const { familiar, resolutionSnapshot, identityBundle, statusAtDecision, principal, target, historicalVerification, revocation, commit, integrity } = binding;
+  const isAuthorityAttempt = ['dispatch', 'session_creation'].includes(binding.bindingPurpose);
   const times = [binding.revisionRecordedAt, binding.validTime.notBefore, binding.validTime.notAfter, resolutionSnapshot.resolvedAt,
     statusAtDecision.decisionTime, binding.issuedAt, binding.decisionAt, commit.finalValidityCheckAt, commit.committedAt,
-    revocation.revokedAt].filter(Boolean);
+    revocation.revokedAt, binding.privacy.recordedAt].filter(Boolean);
   if (times.some(value => !isTimestamp(value))) violations.push(bindingViolation('E_TIMESTAMP', 'timestamps', 'All present timestamps must be strict RFC 3339 calendar date-times with an offset or Z.'));
   const at = value => new Date(value).getTime();
 
@@ -232,10 +236,12 @@ function validateEmbodimentBinding(binding, file, historicalBundle, trustedLedge
       resolutionSnapshot.bundleDigest !== identityBundle.bundleDigest.value || resolutionSnapshot.status !== statusAtDecision.status) {
     violations.push(bindingViolation('E_SNAPSHOT', 'resolutionSnapshot', 'The immutable resolution snapshot must bind root, revision, lineage position, bundle digest, and decision status.'));
   }
-  if (resolutionSnapshot.authoritativeHeadRevisionId !== familiar.identityRevisionId ||
-      (isTimestamp(resolutionSnapshot.cacheObservedAt) && isTimestamp(binding.decisionAt) &&
-       at(binding.decisionAt) - at(resolutionSnapshot.cacheObservedAt) > MAX_CACHE_AGE_SECONDS * 1000)) {
-    violations.push(bindingViolation('E_STALE_CACHE', 'resolutionSnapshot', 'The snapshot must name the authoritative head revision and cache evidence within the verifier policy maximum age.'));
+  if (isAuthorityAttempt &&
+      (resolutionSnapshot.authoritativeHeadRevisionId !== familiar.identityRevisionId ||
+       (isTimestamp(resolutionSnapshot.cacheObservedAt) && isTimestamp(commit.finalValidityCheckAt) &&
+        at(commit.finalValidityCheckAt) - at(resolutionSnapshot.cacheObservedAt) >
+          Math.min(MAX_CACHE_AGE_SECONDS, resolutionSnapshot.freshnessBoundSeconds) * 1000))) {
+    violations.push(bindingViolation('E_STALE_CACHE', 'resolutionSnapshot', 'Authority snapshots must name the current head revision and satisfy both the signed freshness bound and the verifier policy maximum.'));
   }
   if (isTimestamp(resolutionSnapshot.cacheObservedAt) && isTimestamp(commit.finalValidityCheckAt) &&
       at(resolutionSnapshot.cacheObservedAt) > at(commit.finalValidityCheckAt)) {
@@ -253,10 +259,10 @@ function validateEmbodimentBinding(binding, file, historicalBundle, trustedLedge
   if (isTimestamp(binding.revisionRecordedAt) && isTimestamp(binding.decisionAt) && at(binding.revisionRecordedAt) > at(binding.decisionAt)) {
     violations.push(bindingViolation('E_ORDERING', 'revisionRecordedAt', 'The revision cannot be recorded after the binding decision.'));
   }
-  if (isTimestamp(binding.validTime.notBefore) && isTimestamp(binding.decisionAt) && at(binding.validTime.notBefore) > at(binding.decisionAt)) {
+  if (isAuthorityAttempt && isTimestamp(binding.validTime.notBefore) && isTimestamp(binding.decisionAt) && at(binding.validTime.notBefore) > at(binding.decisionAt)) {
     violations.push(bindingViolation('E_STALE', 'validTime.notBefore', 'The revision is not yet valid at the decision time.'));
   }
-  if (binding.validTime.notAfter && isTimestamp(binding.validTime.notAfter) && isTimestamp(binding.decisionAt) && at(binding.validTime.notAfter) < at(binding.decisionAt)) {
+  if (isAuthorityAttempt && binding.validTime.notAfter && isTimestamp(binding.validTime.notAfter) && isTimestamp(binding.decisionAt) && at(binding.validTime.notAfter) < at(binding.decisionAt)) {
     violations.push(bindingViolation('E_STALE', 'validTime.notAfter', 'The revision is stale at the decision time.'));
   }
   if (isTimestamp(commit.finalValidityCheckAt) && isTimestamp(commit.committedAt) && at(commit.finalValidityCheckAt) > at(commit.committedAt)) {
@@ -296,7 +302,6 @@ function validateEmbodimentBinding(binding, file, historicalBundle, trustedLedge
     violations.push(bindingViolation('E_LINEAGE', 'familiar.lineageEvidence', 'Fork/new-root and succession require authenticated, content-addressed predecessor evidence, position 0, a distinct root, and matching root evidence.'));
   }
 
-  const isAuthorityAttempt = ['dispatch', 'session_creation'].includes(binding.bindingPurpose);
   if (isAuthorityAttempt) {
     const trustedObservedAt = trustedLedger && isTimestamp(trustedLedger.observedAt)
       ? at(trustedLedger.observedAt)
@@ -335,8 +340,8 @@ function validateEmbodimentBinding(binding, file, historicalBundle, trustedLedge
       (!binding.privacy.erasureEvidence || binding.privacy.replicaPurgeState === 'not_requested')) {
     violations.push(bindingViolation('E_RETENTION', 'privacy', 'Tombstoned or erased binding metadata requires erasure evidence and a requested replica purge.'));
   }
-  if (historicalBundle) violations.push(...validateHistoricalBundle(historicalBundle, binding));
-  if (!historicalBundle) {
+  if (historicalBundleSupplied) violations.push(...validateHistoricalBundle(historicalBundle, binding));
+  if (!historicalBundleSupplied) {
     const expectedMissingState = historicalVerification.readAuthorization === 'not_authorized'
       ? 'unavailable'
       : 'degraded';
@@ -347,7 +352,7 @@ function validateEmbodimentBinding(binding, file, historicalBundle, trustedLedge
       violations.push(bindingViolation(code, 'historicalVerification', `A missing historical bundle must be ${expectedMissingState} for the recorded read-authorization state.`));
     }
   }
-  if (revocation.outcome === 'before_commit') {
+  if (isAuthorityAttempt && revocation.outcome === 'before_commit') {
     violations.push(bindingViolation('E_REVOCATION', 'revocation', 'A revocation observed before commit must fail closed and cannot produce a binding.'));
   }
   if (revocation.outcome === 'none' && revocation.revokedAt) {
@@ -386,7 +391,7 @@ function validateEmbodimentBindingFile(filePath, historicalBundlePath, trustedLe
     try { trustedLedger = parseJsonNoDuplicate(fs.readFileSync(trustedLedgerPath, 'utf8')); }
     catch (error) { return [bindingViolation('E_TRUSTED_LEDGER', 'trustedLedger', `JSON syntax violation: ${error.message}`)]; }
   }
-  return validateEmbodimentBinding(binding, filePath, historicalBundle, trustedLedger);
+  return validateEmbodimentBinding(binding, filePath, historicalBundle, trustedLedger, Boolean(historicalBundlePath));
 }
 
 // ── SOUL.md parser ────────────────────────────────────────────────────────────

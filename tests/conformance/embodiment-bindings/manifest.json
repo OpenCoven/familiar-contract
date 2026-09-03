@@ -95,6 +95,21 @@
       "expected": "positive",
       "file": "19-tombstoned-historical.json",
       "errorCode": null
+    },
+    {
+      "expected": "positive",
+      "file": "20-superseded-historical.json",
+      "errorCode": null
+    },
+    {
+      "expected": "positive",
+      "file": "21-expired-historical.json",
+      "errorCode": null
+    },
+    {
+      "expected": "positive",
+      "file": "22-revoked-historical.json",
+      "errorCode": null
     }
   ],
   "negative": [
@@ -272,6 +287,46 @@
       "expected": "negative",
       "file": "35-future-trusted-ledger.json",
       "errorCode": "E_TRUSTED_LEDGER"
+    },
+    {
+      "expected": "negative",
+      "file": "36-invalid-privacy-recorded-at.json",
+      "errorCode": "E_TIMESTAMP"
+    },
+    {
+      "expected": "negative",
+      "file": "37-invalid-bundle-recorded-at.json",
+      "errorCode": "E_TIMESTAMP"
+    },
+    {
+      "expected": "negative",
+      "file": "38-invalid-retention-recorded-at.json",
+      "errorCode": "E_TIMESTAMP"
+    },
+    {
+      "expected": "negative",
+      "file": "39-falsy-null-bundle.json",
+      "errorCode": "E_BUNDLE_SCHEMA"
+    },
+    {
+      "expected": "negative",
+      "file": "40-falsy-false-bundle.json",
+      "errorCode": "E_BUNDLE_SCHEMA"
+    },
+    {
+      "expected": "negative",
+      "file": "41-falsy-zero-bundle.json",
+      "errorCode": "E_BUNDLE_SCHEMA"
+    },
+    {
+      "expected": "negative",
+      "file": "42-falsy-empty-string-bundle.json",
+      "errorCode": "E_BUNDLE_SCHEMA"
+    },
+    {
+      "expected": "negative",
+      "file": "43-strict-recorded-cache-bound.json",
+      "errorCode": "E_STALE_CACHE"
     }
   ]
 }

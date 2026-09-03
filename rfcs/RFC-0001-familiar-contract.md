@@ -552,8 +552,9 @@ Resolution precedes final validity check, which precedes decision, commit, and
 issuance; the decision timestamp and `statusAtDecision.decisionTime` are equal.
 Each resolution snapshot **MUST** include authoritative ledger generation and
 head revision, cache provenance/observation time, and a bounded freshness
-window. A cache older than that bound, or one whose head differs from the
-selected revision, **MUST** fail closed even when its copied status is active.
+window. For dispatch or session creation, a cache older than either its signed
+bound or the verifier's maximum, or one whose head differs from the selected
+revision, **MUST** fail closed even when its copied status is active.
 The record's freshness assertion is observational metadata only: the verifier's
 fixed v1 maximum cache age is 300 seconds, a runtime-policy input outside the
 signed record. A cache observation after final validity evaluation is invalid.
@@ -572,10 +573,12 @@ revision is selected at dispatch or session creation, never frozen during
 routine authoring.
 
 A new dispatch or session creation is eligible only when the selected revision
-is active, currently valid, verified, and not revoked. Retired, superseded, and
-revoked revisions remain meaningful historical records but are not new
-dispatch authority. A restored revision is a new active revision with explicit
-restoration lineage. Historical verification uses one deterministic lifecycle classification:
+is active, currently valid, verified, and not revoked. Those current-head,
+current-validity, and pre-commit-revocation eligibility checks apply only to
+authority attempts. Retired, superseded, expired, and revoked revisions remain
+meaningful historical records but are not new dispatch authority. A restored
+revision is a new active revision with explicit restoration lineage.
+Historical verification uses one deterministic lifecycle classification:
 a supplied live bundle with all component bytes retained is `verified`; a
 supplied live bundle with redacted component bytes is `unverifiable`; a
 supplied tombstoned or erased bundle is `unavailable`; and a missing bundle is
