@@ -63,7 +63,8 @@ function parseJsonNoDuplicate(text) {
   value(); ws(); if (i !== text.length) throw new Error('trailing input'); if (duplicate) throw new Error('duplicate object key'); return JSON.parse(text);
 }
 
-function hasInvalidIJsonString(value) {
+function hasInvalidIJsonValue(value) {
+  if (typeof value === 'number') return !Number.isFinite(value);
   if (typeof value === 'string') {
     for (let i = 0; i < value.length; i++) {
       const unit = value.charCodeAt(i);
@@ -71,8 +72,8 @@ function hasInvalidIJsonString(value) {
         if (++i >= value.length || value.charCodeAt(i) < 0xdc00 || value.charCodeAt(i) > 0xdfff) return true;
       } else if (unit >= 0xdc00 && unit <= 0xdfff) return true;
     }
-  } else if (Array.isArray(value)) return value.some(hasInvalidIJsonString);
-  else if (isObject(value)) return Object.entries(value).some(([key, item]) => hasInvalidIJsonString(key) || hasInvalidIJsonString(item));
+  } else if (Array.isArray(value)) return value.some(hasInvalidIJsonValue);
+  else if (isObject(value)) return Object.entries(value).some(([key, item]) => hasInvalidIJsonValue(key) || hasInvalidIJsonValue(item));
   return false;
 }
 
@@ -94,7 +95,7 @@ function bindingDigest(binding) {
 
 function isTimestamp(value) {
   if (typeof value !== 'string') return false;
-  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|([+-])(\d{2}):(\d{2}))$/);
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d{1,3})?(?:Z|([+-])(\d{2}):(\d{2}))$/);
   if (!match) return false;
   const [year, month, day, hour, minute, second] = match.slice(1, 7).map(Number);
   const offsetHour = match[9] === undefined ? 0 : Number(match[9]);
@@ -217,7 +218,7 @@ function validateEmbodimentBinding(binding, file, historicalBundle, trustedLedge
   const isAuthorityAttempt = ['dispatch', 'session_creation'].includes(binding.bindingPurpose);
   const times = [binding.revisionRecordedAt, binding.validTime.notBefore, binding.validTime.notAfter, resolutionSnapshot.resolvedAt,
     statusAtDecision.decisionTime, binding.issuedAt, binding.decisionAt, commit.finalValidityCheckAt, commit.committedAt,
-    revocation.revokedAt, binding.privacy.recordedAt].filter(Boolean);
+    revocation.revokedAt, binding.privacy.recordedAt, resolutionSnapshot.cacheObservedAt].filter(Boolean);
   if (times.some(value => !isTimestamp(value))) violations.push(bindingViolation('E_TIMESTAMP', 'timestamps', 'All present timestamps must be strict RFC 3339 calendar date-times with an offset or Z.'));
   const at = value => new Date(value).getTime();
 
@@ -259,10 +260,14 @@ function validateEmbodimentBinding(binding, file, historicalBundle, trustedLedge
   if (isTimestamp(binding.revisionRecordedAt) && isTimestamp(binding.decisionAt) && at(binding.revisionRecordedAt) > at(binding.decisionAt)) {
     violations.push(bindingViolation('E_ORDERING', 'revisionRecordedAt', 'The revision cannot be recorded after the binding decision.'));
   }
-  if (isAuthorityAttempt && isTimestamp(binding.validTime.notBefore) && isTimestamp(binding.decisionAt) && at(binding.validTime.notBefore) > at(binding.decisionAt)) {
+  if (binding.validTime.notAfter && isTimestamp(binding.validTime.notBefore) && isTimestamp(binding.validTime.notAfter) &&
+      at(binding.validTime.notBefore) > at(binding.validTime.notAfter)) {
+    violations.push(bindingViolation('E_ORDERING', 'validTime', 'The valid-time interval cannot end before it begins.'));
+  }
+  if (isAuthorityAttempt && isTimestamp(binding.validTime.notBefore) && isTimestamp(commit.committedAt) && at(binding.validTime.notBefore) > at(commit.committedAt)) {
     violations.push(bindingViolation('E_STALE', 'validTime.notBefore', 'The revision is not yet valid at the decision time.'));
   }
-  if (isAuthorityAttempt && binding.validTime.notAfter && isTimestamp(binding.validTime.notAfter) && isTimestamp(binding.decisionAt) && at(binding.validTime.notAfter) < at(binding.decisionAt)) {
+  if (isAuthorityAttempt && binding.validTime.notAfter && isTimestamp(binding.validTime.notAfter) && isTimestamp(commit.committedAt) && at(binding.validTime.notAfter) < at(commit.committedAt)) {
     violations.push(bindingViolation('E_STALE', 'validTime.notAfter', 'The revision is stale at the decision time.'));
   }
   if (isTimestamp(commit.finalValidityCheckAt) && isTimestamp(commit.committedAt) && at(commit.finalValidityCheckAt) > at(commit.committedAt)) {
@@ -272,6 +277,10 @@ function validateEmbodimentBinding(binding, file, historicalBundle, trustedLedge
       !(at(resolutionSnapshot.resolvedAt) <= at(commit.finalValidityCheckAt) && at(commit.finalValidityCheckAt) <= at(binding.decisionAt) && at(binding.decisionAt) <= at(commit.committedAt) && at(commit.committedAt) <= at(binding.issuedAt)) ||
       statusAtDecision.decisionTime !== binding.decisionAt) {
     violations.push(bindingViolation('E_ORDERING', 'decisionAt', 'Snapshot resolution, final validity check, decision, commit, and issue must be ordered; statusAtDecision.decisionTime equals decisionAt.'));
+  }
+  if (isAuthorityAttempt && isTimestamp(commit.finalValidityCheckAt) && isTimestamp(binding.decisionAt) && isTimestamp(commit.committedAt) &&
+      !(at(commit.finalValidityCheckAt) === at(binding.decisionAt) && at(binding.decisionAt) === at(commit.committedAt))) {
+    violations.push(bindingViolation('E_ORDERING', 'commit', 'Authority eligibility check, decision, and immutable commit must share one transaction boundary.'));
   }
 
   const bindingIdentityBundleDigest = identityBundle.bundleDigest.value;
@@ -340,6 +349,9 @@ function validateEmbodimentBinding(binding, file, historicalBundle, trustedLedge
       (!binding.privacy.erasureEvidence || binding.privacy.replicaPurgeState === 'not_requested')) {
     violations.push(bindingViolation('E_RETENTION', 'privacy', 'Tombstoned or erased binding metadata requires erasure evidence and a requested replica purge.'));
   }
+  if (historicalBundleSupplied && historicalVerification.readAuthorization === 'not_authorized') {
+    violations.push(bindingViolation('E_BUNDLE_ACCESS', 'historicalVerification.readAuthorization', 'A denied historical read cannot include a detached bundle.'));
+  }
   if (historicalBundleSupplied) violations.push(...validateHistoricalBundle(historicalBundle, binding));
   if (!historicalBundleSupplied) {
     const expectedMissingState = historicalVerification.readAuthorization === 'not_authorized'
@@ -352,8 +364,13 @@ function validateEmbodimentBinding(binding, file, historicalBundle, trustedLedge
       violations.push(bindingViolation(code, 'historicalVerification', `A missing historical bundle must be ${expectedMissingState} for the recorded read-authorization state.`));
     }
   }
-  if (isAuthorityAttempt && revocation.outcome === 'before_commit') {
-    violations.push(bindingViolation('E_REVOCATION', 'revocation', 'A revocation observed before commit must fail closed and cannot produce a binding.'));
+  if (revocation.outcome === 'before_commit') {
+    if (!revocation.revokedAt || !isTimestamp(revocation.revokedAt) || !isTimestamp(commit.committedAt) ||
+        at(revocation.revokedAt) > at(commit.committedAt)) {
+      violations.push(bindingViolation('E_REVOCATION', 'revocation', 'A before-commit revocation must be timestamped at or before the immutable commit.'));
+    } else if (isAuthorityAttempt) {
+      violations.push(bindingViolation('E_REVOCATION', 'revocation', 'A revocation observed before commit must fail closed and cannot authorize dispatch.'));
+    }
   }
   if (revocation.outcome === 'none' && revocation.revokedAt) {
     violations.push(bindingViolation('E_REVOCATION', 'revocation.outcome', 'A binding with revokedAt must classify the revocation outcome explicitly.'));
@@ -373,7 +390,7 @@ function validateEmbodimentBindingFile(filePath, historicalBundlePath, trustedLe
   let binding;
   try {
     binding = parseJsonNoDuplicate(fs.readFileSync(filePath, 'utf8'));
-    if (hasInvalidIJsonString(binding)) return [bindingViolation('E_IJSON', 'input', 'JCS inputs must be I-JSON and cannot contain lone UTF-16 surrogates.')];
+    if (hasInvalidIJsonValue(binding)) return [bindingViolation('E_IJSON', 'input', 'JCS inputs must be I-JSON and cannot contain non-finite numbers or lone UTF-16 surrogates.')];
   } catch (error) {
     return [bindingViolation('E_JSON', 'syntax', `JSON syntax violation: ${error.message}`)];
   }
@@ -381,14 +398,17 @@ function validateEmbodimentBindingFile(filePath, historicalBundlePath, trustedLe
   if (historicalBundlePath) {
     try {
       historicalBundle = parseJsonNoDuplicate(fs.readFileSync(historicalBundlePath, 'utf8'));
-      if (hasInvalidIJsonString(historicalBundle)) return [bindingViolation('E_IJSON', 'historicalBundle', 'JCS inputs must be I-JSON and cannot contain lone UTF-16 surrogates.')];
+      if (hasInvalidIJsonValue(historicalBundle)) return [bindingViolation('E_IJSON', 'historicalBundle', 'JCS inputs must be I-JSON and cannot contain non-finite numbers or lone UTF-16 surrogates.')];
     } catch (error) {
       return [bindingViolation('E_BUNDLE_SCHEMA', 'historicalBundle', `JSON syntax violation: ${error.message}`)];
     }
   }
   let trustedLedger;
   if (trustedLedgerPath) {
-    try { trustedLedger = parseJsonNoDuplicate(fs.readFileSync(trustedLedgerPath, 'utf8')); }
+    try {
+      trustedLedger = parseJsonNoDuplicate(fs.readFileSync(trustedLedgerPath, 'utf8'));
+      if (hasInvalidIJsonValue(trustedLedger)) return [bindingViolation('E_IJSON', 'trustedLedger', 'Trusted ledger JSON must be I-JSON and cannot contain non-finite numbers or lone UTF-16 surrogates.')];
+    }
     catch (error) { return [bindingViolation('E_TRUSTED_LEDGER', 'trustedLedger', `JSON syntax violation: ${error.message}`)]; }
   }
   return validateEmbodimentBinding(binding, filePath, historicalBundle, trustedLedger, Boolean(historicalBundlePath));

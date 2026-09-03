@@ -542,10 +542,12 @@ and resolver/verifier identities. `identityMeaning` **MUST** be `unchanged`;
 the purpose only contextualizes embodiment and cannot alter identity meaning.
 The target's principal **MUST** equal the authenticated principal.
 
-All recorded, valid, resolution, decision, final-check, commit, issue, and
-revocation times **MUST** be strict RFC 3339 calendar times with a `Z` or
-numeric offset. Recorded time describes when evidence was observed; valid time
-describes when the revision was eligible and the two are not interchangeable.
+All recorded, valid, cache-observation, resolution, decision, final-check,
+commit, issue, and revocation times in bindings and detached bundles **MUST**
+be strict RFC 3339 calendar times with a `Z` or numeric offset and no more than
+millisecond precision. Recorded time describes when evidence was observed;
+valid time describes when the revision was eligible and the two are not
+interchangeable. A valid-time interval **MUST NOT** end before it begins.
 The resolution snapshot **MUST** bind root, revision, lineage position, bundle
 digest, and status; its snapshot id **MUST** be the final-check/commit snapshot.
 Resolution precedes final validity check, which precedes decision, commit, and
@@ -618,6 +620,10 @@ keeps one duplicate is insufficient. This profile supports exactly
 
 The resolver and verifier **MUST** perform the final eligibility check and
 immutable binding commit on the same snapshot/transaction boundary. The
+final validity check, authority decision, and immutable commit therefore
+**MUST** identify the same instant for dispatch and session creation. Revision
+validity and authoritative-ledger freshness extend through that commit instant.
+The
 committed binding digest **MUST** recompute from the same JCS canonical preimage
 defined above: the binding with its entire `integrity` and `authentication`
 members and redundant `commit.verifiedBindingDigest` omitted, and the commit
@@ -636,9 +642,9 @@ read is `unavailable` without exposing a bundle. Fully retained supplied
 evidence is always live, unredacted, unpurged, and `verified`. Tombstoned and
 erased bundles contain no retained component bytes; erased evidence additionally
 requires completed replica purge and device-revocation evidence. These states
-never imply current authority. Canonical inputs MUST be
-I-JSON: duplicate object keys and lone UTF-16 surrogates are rejected before
-canonicalization, digest, or signature verification.
+never imply current authority. Canonical inputs MUST be I-JSON: duplicate object keys, non-finite numbers, and
+lone UTF-16 surrogates are rejected before canonicalization, digest, or
+signature verification.
 The binding carries metadata-only classification plus retention time,
 tombstone/erasure state, and replica/device-purge state; a tombstoned or erased
 record **MUST** carry erasure evidence, and requested replica or device

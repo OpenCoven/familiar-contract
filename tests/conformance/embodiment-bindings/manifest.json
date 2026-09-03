@@ -327,6 +327,51 @@
       "expected": "negative",
       "file": "43-strict-recorded-cache-bound.json",
       "errorCode": "E_STALE_CACHE"
+    },
+    {
+      "expected": "negative",
+      "file": "44-delayed-authority-commit.json",
+      "errorCode": "E_ORDERING"
+    },
+    {
+      "expected": "negative",
+      "file": "45-overflow-binding-number.json",
+      "errorCode": "E_IJSON"
+    },
+    {
+      "expected": "negative",
+      "file": "46-overflow-bundle-number.json",
+      "errorCode": "E_IJSON"
+    },
+    {
+      "expected": "negative",
+      "file": "47-invalid-cache-observed-at.json",
+      "errorCode": "E_TIMESTAMP"
+    },
+    {
+      "expected": "negative",
+      "file": "48-submillisecond-future-cache.json",
+      "errorCode": "E_SCHEMA"
+    },
+    {
+      "expected": "negative",
+      "file": "49-submillisecond-future-ledger.json",
+      "errorCode": "E_TRUSTED_LEDGER"
+    },
+    {
+      "expected": "negative",
+      "file": "50-inverted-historical-validity.json",
+      "errorCode": "E_ORDERING"
+    },
+    {
+      "expected": "negative",
+      "file": "51-inconsistent-historical-revocation.json",
+      "errorCode": "E_REVOCATION"
+    },
+    {
+      "expected": "negative",
+      "file": "52-denied-read-with-bundle.json",
+      "errorCode": "E_BUNDLE_ACCESS"
     }
   ]
 }
