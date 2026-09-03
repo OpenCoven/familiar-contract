@@ -1,0 +1,62 @@
+{
+  "profile": "familiar.identity_bundle.v1",
+  "canonicalization": "jcs-rfc8785",
+  "familiarRootId": "familiar-root:willow",
+  "identityRevisionId": "familiar-revision:willow:0",
+  "lineagePosition": 0,
+  "recordedAt": "2026-09-03T08:00:00Z",
+  "components": [
+    {
+      "componentId": "identity-declaration",
+      "mediaType": "application/json",
+      "content": {
+        "familiarRootId": "familiar-root:willow",
+        "identityRevisionId": "familiar-revision:willow:0",
+        "lineagePosition": 0,
+        "name": "Sage"
+      },
+      "digest": {
+        "algorithm": "sha-256",
+        "value": "b4ce2e6913e66f082a0974207a12067ca850b0585fbc8ae8abc2d39a57d39504"
+      },
+      "redactionState": "retained"
+    },
+    {
+      "componentId": "soul-declaration",
+      "mediaType": "application/json",
+      "content": {
+        "purpose": "Research familiar",
+        "identityMeaning": "unchanged"
+      },
+      "digest": {
+        "algorithm": "sha-256",
+        "value": "30fc8e732377c164fcd1b85f83eee874620973cce5de3bfe6e2f02344adb64ad"
+      },
+      "redactionState": "retained"
+    },
+    {
+      "componentId": "ward-declaration",
+      "mediaType": "application/json",
+      "content": {
+        "policyVersion": "policy-2026-09"
+      },
+      "digest": {
+        "algorithm": "sha-256",
+        "value": "cf8e16b4da166041d4a6cb15437e028d6100f417fac10c45255ee318c6512230"
+      },
+      "redactionState": "retained"
+    }
+  ],
+  "retention": {
+    "classification": "restricted-historical-identity",
+    "verifierAccess": "authorized",
+    "recordedAt": "2026-09-03T08:00:00Z",
+    "tombstoneState": "live",
+    "replicaPurgeState": "not_requested",
+    "redactionState": "none"
+  },
+  "bundleDigest": {
+    "algorithm": "sha-256",
+    "value": "19ee0a8cdf41c5659311b5fd5c774442028b23f889fdd9579167e1bb85994291"
+  }
+}

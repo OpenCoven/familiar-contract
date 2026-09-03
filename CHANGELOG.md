@@ -7,6 +7,44 @@ This project uses [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [Unreleased]
+
+### Added
+
+- **`familiar.embodiment_binding.v1`** — A universal, versioned,
+  privacy-minimized JSON profile for proving the stable familiar root and exact
+  identity revision embodied by one direct session, automation run/attempt, or
+  Psyche-delegated execution. It is explicitly separate from scheduler
+  lifecycle and protected-action authority.
+- **`schemas/familiar-embodiment-binding.schema.json`** and semantic
+  `--embodiment-binding` validation — Canonical digest/reference equality,
+  lineage, revision status and validity, alias cardinality, principal
+  consistency, historical-read privacy, revocation races, and immutable
+  final-check/commit verification fail closed.
+- **Detached historical bundles and cryptographic verification** —
+  `familiar.identity_bundle.v1` retains canonical identity/soul (and optional
+  Ward) components under restricted verifier access; the validator recomputes
+  component/bundle digests and verifies non-circular Ed25519 attestations.
+  Resolution snapshots, strict RFC 3339 timestamps, authenticated lineage
+  edges, retention tombstone/purge evidence, and a fixed error-code conformance
+  manifest close stale-cache and vector-integrity gaps.
+- **Rereview hardening** — Defines one non-circular digest preimage, records
+  authoritative snapshot freshness, supports erased/redacted detached bundles
+  with retained digest/audit evidence, rejects duplicate JSON keys and unknown
+  profile versions, rejects non-finite I-JSON numbers and non-Ed25519 keys, and
+  separates post-commit revocation into an immutable-binding-referenced,
+  append-only signed `familiar.embodiment_revocation.v1` event.
+- **Embodiment-binding conformance lane** — 22 positive and 65 negative
+  vectors covering active and historical revision states, continuation,
+  restoration, fork, succession, direct/automation/Psyche targets, retained
+  and redacted history, privacy authorization, transaction timing, key-type
+  confusion, revocation events, tampering, ambiguity, stale revisions, and
+  malformed data. The runner uses system-temporary output, works from a
+  read-only source checkout, and rejects unknown, duplicate, or valueless
+  sidecar options as well as malformed falsy bundle and revocation sidecars.
+
+---
+
 ## [0.7.0] — 2026-07-26
 
 Draft minor under the **v0.5.0** §6.3 rule (unchanged through v0.6.0): rescopes an existing normative MUST and promotes the reference `ward_hash` leaf construction to a normative definition. Closes both findings of the v0.6.0 post-merge review (beads `threads-8gg`, `threads-df9`).

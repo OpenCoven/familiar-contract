@@ -1,0 +1,22 @@
+{
+  "profile": "familiar.embodiment_revocation.v1",
+  "schemaVersion": "1.0.0",
+  "revocationId": "revocation:oak-binding-15",
+  "bindingId": "binding-57-tampered-revocation-reference",
+  "bindingDigest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+  "familiarRootId": "familiar-root:oak",
+  "identityRevisionId": "familiar-revision:oak:3",
+  "revokedAt": "2026-09-03T09:00:01Z",
+  "reasonCode": "identity-revoked",
+  "integrity": {
+    "algorithm": "sha-256",
+    "canonicalization": "jcs-rfc8785",
+    "eventDigest": "e52e219c843713ad906ae30316a9f7c71cec15b50bd1f715692a49d5e30e98eb"
+  },
+  "authentication": {
+    "method": "ed25519",
+    "signerId": "authority:oak",
+    "publicKey": "MCowBQYDK2VwAyEAeDkGOu0ko+ghTbWz9jRqNhLV9mlXdOVITXqOMO2Scfk=",
+    "signature": "9hcio4BH+Acge7t4w8VcqO60yYcT/U6rBUJWhgk/h5Yk396qpuLQpMBE6rbh3k0+gAWgS3IwwNorpfMpCsE7Aw=="
+  }
+}

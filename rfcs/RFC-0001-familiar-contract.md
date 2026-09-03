@@ -495,6 +495,186 @@ These gaps are intentional. The file-level conformance suite verifies the **stru
 
 ---
 
+## 10.2 Familiar embodiment binding profile
+
+`familiar.embodiment_binding.v1`, defined by
+[`schemas/familiar-embodiment-binding.schema.json`](../schemas/familiar-embodiment-binding.schema.json),
+is a universal, independently consumable JSON profile. It proves which stable
+familiar root and *exact identity revision* a direct session, automation
+run/attempt, or Psyche-delegated execution embodies. It binds identity to a
+concrete target; it is **not** scheduler-lifecycle state, and it grants,
+changes, or proves no protected-action authority.
+
+A binding **MUST** carry an opaque `bindingId`, stable opaque
+`familiarRootId`, exact `identityRevisionId`, and monotonic `lineagePosition`.
+It **MUST** record a JCS/RFC 8785 canonical identity-declaration digest, bundle
+digest, and `urn:sha256:` content-addressed historical bundle reference. The
+resolver **MUST** reject malformed digest encodings or unequal bundle digest and
+reference. Bindings **MUST NOT** copy identity declarations, memory,
+relationships, credentials, or other sensitive contents: opaque identifiers
+and digests are the default. `privacy.classification` is therefore
+`metadata-only`, with an explicit minimum-retention class.
+
+The independently consumable detached historical record is
+`familiar.identity_bundle.v1`, defined by
+[`schemas/familiar-identity-bundle.schema.json`](../schemas/familiar-identity-bundle.schema.json).
+It **MUST** retain identity- and soul-declaration component evidence (and MAY
+retain Ward-declaration evidence), their individual SHA-256 digests, its
+root/revision/position, and a SHA-256 digest of the canonical bundle. A
+verifier supplied retained component content **MUST** recompute that component
+digest; redacted or erased components retain only their digest and audit
+evidence. The verifier **MUST** always recompute the bundle digest and match the
+binding declaration digest, bundle digest, and URN.
+
+`lineageEvidence` **MUST** distinguish genesis, same-familiar revision,
+restoration, fork/new-root, and succession. A continuation has the immediately
+preceding position and same root; restoration additionally follows a retired
+predecessor. A fork/new-root and succession begin position zero on a distinct
+root and name their distinct predecessor and relationship. These records
+describe continuity evidence only: a fork/new-root is not silently a
+continuation, and succession is not an alias for the predecessor familiar.
+
+The record **MUST** state revision-recorded time, valid-time interval, decision
+status (`active`, `retired`, `revoked`, or `superseded`), authenticated
+principal (and optional project/scope), target type and correlation target,
+binding purpose, schema/profile/policy versions, issued/decision timestamps,
+and resolver/verifier identities. `identityMeaning` **MUST** be `unchanged`;
+the purpose only contextualizes embodiment and cannot alter identity meaning.
+The target's principal **MUST** equal the authenticated principal.
+
+All recorded, valid, cache-observation, resolution, decision, final-check,
+commit, issue, and revocation times in bindings and detached bundles **MUST**
+be strict RFC 3339 calendar times with a `Z` or numeric offset and no more than
+millisecond precision. Recorded time describes when evidence was observed;
+valid time describes when the revision was eligible and the two are not
+interchangeable. A valid-time interval **MUST NOT** end before it begins.
+The resolution snapshot **MUST** bind root, revision, lineage position, bundle
+digest, and status; its snapshot id **MUST** be the final-check/commit snapshot.
+Resolution precedes final validity check, which precedes decision, commit, and
+issuance; the decision timestamp and `statusAtDecision.decisionTime` are equal.
+Each resolution snapshot **MUST** include authoritative ledger generation and
+head revision, cache provenance/observation time, and a bounded freshness
+window. For dispatch or session creation, a cache older than either its signed
+bound or the verifier's maximum, or one whose head differs from the selected
+revision, **MUST** fail closed even when its copied status is active.
+The record's freshness assertion is observational metadata only: the verifier's
+fixed v1 maximum cache age is 300 seconds, a runtime-policy input outside the
+signed record. A cache observation after final validity evaluation is invalid.
+Dispatch additionally requires verifier-supplied current authoritative ledger
+state at final validation/commit; cache evidence alone never authorizes launch.
+The trusted ledger observation **MUST NOT** precede the recorded cache
+observation, **MUST NOT** follow the final validity check, and **MUST** be no
+more than 300 seconds old at that check. A stale, future-dated, mismatched, or
+missing trusted ledger observation fails closed.
+All counters and generations **MUST** be non-negative I-JSON safe integers no
+greater than `9007199254740991`; implementations must reject rather than round
+larger values.
+
+Aliases are non-authoritative resolution evidence only. When an alias is used,
+resolution **MUST** yield exactly one root, and that root **MUST** equal the
+recorded root. Ambiguity, stale cache, malformed or tampered digest, invalid or
+unverifiable revision, or principal mismatch **MUST** fail closed. The exact
+revision is selected at dispatch or session creation, never frozen during
+routine authoring.
+
+A new dispatch or session creation is eligible only when the selected revision
+is active, currently valid, verified, and not revoked. Those current-head,
+current-validity, and pre-commit-revocation eligibility checks apply only to
+authority attempts. Retired, superseded, expired, and revoked revisions remain
+meaningful historical records but are not new dispatch authority. A restored
+revision is a new active revision with explicit restoration lineage.
+Historical verification uses one deterministic lifecycle classification:
+a supplied live bundle with all component bytes retained is `verified`; a
+supplied live bundle with redacted component bytes is `unverifiable`; a
+supplied tombstoned or erased bundle is `unavailable`; and a missing bundle is
+`degraded`. A denied historical read is also `unavailable`, but is
+distinguished by `readAuthorization: not_authorized`. Only `verified` may
+authorize current dispatch.
+
+| Detached evidence | Bundle lifecycle | Required history state |
+| --- | --- | --- |
+| Supplied, all component bytes retained | live, unredacted, unpurged | `verified` |
+| Supplied, one or more component bytes redacted | live, redacted, unpurged | `unverifiable` |
+| Supplied, all component bytes removed | tombstoned with active purge, or erased with completed purge | `unavailable` |
+| Missing despite authorized or unrequested read | no detached bundle | `degraded` |
+| Withheld because verifier access was denied | no detached bundle | `unavailable` |
+
+`authentication` **MUST** be a Node-core-verifiable Ed25519 public-key
+attestation with a DER/SPKI public key and base64 signature. The binding digest
+is the lowercase hexadecimal encoding of SHA-256 over the UTF-8 JCS canonical
+binding bytes with the entire `integrity` and `authentication` members omitted
+(and the redundant commit digest-verification field omitted). The Ed25519
+message is the **32 raw digest octets obtained by decoding that 64-character
+lowercase hexadecimal digest**, not the UTF-8 bytes of the hexadecimal text.
+No private key appears in either profile. An invalid encoding or unverifiable
+signature **MUST** fail closed. The verifier **MUST** parse the SPKI key and
+require its asymmetric key type to be Ed25519; trusting the declared method
+while accepting RSA, ECDSA, Ed448, or another key type does not conform.
+
+Lineage predecessors **MUST** name a content-addressed predecessor bundle and
+an authenticated Ed25519 transition edge that signs its relationship,
+predecessor digest, successor root/revision, successor bundle digest, and
+successor identity-declaration digest. The transition preimage is the JCS
+canonical UTF-8 encoding of an object containing exactly those six fields:
+`relationship`, `predecessorBundleDigest`, `successorFamiliarRootId`,
+`successorIdentityRevisionId`, `successorBundleDigest`, and
+`successorDeclarationDigest`. The transition digest is SHA-256 over those
+bytes; the Ed25519 message is the 32 raw transition-digest octets. The verifier
+**MUST** reject a
+self-predecessor, repeated/non-monotonic position, root/revision or successor
+digest mismatch, or relation/root-evidence mismatch. Thus continuation,
+restoration, fork/new-root, and succession are mechanically—not merely
+narratively—distinct.
+
+Implementations **MUST** reject duplicate JSON object member names before JSON
+Schema, digest, or signature processing; ordinary JSON parsing that silently
+keeps one duplicate is insufficient. This profile supports exactly
+`schemaVersion` `1.0.0`; unknown versions fail closed.
+
+The resolver and verifier **MUST** perform the final eligibility check and
+immutable binding commit on the same snapshot/transaction boundary. The
+final validity check, authority decision, and immutable commit therefore
+**MUST** identify the same instant for dispatch and session creation. Revision
+validity and authoritative-ledger freshness extend through that commit instant.
+The committed binding digest **MUST** recompute from the same JCS canonical preimage
+defined above: the binding with its entire `integrity` and `authentication`
+members and redundant `commit.verifiedBindingDigest` omitted, and the commit
+**MUST** attest to that exact digest before launch success. A revocation known
+at or before commit is represented inside the binding as
+`outcome: before_commit` and rejects an authority attempt. A revocation learned
+strictly after commit **MUST NOT** be inserted into or re-sign the immutable
+binding. It is recorded as a separately signed, append-only
+`familiar.embodiment_revocation.v1` event that references the exact binding id,
+binding digest, familiar root, and identity revision, and whose own canonical
+event digest is Ed25519-authenticated. Its preimage is the JCS canonical UTF-8
+encoding of the complete event with `integrity` and `authentication` omitted;
+the event digest is SHA-256 over those bytes, and the Ed25519 message is the 32
+raw event-digest octets. Such an event preserves historical
+evidence while preventing later dispatches. Integrity and authenticated
+attestation are mandatory, while cryptographic key-policy verification remains
+the verifier's policy responsibility.
+
+Retention is lifecycle evidence, not a license to replicate identity content.
+Retained components carry content and always recompute their digest.
+Redacted/erased components retain only digest plus redaction/audit evidence.
+A live supplied-redacted bundle is `unverifiable`; tombstoned or erased
+supplied evidence is `unavailable`; a missing bundle is `degraded`. A denied
+read is `unavailable` without exposing a bundle. Fully retained supplied
+evidence is always live, unredacted, unpurged, and `verified`. Tombstoned and
+erased bundles contain no retained component bytes; erased evidence additionally
+requires completed replica purge and device-revocation evidence. These states
+never imply current authority. Canonical inputs MUST be I-JSON: duplicate object keys, non-finite numbers, and
+lone UTF-16 surrogates are rejected before canonicalization, digest, or
+signature verification.
+The binding carries metadata-only classification plus retention time,
+tombstone/erasure state, and replica/device-purge state; a tombstoned or erased
+record **MUST** carry erasure evidence, and requested replica or device
+revocation **MUST** remain pending or complete rather than disappear. The
+detached bundle records restricted-historical-identity classification and
+authorized/denied verifier access. A denied reader **MUST NOT** receive
+component content and records unavailable history. Tombstone, erasure, or purge
+does not alter already-recorded time or valid-time facts.
+
 ## 11. Changelog
 
 ### v0.7.0 (2026-07-26)

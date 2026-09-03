@@ -1,0 +1,442 @@
+{
+  "profile": "familiar.embodiment_binding.v1",
+  "positive": [
+    {
+      "expected": "positive",
+      "file": "01-active-direct.json",
+      "errorCode": null
+    },
+    {
+      "expected": "positive",
+      "file": "02-unique-alias-resolution.json",
+      "errorCode": null
+    },
+    {
+      "expected": "positive",
+      "file": "03-retired-historical-record.json",
+      "errorCode": null
+    },
+    {
+      "expected": "positive",
+      "file": "04-restoration-with-lineage.json",
+      "errorCode": null
+    },
+    {
+      "expected": "positive",
+      "file": "05-new-revision-same-familiar.json",
+      "errorCode": null
+    },
+    {
+      "expected": "positive",
+      "file": "06-fork-new-root.json",
+      "errorCode": null
+    },
+    {
+      "expected": "positive",
+      "file": "07-succession.json",
+      "errorCode": null
+    },
+    {
+      "expected": "positive",
+      "file": "08-direct-coven-session.json",
+      "errorCode": null
+    },
+    {
+      "expected": "positive",
+      "file": "09-scheduled-automation-run.json",
+      "errorCode": null
+    },
+    {
+      "expected": "positive",
+      "file": "10-scheduled-automation-attempt.json",
+      "errorCode": null
+    },
+    {
+      "expected": "positive",
+      "file": "11-psyche-delegated-execution.json",
+      "errorCode": null
+    },
+    {
+      "expected": "positive",
+      "file": "12-degraded-historical-bundle.json",
+      "errorCode": null
+    },
+    {
+      "expected": "positive",
+      "file": "13-privacy-authorized-historical-read.json",
+      "errorCode": null
+    },
+    {
+      "expected": "positive",
+      "file": "14-privacy-unauthorized-read-denied.json",
+      "errorCode": null
+    },
+    {
+      "expected": "positive",
+      "file": "15-revocation-after-commit.json",
+      "errorCode": null
+    },
+    {
+      "expected": "positive",
+      "file": "16-missing-historical-bundle.json",
+      "errorCode": null
+    },
+    {
+      "expected": "positive",
+      "file": "17-erased-redacted-historical.json",
+      "errorCode": null
+    },
+    {
+      "expected": "positive",
+      "file": "18-redacted-historical.json",
+      "errorCode": null
+    },
+    {
+      "expected": "positive",
+      "file": "19-tombstoned-historical.json",
+      "errorCode": null
+    },
+    {
+      "expected": "positive",
+      "file": "20-superseded-historical.json",
+      "errorCode": null
+    },
+    {
+      "expected": "positive",
+      "file": "21-expired-historical.json",
+      "errorCode": null
+    },
+    {
+      "expected": "positive",
+      "file": "22-revoked-historical.json",
+      "errorCode": null
+    }
+  ],
+  "negative": [
+    {
+      "expected": "negative",
+      "file": "01-ambiguous-alias.json",
+      "errorCode": "E_ALIAS"
+    },
+    {
+      "expected": "negative",
+      "file": "02-stale-cached-revision.json",
+      "errorCode": "E_STALE"
+    },
+    {
+      "expected": "negative",
+      "file": "03-revoked-revision.json",
+      "errorCode": "E_STATUS"
+    },
+    {
+      "expected": "negative",
+      "file": "04-retired-dispatch.json",
+      "errorCode": "E_STATUS"
+    },
+    {
+      "expected": "negative",
+      "file": "05-principal-mismatch.json",
+      "errorCode": "E_PRINCIPAL"
+    },
+    {
+      "expected": "negative",
+      "file": "06-tampered-bundle-digest.json",
+      "errorCode": "E_COMPONENT_DIGEST"
+    },
+    {
+      "expected": "negative",
+      "file": "07-degraded-history-dispatch.json",
+      "errorCode": "E_HISTORY"
+    },
+    {
+      "expected": "negative",
+      "file": "08-unauthorized-history-dispatch.json",
+      "errorCode": "E_HISTORY"
+    },
+    {
+      "expected": "negative",
+      "file": "09-revocation-before-commit.json",
+      "errorCode": "E_REVOCATION"
+    },
+    {
+      "expected": "negative",
+      "file": "10-unknown-field.json",
+      "errorCode": "E_SCHEMA"
+    },
+    {
+      "expected": "negative",
+      "file": "11-malformed-structure.json",
+      "errorCode": "E_SCHEMA"
+    },
+    {
+      "expected": "negative",
+      "file": "12-tampered-binding-digest.json",
+      "errorCode": "E_BINDING_DIGEST"
+    },
+    {
+      "expected": "negative",
+      "file": "13-cached-superseded-apparently-active.json",
+      "errorCode": "E_SNAPSHOT"
+    },
+    {
+      "expected": "negative",
+      "file": "14-unverifiable-authentication.json",
+      "errorCode": "E_AUTHENTICATION"
+    },
+    {
+      "expected": "negative",
+      "file": "15-lineage-self-predecessor.json",
+      "errorCode": "E_LINEAGE"
+    },
+    {
+      "expected": "negative",
+      "file": "16-timezone-missing.json",
+      "errorCode": "E_SCHEMA"
+    },
+    {
+      "expected": "negative",
+      "file": "17-malformed-calendar-time.json",
+      "errorCode": "E_TIMESTAMP"
+    },
+    {
+      "expected": "negative",
+      "file": "18-tombstone-without-purge.json",
+      "errorCode": "E_RETENTION"
+    },
+    {
+      "expected": "negative",
+      "file": "19-verified-history-missing-bundle.json",
+      "errorCode": "E_BUNDLE_MISSING"
+    },
+    {
+      "expected": "negative",
+      "file": "20-revocation-at-commit-outcome-none.json",
+      "errorCode": "E_REVOCATION"
+    },
+    {
+      "expected": "negative",
+      "file": "21-stale-active-cache.json",
+      "errorCode": "E_STALE_CACHE"
+    },
+    {
+      "expected": "negative",
+      "file": "22-duplicate-schema-version.json",
+      "errorCode": "E_JSON"
+    },
+    {
+      "expected": "negative",
+      "file": "23-unknown-schema-version.json",
+      "errorCode": "E_VERSION"
+    },
+    {
+      "expected": "negative",
+      "file": "24-redacted-verified-history.json",
+      "errorCode": "E_REDACTION"
+    },
+    {
+      "expected": "negative",
+      "file": "25-enlarged-stale-cache.json",
+      "errorCode": "E_STALE_CACHE"
+    },
+    {
+      "expected": "negative",
+      "file": "26-future-cache-observation.json",
+      "errorCode": "E_CACHE_TIME"
+    },
+    {
+      "expected": "negative",
+      "file": "27-lone-surrogate.json",
+      "errorCode": "E_IJSON"
+    },
+    {
+      "expected": "negative",
+      "file": "28-erased-content-verified.json",
+      "errorCode": "E_REDACTION"
+    },
+    {
+      "expected": "negative",
+      "file": "29-replayed-transition-successor.json",
+      "errorCode": "E_LINEAGE"
+    },
+    {
+      "expected": "negative",
+      "file": "30-retained-degraded.json",
+      "errorCode": "E_REDACTION"
+    },
+    {
+      "expected": "negative",
+      "file": "31-retained-marked-redacted.json",
+      "errorCode": "E_REDACTION"
+    },
+    {
+      "expected": "negative",
+      "file": "32-redacted-degraded.json",
+      "errorCode": "E_REDACTION"
+    },
+    {
+      "expected": "negative",
+      "file": "33-missing-unverifiable.json",
+      "errorCode": "E_REDACTION"
+    },
+    {
+      "expected": "negative",
+      "file": "34-stale-trusted-ledger.json",
+      "errorCode": "E_TRUSTED_LEDGER"
+    },
+    {
+      "expected": "negative",
+      "file": "35-future-trusted-ledger.json",
+      "errorCode": "E_TRUSTED_LEDGER"
+    },
+    {
+      "expected": "negative",
+      "file": "36-invalid-privacy-recorded-at.json",
+      "errorCode": "E_TIMESTAMP"
+    },
+    {
+      "expected": "negative",
+      "file": "37-invalid-bundle-recorded-at.json",
+      "errorCode": "E_TIMESTAMP"
+    },
+    {
+      "expected": "negative",
+      "file": "38-invalid-retention-recorded-at.json",
+      "errorCode": "E_TIMESTAMP"
+    },
+    {
+      "expected": "negative",
+      "file": "39-falsy-null-bundle.json",
+      "errorCode": "E_BUNDLE_SCHEMA"
+    },
+    {
+      "expected": "negative",
+      "file": "40-falsy-false-bundle.json",
+      "errorCode": "E_BUNDLE_SCHEMA"
+    },
+    {
+      "expected": "negative",
+      "file": "41-falsy-zero-bundle.json",
+      "errorCode": "E_BUNDLE_SCHEMA"
+    },
+    {
+      "expected": "negative",
+      "file": "42-falsy-empty-string-bundle.json",
+      "errorCode": "E_BUNDLE_SCHEMA"
+    },
+    {
+      "expected": "negative",
+      "file": "43-strict-recorded-cache-bound.json",
+      "errorCode": "E_STALE_CACHE"
+    },
+    {
+      "expected": "negative",
+      "file": "44-delayed-authority-commit.json",
+      "errorCode": "E_ORDERING"
+    },
+    {
+      "expected": "negative",
+      "file": "45-overflow-binding-number.json",
+      "errorCode": "E_IJSON"
+    },
+    {
+      "expected": "negative",
+      "file": "46-overflow-bundle-number.json",
+      "errorCode": "E_IJSON"
+    },
+    {
+      "expected": "negative",
+      "file": "47-invalid-cache-observed-at.json",
+      "errorCode": "E_TIMESTAMP"
+    },
+    {
+      "expected": "negative",
+      "file": "48-submillisecond-future-cache.json",
+      "errorCode": "E_SCHEMA"
+    },
+    {
+      "expected": "negative",
+      "file": "49-submillisecond-future-ledger.json",
+      "errorCode": "E_TRUSTED_LEDGER"
+    },
+    {
+      "expected": "negative",
+      "file": "50-inverted-historical-validity.json",
+      "errorCode": "E_ORDERING"
+    },
+    {
+      "expected": "negative",
+      "file": "51-inconsistent-historical-revocation.json",
+      "errorCode": "E_REVOCATION"
+    },
+    {
+      "expected": "negative",
+      "file": "52-denied-read-with-bundle.json",
+      "errorCode": "E_BUNDLE_ACCESS"
+    },
+    {
+      "expected": "negative",
+      "file": "53-rsa-key-mislabeled-ed25519.json",
+      "errorCode": "E_AUTHENTICATION"
+    },
+    {
+      "expected": "negative",
+      "file": "54-ecdsa-key-mislabeled-ed25519.json",
+      "errorCode": "E_AUTHENTICATION"
+    },
+    {
+      "expected": "negative",
+      "file": "55-ed448-key-mislabeled-ed25519.json",
+      "errorCode": "E_AUTHENTICATION"
+    },
+    {
+      "expected": "negative",
+      "file": "56-inline-after-commit-revocation.json",
+      "errorCode": "E_SCHEMA"
+    },
+    {
+      "expected": "negative",
+      "file": "57-tampered-revocation-reference.json",
+      "errorCode": "E_REVOCATION"
+    },
+    {
+      "expected": "negative",
+      "file": "58-tampered-revocation-signature.json",
+      "errorCode": "E_AUTHENTICATION"
+    },
+    {
+      "expected": "negative",
+      "file": "59-revoked-status-without-revocation.json",
+      "errorCode": "E_REVOCATION"
+    },
+    {
+      "expected": "negative",
+      "file": "60-rounded-generation-collision.json",
+      "errorCode": "E_SCHEMA"
+    },
+    {
+      "expected": "negative",
+      "file": "61-unsafe-trusted-ledger-generation.json",
+      "errorCode": "E_TRUSTED_LEDGER"
+    },
+    {
+      "expected": "negative",
+      "file": "62-falsy-null-revocation.json",
+      "errorCode": "E_REVOCATION"
+    },
+    {
+      "expected": "negative",
+      "file": "63-falsy-false-revocation.json",
+      "errorCode": "E_REVOCATION"
+    },
+    {
+      "expected": "negative",
+      "file": "64-falsy-zero-revocation.json",
+      "errorCode": "E_REVOCATION"
+    },
+    {
+      "expected": "negative",
+      "file": "65-falsy-empty-string-revocation.json",
+      "errorCode": "E_REVOCATION"
+    }
+  ]
+}

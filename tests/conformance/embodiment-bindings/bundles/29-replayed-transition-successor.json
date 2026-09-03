@@ -1,0 +1,62 @@
+{
+  "profile": "familiar.identity_bundle.v1",
+  "canonicalization": "jcs-rfc8785",
+  "familiarRootId": "familiar-root:oak",
+  "identityRevisionId": "familiar-revision:oak:3",
+  "lineagePosition": 3,
+  "recordedAt": "2026-09-03T08:00:00Z",
+  "components": [
+    {
+      "componentId": "identity-declaration",
+      "mediaType": "application/json",
+      "content": {
+        "familiarRootId": "familiar-root:oak",
+        "identityRevisionId": "familiar-revision:oak:3",
+        "lineagePosition": 3,
+        "name": "Successor mutation"
+      },
+      "digest": {
+        "algorithm": "sha-256",
+        "value": "708592bbe1d466fe56ac963a683bcbd834480a91cfbd4d51cfc48818818d5a29"
+      },
+      "redactionState": "retained"
+    },
+    {
+      "componentId": "soul-declaration",
+      "mediaType": "application/json",
+      "content": {
+        "purpose": "Research familiar",
+        "identityMeaning": "unchanged"
+      },
+      "digest": {
+        "algorithm": "sha-256",
+        "value": "30fc8e732377c164fcd1b85f83eee874620973cce5de3bfe6e2f02344adb64ad"
+      },
+      "redactionState": "retained"
+    },
+    {
+      "componentId": "ward-declaration",
+      "mediaType": "application/json",
+      "content": {
+        "policyVersion": "policy-2026-09"
+      },
+      "digest": {
+        "algorithm": "sha-256",
+        "value": "cf8e16b4da166041d4a6cb15437e028d6100f417fac10c45255ee318c6512230"
+      },
+      "redactionState": "retained"
+    }
+  ],
+  "retention": {
+    "classification": "restricted-historical-identity",
+    "verifierAccess": "authorized",
+    "recordedAt": "2026-09-03T08:00:00Z",
+    "tombstoneState": "live",
+    "replicaPurgeState": "not_requested",
+    "redactionState": "none"
+  },
+  "bundleDigest": {
+    "algorithm": "sha-256",
+    "value": "78c704a16af2fc87af033bd8a8ed3232c35d2e15db6a18fc36d04ef9dae28dbb"
+  }
+}
