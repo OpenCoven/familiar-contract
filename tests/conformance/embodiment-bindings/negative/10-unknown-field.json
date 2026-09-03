@@ -20,11 +20,13 @@
           "predecessorBundleDigest": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
           "successorFamiliarRootId": "familiar-root:oak",
           "successorIdentityRevisionId": "familiar-revision:oak:3",
+          "successorBundleDigest": "d048ee8d8081f7efce5b98a26565c6745f4ffc1dd72e107239e1e9b8df55c9c8",
+          "successorDeclarationDigest": "8392e679b9e15102cac7593352a44ccf8bcf76421f2546e3e2eb29ab1e1e6dd6",
           "authentication": {
             "method": "ed25519",
             "signerId": "authority:oak",
-            "publicKey": "MCowBQYDK2VwAyEAmbOf31f4VYZMNezOMkuKbcUXFoqEtEFWsM59cpLN9Jg=",
-            "signature": "SLxebnthcFkaAYQ45sPXGFmTXEZH/T7lC7KTsD+gFbXvlUq1/kNjElhqnymQnurXyZDpqZ4749EYSqPE7u68Bw=="
+            "publicKey": "MCowBQYDK2VwAyEAOKf95OtbWrc2JecAzzV1NWJs1cGmZX1jb8qTn6BS64I=",
+            "signature": "XZkUansEi3fFq7oaaRfrFna17yEs8KW0+xRBSvEqoc+rIHQI4BfsR1GGIsfuTwLf1EPPA0xp5yhm6Cw6llvyDQ=="
           }
         }
       }
@@ -83,13 +85,13 @@
   "integrity": {
     "algorithm": "sha-256",
     "canonicalization": "jcs-rfc8785",
-    "bindingDigest": "143a63c7e2a8f1df09ee3ad03bcdda195b47eb791caf8d2ea7792fcc2be1d427"
+    "bindingDigest": "5b616d35aaf3b985d15f91b0161ae914cece887feb8f64b6793c36a4eb61275e"
   },
   "authentication": {
     "method": "ed25519",
     "signerId": "authority:oak",
-    "publicKey": "MCowBQYDK2VwAyEAmbOf31f4VYZMNezOMkuKbcUXFoqEtEFWsM59cpLN9Jg=",
-    "signature": "XGFQsVXUvPiIb+2p/dWegkcsNTCkLPUNeDyd4a9zKzEqVnCBNRMwJYe9IDDlCBK3XF1+CJRYvPoBUEky/CkqCA=="
+    "publicKey": "MCowBQYDK2VwAyEAOKf95OtbWrc2JecAzzV1NWJs1cGmZX1jb8qTn6BS64I=",
+    "signature": "6i2GbVoLaVvddJuMh5quruRm9NY3BCPqV2PWOBfsbUxIUbGY1fAf7ntX/1xoPtGdTR5uYNebuDvFBrL8M6VKDQ=="
   },
   "privacy": {
     "classification": "metadata-only",
@@ -104,7 +106,7 @@
     "state": "committed",
     "finalValidityCheckAt": "2026-09-03T09:00:00Z",
     "committedAt": "2026-09-03T09:00:00Z",
-    "verifiedBindingDigest": "143a63c7e2a8f1df09ee3ad03bcdda195b47eb791caf8d2ea7792fcc2be1d427"
+    "verifiedBindingDigest": "5b616d35aaf3b985d15f91b0161ae914cece887feb8f64b6793c36a4eb61275e"
   },
   "unknownField": "must-fail-closed",
   "resolutionSnapshot": {

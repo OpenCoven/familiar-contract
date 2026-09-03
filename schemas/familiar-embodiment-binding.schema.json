@@ -140,12 +140,14 @@
     }
     ,"transition": {
       "type": "object", "additionalProperties": false,
-      "required": ["relationship", "predecessorBundleDigest", "successorFamiliarRootId", "successorIdentityRevisionId", "authentication"],
+      "required": ["relationship", "predecessorBundleDigest", "successorFamiliarRootId", "successorIdentityRevisionId", "successorBundleDigest", "successorDeclarationDigest", "authentication"],
       "properties": {
         "relationship": { "enum": ["same_familiar_revision", "restoration", "fork_new_root", "succession"] },
         "predecessorBundleDigest": { "$ref": "#/definitions/hash" },
         "successorFamiliarRootId": { "$ref": "#/definitions/opaqueId" },
         "successorIdentityRevisionId": { "$ref": "#/definitions/opaqueId" },
+        "successorBundleDigest": { "$ref": "#/definitions/hash" },
+        "successorDeclarationDigest": { "$ref": "#/definitions/hash" },
         "authentication": { "$ref": "#/definitions/authentication" }
       }
     }

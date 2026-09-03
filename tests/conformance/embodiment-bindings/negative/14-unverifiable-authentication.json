@@ -20,11 +20,13 @@
           "predecessorBundleDigest": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
           "successorFamiliarRootId": "familiar-root:oak",
           "successorIdentityRevisionId": "familiar-revision:oak:3",
+          "successorBundleDigest": "d048ee8d8081f7efce5b98a26565c6745f4ffc1dd72e107239e1e9b8df55c9c8",
+          "successorDeclarationDigest": "8392e679b9e15102cac7593352a44ccf8bcf76421f2546e3e2eb29ab1e1e6dd6",
           "authentication": {
             "method": "ed25519",
             "signerId": "authority:oak",
-            "publicKey": "MCowBQYDK2VwAyEAsISLURBuxkg9dcr1LMwzg7gSZC7hA2Niaqtl63zaOfE=",
-            "signature": "BZRk3kocqmF6DcxOhPkkHxs/HAubcGlN5XoAC2KYXhH0O5CVnxoHFgib2rnlsFIMwjXMGLsw2yKKYeeFSE0yBg=="
+            "publicKey": "MCowBQYDK2VwAyEAEAciDQCka+m1zH8BLn3RAK8v/peMIm9hfTtDzYmsxZk=",
+            "signature": "oxAwCobLm4EfniccxIyaKumJvAax7i5tDLGJZ96j9xjFy+SEEpFvs2gByQ5HwBaaG8kiIs2aOyJgep6Fhs2oCw=="
           }
         }
       }
@@ -83,12 +85,12 @@
   "integrity": {
     "algorithm": "sha-256",
     "canonicalization": "jcs-rfc8785",
-    "bindingDigest": "a9b86307775470ad3139e8680a7ea8c2ffe8c051f00e2cdaf055c0b4497ae79e"
+    "bindingDigest": "dc3c3084c4663b5b1fec1cb11c1b7f4875997fb535511113c5edd30854d81f72"
   },
   "authentication": {
     "method": "ed25519",
     "signerId": "authority:oak",
-    "publicKey": "MCowBQYDK2VwAyEAsISLURBuxkg9dcr1LMwzg7gSZC7hA2Niaqtl63zaOfE=",
+    "publicKey": "MCowBQYDK2VwAyEAEAciDQCka+m1zH8BLn3RAK8v/peMIm9hfTtDzYmsxZk=",
     "signature": "AAAA"
   },
   "privacy": {
@@ -104,7 +106,7 @@
     "state": "committed",
     "finalValidityCheckAt": "2026-09-03T09:00:00Z",
     "committedAt": "2026-09-03T09:00:00Z",
-    "verifiedBindingDigest": "a9b86307775470ad3139e8680a7ea8c2ffe8c051f00e2cdaf055c0b4497ae79e"
+    "verifiedBindingDigest": "dc3c3084c4663b5b1fec1cb11c1b7f4875997fb535511113c5edd30854d81f72"
   },
   "resolutionSnapshot": {
     "snapshotId": "snapshot:oak-dispatch-001",

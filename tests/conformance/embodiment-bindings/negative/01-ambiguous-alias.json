@@ -20,11 +20,13 @@
           "predecessorBundleDigest": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
           "successorFamiliarRootId": "familiar-root:oak",
           "successorIdentityRevisionId": "familiar-revision:oak:3",
+          "successorBundleDigest": "d048ee8d8081f7efce5b98a26565c6745f4ffc1dd72e107239e1e9b8df55c9c8",
+          "successorDeclarationDigest": "8392e679b9e15102cac7593352a44ccf8bcf76421f2546e3e2eb29ab1e1e6dd6",
           "authentication": {
             "method": "ed25519",
             "signerId": "authority:oak",
-            "publicKey": "MCowBQYDK2VwAyEAB3zry5LppwhNlS2yVEvhmYt5/dbcQKjOXI/xasuLNlM=",
-            "signature": "ufoCulaC0WSk3UEOJPN9BIjEmcS5ktNqTzNfae5awawV5yPv1PS9K5HQaGM7vGOgnk06h30AeZpHCWO/bHECCw=="
+            "publicKey": "MCowBQYDK2VwAyEAG1fcGmPA8dChCLQ73sVClfVhLqd+mfyCIra7Ju/H55Y=",
+            "signature": "0eOvJn8PRsrfUPQfHqENXnrpevJ+EcC7bznsPeAUPU23l/gCNl81+Vm615Eh4Vgg+csA3B/8dU/FLuGlcGT0BQ=="
           }
         }
       }
@@ -83,13 +85,13 @@
   "integrity": {
     "algorithm": "sha-256",
     "canonicalization": "jcs-rfc8785",
-    "bindingDigest": "95cffaee8bc4e6200f6375d8cfa7c8b0e2cc9c30fb99e412e0281f32f6a2ff59"
+    "bindingDigest": "5fde92071e1ceda6e0a3a1fe17662431e95df19de0dae21cedf73388fb7a6fdd"
   },
   "authentication": {
     "method": "ed25519",
     "signerId": "authority:oak",
-    "publicKey": "MCowBQYDK2VwAyEAB3zry5LppwhNlS2yVEvhmYt5/dbcQKjOXI/xasuLNlM=",
-    "signature": "ZSZDTZ1THnkMNZniGH+eV/Sf8lwEPQ0E/e5pPnvQUqOlCgc5UnIRU4lt5HlytwkFZYKNb48ulXrmjRGltbYnBQ=="
+    "publicKey": "MCowBQYDK2VwAyEAG1fcGmPA8dChCLQ73sVClfVhLqd+mfyCIra7Ju/H55Y=",
+    "signature": "IrZw9cxxztTIrHuFJsMzh7ovn5Qi1Wy67zr40L9HxXYEevtkaEEoP4QQluoXD1avKhk39QKlQOolKS2aXMsLAA=="
   },
   "privacy": {
     "classification": "metadata-only",
@@ -104,7 +106,7 @@
     "state": "committed",
     "finalValidityCheckAt": "2026-09-03T09:00:00Z",
     "committedAt": "2026-09-03T09:00:00Z",
-    "verifiedBindingDigest": "95cffaee8bc4e6200f6375d8cfa7c8b0e2cc9c30fb99e412e0281f32f6a2ff59"
+    "verifiedBindingDigest": "5fde92071e1ceda6e0a3a1fe17662431e95df19de0dae21cedf73388fb7a6fdd"
   },
   "aliasResolution": {
     "alias": "Sage",

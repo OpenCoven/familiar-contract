@@ -20,11 +20,13 @@
           "predecessorBundleDigest": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
           "successorFamiliarRootId": "familiar-root:oak",
           "successorIdentityRevisionId": "familiar-revision:oak:3",
+          "successorBundleDigest": "d048ee8d8081f7efce5b98a26565c6745f4ffc1dd72e107239e1e9b8df55c9c8",
+          "successorDeclarationDigest": "8392e679b9e15102cac7593352a44ccf8bcf76421f2546e3e2eb29ab1e1e6dd6",
           "authentication": {
             "method": "ed25519",
             "signerId": "authority:oak",
-            "publicKey": "MCowBQYDK2VwAyEAwPW87r1+eU3wx54ZkVuJvrcNdbd9pF3zT1zlCCX/7pM=",
-            "signature": "9Uhp1v+5jwO77LpiKor+pXhq90GOJ/KUa/1EzrjKtw5Jg5MGz0xX3U3g95kJxPpUHvB0Ha8zmelhJfgDaxUtBw=="
+            "publicKey": "MCowBQYDK2VwAyEAoAellUx3nUhHggfgp8D7sLhL5uRuf719RMmpJkzjWIc=",
+            "signature": "BOY7fSJ1Yg+e+QGS57odYl8NCrYJYLU+c7xDTJsZKxTbMxY2HVHqsk3Bdedg0r12EhBf0q+0b7jxFT9VjAhkAQ=="
           }
         }
       }
@@ -88,8 +90,8 @@
   "authentication": {
     "method": "ed25519",
     "signerId": "authority:oak",
-    "publicKey": "MCowBQYDK2VwAyEAwPW87r1+eU3wx54ZkVuJvrcNdbd9pF3zT1zlCCX/7pM=",
-    "signature": "oX0GhwgLH1zI7/PcJuEaYhMdBpxcde4txETI0BFrlCLY7qBqTY9P81NwiAMqeMtN/Hc9ngtDxjyD8AATYVTwDg=="
+    "publicKey": "MCowBQYDK2VwAyEAoAellUx3nUhHggfgp8D7sLhL5uRuf719RMmpJkzjWIc=",
+    "signature": "y+FDxhRp+zuEWnehT9mINtJ6/RQEoRC/MKsSW+YRv31iwVprH4wN2XqDebNnG8iCP6G+InCuFXqXJerD/hOMDQ=="
   },
   "privacy": {
     "classification": "metadata-only",

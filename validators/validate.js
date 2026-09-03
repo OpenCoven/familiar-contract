@@ -119,16 +119,20 @@ function digestObject(value) {
   return crypto.createHash('sha256').update(canonicalJson(value), 'utf8').digest('hex');
 }
 
-function validTransition(transition, predecessor, familiar, relationship) {
+function validTransition(transition, predecessor, familiar, relationship, bindingIdentityBundleDigest, bindingDeclarationDigest) {
   return transition && transition.relationship === relationship
     && transition.predecessorBundleDigest === predecessor.identityBundleRef.slice('urn:sha256:'.length)
     && transition.successorFamiliarRootId === familiar.familiarRootId
     && transition.successorIdentityRevisionId === familiar.identityRevisionId
+    && transition.successorBundleDigest === bindingIdentityBundleDigest
+    && transition.successorDeclarationDigest === bindingDeclarationDigest
     && verifyEd25519(transition.authentication, digestObject({
       relationship: transition.relationship,
       predecessorBundleDigest: transition.predecessorBundleDigest,
       successorFamiliarRootId: transition.successorFamiliarRootId,
-      successorIdentityRevisionId: transition.successorIdentityRevisionId
+      successorIdentityRevisionId: transition.successorIdentityRevisionId,
+      successorBundleDigest: transition.successorBundleDigest,
+      successorDeclarationDigest: transition.successorDeclarationDigest
     }));
 }
 
@@ -175,6 +179,9 @@ function validateHistoricalBundle(bundle, binding) {
   }
   if (bundle.retention.tombstoneState === 'erased' && bundle.components.some(component => component.redactionState === 'retained' || component.content)) {
     violations.push(bindingViolation('E_REDACTION', 'historicalBundle.components', 'An erased bundle cannot retain sensitive component content.'));
+  }
+  if (!redacted && (bundle.retention.redactionState !== 'none' || bundle.retention.tombstoneState !== 'live' || binding.historicalVerification.state !== 'verified')) {
+    violations.push(bindingViolation('E_REDACTION', 'historicalBundle.retention', 'A fully retained supplied bundle is live, unredacted, and verified.'));
   }
   return violations;
 }
@@ -247,6 +254,8 @@ function validateEmbodimentBinding(binding, file, historicalBundle, trustedLedge
     violations.push(bindingViolation('E_ORDERING', 'decisionAt', 'Snapshot resolution, final validity check, decision, commit, and issue must be ordered; statusAtDecision.decisionTime equals decisionAt.'));
   }
 
+  const bindingIdentityBundleDigest = identityBundle.bundleDigest.value;
+  const bindingDeclarationDigest = identityBundle.declarationDigest.value;
   const lineage = familiar.lineageEvidence;
   const predecessor = lineage.predecessor;
   if (predecessor && predecessor.identityRevisionId === familiar.identityRevisionId) {
@@ -258,7 +267,7 @@ function validateEmbodimentBinding(binding, file, historicalBundle, trustedLedge
   if (['same_familiar_revision', 'restoration'].includes(lineage.relationship)) {
     if (!predecessor || lineage.rootEvidence !== 'continued' || predecessor.familiarRootId !== familiar.familiarRootId ||
       predecessor.lineagePosition !== familiar.lineagePosition - 1 || predecessor.identityRevisionId === familiar.identityRevisionId ||
-      !predecessor.identityBundleRef || !validTransition(predecessor.transition, predecessor, familiar, lineage.relationship)) {
+      !predecessor.identityBundleRef || !validTransition(predecessor.transition, predecessor, familiar, lineage.relationship, bindingIdentityBundleDigest, bindingDeclarationDigest)) {
       violations.push(bindingViolation('E_LINEAGE', 'familiar.lineageEvidence', 'Same-familiar continuation/restoration requires an authenticated, content-addressed edge from the immediately preceding distinct revision on the same root.'));
     }
   }
@@ -267,7 +276,7 @@ function validateEmbodimentBinding(binding, file, historicalBundle, trustedLedge
   }
   if (['fork_new_root', 'succession'].includes(lineage.relationship) &&
     (!predecessor || !predecessor.identityBundleRef ||
-      !validTransition(predecessor.transition, predecessor, familiar, lineage.relationship) ||
+      !validTransition(predecessor.transition, predecessor, familiar, lineage.relationship, bindingIdentityBundleDigest, bindingDeclarationDigest) ||
       familiar.lineagePosition !== 0 || predecessor.familiarRootId === familiar.familiarRootId ||
       lineage.rootEvidence !== (lineage.relationship === 'fork_new_root' ? 'fork' : 'succession'))) {
     violations.push(bindingViolation('E_LINEAGE', 'familiar.lineageEvidence', 'Fork/new-root and succession require authenticated, content-addressed predecessor evidence, position 0, a distinct root, and matching root evidence.'));

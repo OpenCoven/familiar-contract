@@ -20,11 +20,13 @@
           "predecessorBundleDigest": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
           "successorFamiliarRootId": "familiar-root:oak",
           "successorIdentityRevisionId": "familiar-revision:oak:3",
+          "successorBundleDigest": "ca973605cef73dd456884adcbda64d698a849a295837e9fd1fdf13b3afcd74e3",
+          "successorDeclarationDigest": "8392e679b9e15102cac7593352a44ccf8bcf76421f2546e3e2eb29ab1e1e6dd6",
           "authentication": {
             "method": "ed25519",
             "signerId": "authority:oak",
-            "publicKey": "MCowBQYDK2VwAyEA2toVlONZkbF5CT1l2T6Bvqzae2wH41ZetUhXtzgOpbc=",
-            "signature": "a3QkHDB896rAJk/zOaIVcKy/5riwS7eG5sNnCGUAh6fHuMSdbG49FVltrk2wyx8GYo08s78+7u4WiKv/9IdlDQ=="
+            "publicKey": "MCowBQYDK2VwAyEAczsiveLtHIJ6IfNcAGzOPm1UPApwX0DOaLv/p7IYtKg=",
+            "signature": "lneojFM0EHPK4VFHKvSOt/xY1o/HF52rN6V6VDVkxpa0mpGEyPd4J9jR6otaxfns3C6gODXYNo1OnpdCsKZmDQ=="
           }
         }
       }
@@ -83,13 +85,13 @@
   "integrity": {
     "algorithm": "sha-256",
     "canonicalization": "jcs-rfc8785",
-    "bindingDigest": "274b3208e3953ea92e0fea2ca80925b92cd1d3153424ad5aa0b302fe1fef6a62"
+    "bindingDigest": "8dafb543a710833c5c3056171c17a06c5841be342df034d66858fc9440bb9275"
   },
   "authentication": {
     "method": "ed25519",
     "signerId": "authority:oak",
-    "publicKey": "MCowBQYDK2VwAyEA2toVlONZkbF5CT1l2T6Bvqzae2wH41ZetUhXtzgOpbc=",
-    "signature": "31i9ZWqerk6pDC1qbdfTlmIOwVfzrG7PC2unxHP99GT76GvGpGzm1Dbqz8f8jbRRtnRX9MvdcBYP4v0B3/IJBw=="
+    "publicKey": "MCowBQYDK2VwAyEAczsiveLtHIJ6IfNcAGzOPm1UPApwX0DOaLv/p7IYtKg=",
+    "signature": "sqSZqmECdCQVsHRTKfkfFnQdCFElOAuhde6o2blew2IHs7xkcEzsR1YyMRaEmz/60MCAzzfQEr214+LJWUKzBA=="
   },
   "privacy": {
     "classification": "metadata-only",
@@ -104,7 +106,7 @@
     "state": "committed",
     "finalValidityCheckAt": "2026-09-03T09:00:00Z",
     "committedAt": "2026-09-03T09:00:00Z",
-    "verifiedBindingDigest": "274b3208e3953ea92e0fea2ca80925b92cd1d3153424ad5aa0b302fe1fef6a62"
+    "verifiedBindingDigest": "8dafb543a710833c5c3056171c17a06c5841be342df034d66858fc9440bb9275"
   },
   "resolutionSnapshot": {
     "snapshotId": "snapshot:oak-dispatch-001",
