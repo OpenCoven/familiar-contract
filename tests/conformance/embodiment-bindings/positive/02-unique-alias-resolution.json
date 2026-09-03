@@ -16,10 +16,16 @@
         "status": "superseded",
         "identityBundleRef": "urn:sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
         "transition": {
-          "method": "ed25519",
-          "signerId": "authority:oak",
-          "publicKey": "MCowBQYDK2VwAyEAlWU5gXFdbNc2qSkWVDd9IqarCUNox0b3bCjP7GBqMoQ=",
-          "signature": "WSh3L873lxKqD1NH20yEYH6US9Z4iekdsGY+MCxa6kvXtpcJC1FhSnDVyfchp2m9h/t1cS3iTtbXxEV7yAbqBA=="
+          "relationship": "same_familiar_revision",
+          "predecessorBundleDigest": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "successorFamiliarRootId": "familiar-root:oak",
+          "successorIdentityRevisionId": "familiar-revision:oak:3",
+          "authentication": {
+            "method": "ed25519",
+            "signerId": "authority:oak",
+            "publicKey": "MCowBQYDK2VwAyEAoIM1QChAlVY8y4bHrWizmYNQDJr2cxws7hwDGkhl/gI=",
+            "signature": "6Hw7PiVlqwLFH45bqnZ7qxD72mGIG7arAarGnhr10MbWI2+Xo0WULjp2quFDEUj4PoksadZq6K2LlVhPUzOqAQ=="
+          }
         }
       }
     }
@@ -77,13 +83,13 @@
   "integrity": {
     "algorithm": "sha-256",
     "canonicalization": "jcs-rfc8785",
-    "bindingDigest": "7849a6064428f7b78ed297898ecd3dfefe498862410b66db4f80807e86404996"
+    "bindingDigest": "8a87502d0b4ca340e0993aebd17ab59a922d44f6f6b58140edeb2b3d97667279"
   },
   "authentication": {
     "method": "ed25519",
     "signerId": "authority:oak",
-    "publicKey": "MCowBQYDK2VwAyEAlWU5gXFdbNc2qSkWVDd9IqarCUNox0b3bCjP7GBqMoQ=",
-    "signature": "2EZpy7r1GQrc0wjKTNfnAyB/GDXzNx/OllsaD/+kWTepmgyl61ou7yV0Tpomr4a3myKlerlQy1EfFDTeSSOSCg=="
+    "publicKey": "MCowBQYDK2VwAyEAoIM1QChAlVY8y4bHrWizmYNQDJr2cxws7hwDGkhl/gI=",
+    "signature": "3omFX9YPDcEPFJB5vQa+f8OYpB+HwrNaM+RuDhPa/5OojwycXfzwS+cxuuwTXJPpCL78dEPIJHl509aahUGgDQ=="
   },
   "privacy": {
     "classification": "metadata-only",
@@ -98,7 +104,7 @@
     "state": "committed",
     "finalValidityCheckAt": "2026-09-03T09:00:00Z",
     "committedAt": "2026-09-03T09:00:00Z",
-    "verifiedBindingDigest": "7849a6064428f7b78ed297898ecd3dfefe498862410b66db4f80807e86404996"
+    "verifiedBindingDigest": "8a87502d0b4ca340e0993aebd17ab59a922d44f6f6b58140edeb2b3d97667279"
   },
   "aliasResolution": {
     "alias": "Sage",

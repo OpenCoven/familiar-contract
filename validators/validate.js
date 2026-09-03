@@ -95,6 +95,19 @@ function digestObject(value) {
   return crypto.createHash('sha256').update(canonicalJson(value), 'utf8').digest('hex');
 }
 
+function validTransition(transition, predecessor, familiar, relationship) {
+  return transition && transition.relationship === relationship
+    && transition.predecessorBundleDigest === predecessor.identityBundleRef.slice('urn:sha256:'.length)
+    && transition.successorFamiliarRootId === familiar.familiarRootId
+    && transition.successorIdentityRevisionId === familiar.identityRevisionId
+    && verifyEd25519(transition.authentication, digestObject({
+      relationship: transition.relationship,
+      predecessorBundleDigest: transition.predecessorBundleDigest,
+      successorFamiliarRootId: transition.successorFamiliarRootId,
+      successorIdentityRevisionId: transition.successorIdentityRevisionId
+    }));
+}
+
 function validateHistoricalBundle(bundle, binding) {
   const violations = [];
   if (!isObject(bundle) || !validateIdentityBundleSchema(bundle)) {
@@ -202,7 +215,7 @@ function validateEmbodimentBinding(binding, file, historicalBundle) {
   if (['same_familiar_revision', 'restoration'].includes(lineage.relationship)) {
     if (!predecessor || lineage.rootEvidence !== 'continued' || predecessor.familiarRootId !== familiar.familiarRootId ||
       predecessor.lineagePosition !== familiar.lineagePosition - 1 || predecessor.identityRevisionId === familiar.identityRevisionId ||
-      !predecessor.identityBundleRef || !predecessor.transition || !verifyEd25519(predecessor.transition, predecessor.identityBundleRef.slice('urn:sha256:'.length))) {
+      !predecessor.identityBundleRef || !validTransition(predecessor.transition, predecessor, familiar, lineage.relationship)) {
       violations.push(bindingViolation('E_LINEAGE', 'familiar.lineageEvidence', 'Same-familiar continuation/restoration requires an authenticated, content-addressed edge from the immediately preceding distinct revision on the same root.'));
     }
   }
@@ -210,8 +223,8 @@ function validateEmbodimentBinding(binding, file, historicalBundle) {
     violations.push(bindingViolation('E_LINEAGE', 'familiar.lineageEvidence', 'Restoration requires a retired predecessor on the same familiar root.'));
   }
   if (['fork_new_root', 'succession'].includes(lineage.relationship) &&
-    (!predecessor || !predecessor.identityBundleRef || !predecessor.transition ||
-      !verifyEd25519(predecessor.transition, predecessor.identityBundleRef.slice('urn:sha256:'.length)) ||
+    (!predecessor || !predecessor.identityBundleRef ||
+      !validTransition(predecessor.transition, predecessor, familiar, lineage.relationship) ||
       familiar.lineagePosition !== 0 || predecessor.familiarRootId === familiar.familiarRootId ||
       lineage.rootEvidence !== (lineage.relationship === 'fork_new_root' ? 'fork' : 'succession'))) {
     violations.push(bindingViolation('E_LINEAGE', 'familiar.lineageEvidence', 'Fork/new-root and succession require authenticated, content-addressed predecessor evidence, position 0, a distinct root, and matching root evidence.'));

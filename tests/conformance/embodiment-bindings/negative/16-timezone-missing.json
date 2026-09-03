@@ -16,10 +16,16 @@
         "status": "superseded",
         "identityBundleRef": "urn:sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
         "transition": {
-          "method": "ed25519",
-          "signerId": "authority:oak",
-          "publicKey": "MCowBQYDK2VwAyEAlWU5gXFdbNc2qSkWVDd9IqarCUNox0b3bCjP7GBqMoQ=",
-          "signature": "WSh3L873lxKqD1NH20yEYH6US9Z4iekdsGY+MCxa6kvXtpcJC1FhSnDVyfchp2m9h/t1cS3iTtbXxEV7yAbqBA=="
+          "relationship": "same_familiar_revision",
+          "predecessorBundleDigest": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "successorFamiliarRootId": "familiar-root:oak",
+          "successorIdentityRevisionId": "familiar-revision:oak:3",
+          "authentication": {
+            "method": "ed25519",
+            "signerId": "authority:oak",
+            "publicKey": "MCowBQYDK2VwAyEAMnSUQFVBoKN3x8sgcJsaZdrazZdrCUN8Whep21iYD9s=",
+            "signature": "Xt3nyoaeOf1C8qOiFtqFu303D5y30X/ufHuDmj00oKGAbjzPPyHiFplWLX5zZcPH71iExVMHl6t1FfC/oTUCBA=="
+          }
         }
       }
     }
@@ -77,13 +83,13 @@
   "integrity": {
     "algorithm": "sha-256",
     "canonicalization": "jcs-rfc8785",
-    "bindingDigest": "f52ac432607a3f88e3d37919a3eb14db3c0bc0d2fcf6980ac19000c00bdef119"
+    "bindingDigest": "3ad5c2044186a7e1b3ccc548b7c63c09f7726e2851918f4d71c03b13c5f86d8e"
   },
   "authentication": {
     "method": "ed25519",
     "signerId": "authority:oak",
-    "publicKey": "MCowBQYDK2VwAyEAlWU5gXFdbNc2qSkWVDd9IqarCUNox0b3bCjP7GBqMoQ=",
-    "signature": "qMTTjBCZ5dAhFE6qxJbZ9NTGNVIQpLQKT2WHMdUWg9LLqv3W4C51eofCtsEchKf+ssZdn8/g22yDNYgDn3FNCg=="
+    "publicKey": "MCowBQYDK2VwAyEAMnSUQFVBoKN3x8sgcJsaZdrazZdrCUN8Whep21iYD9s=",
+    "signature": "0hR1jA111Bt/b7iil4TwmVeK7ODrlgYgy8LEys1AGFqGyAcJKA5Fu+QnohMwn0vtcuJfZ4aFaQOHHkoME44MBQ=="
   },
   "privacy": {
     "classification": "metadata-only",
@@ -98,7 +104,7 @@
     "state": "committed",
     "finalValidityCheckAt": "2026-09-03T09:00:00Z",
     "committedAt": "2026-09-03T09:00:00Z",
-    "verifiedBindingDigest": "f52ac432607a3f88e3d37919a3eb14db3c0bc0d2fcf6980ac19000c00bdef119"
+    "verifiedBindingDigest": "3ad5c2044186a7e1b3ccc548b7c63c09f7726e2851918f4d71c03b13c5f86d8e"
   },
   "resolutionSnapshot": {
     "snapshotId": "snapshot:oak-dispatch-001",

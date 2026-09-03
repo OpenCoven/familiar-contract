@@ -102,6 +102,11 @@ SHA-256 JCS binding digest. The digest excludes the complete `integrity` and
 `authentication` members, so verification is non-circular; no private key is
 accepted or stored in the profile.
 
+Each predecessor transition separately signs the relationship, predecessor
+bundle digest, and successor root/revision. This lets the validator distinguish
+continuation, restoration, fork/new-root, and succession without trusting
+unstructured lineage prose.
+
 ## For CI Integration
 
 ```yaml

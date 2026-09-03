@@ -16,10 +16,16 @@
         "status": "superseded",
         "identityBundleRef": "urn:sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
         "transition": {
-          "method": "ed25519",
-          "signerId": "authority:oak",
-          "publicKey": "MCowBQYDK2VwAyEAlWU5gXFdbNc2qSkWVDd9IqarCUNox0b3bCjP7GBqMoQ=",
-          "signature": "WSh3L873lxKqD1NH20yEYH6US9Z4iekdsGY+MCxa6kvXtpcJC1FhSnDVyfchp2m9h/t1cS3iTtbXxEV7yAbqBA=="
+          "relationship": "same_familiar_revision",
+          "predecessorBundleDigest": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "successorFamiliarRootId": "familiar-root:oak",
+          "successorIdentityRevisionId": "familiar-revision:oak:3",
+          "authentication": {
+            "method": "ed25519",
+            "signerId": "authority:oak",
+            "publicKey": "MCowBQYDK2VwAyEAGhimXyWyVIb0RbfE+TBBVaHvzFaIbf6zuPxKShSWmVU=",
+            "signature": "8UwA2yJDDGLbOdEsU9SOd3vv5RZDW5MoAEnxPq1kqza7NsEtr3CVry2/4RWb6s+pNRlJM/5jxrTsruC4RtK/DQ=="
+          }
         }
       }
     }
@@ -82,8 +88,8 @@
   "authentication": {
     "method": "ed25519",
     "signerId": "authority:oak",
-    "publicKey": "MCowBQYDK2VwAyEAlWU5gXFdbNc2qSkWVDd9IqarCUNox0b3bCjP7GBqMoQ=",
-    "signature": "5hlAnfFVFKmus/ffnP17hNKoPDaIWBA5vyu5h8Q/W/DF57W6WvhfArRudJwpddbz1/edPbX5Bg4Y14xQX5+XDA=="
+    "publicKey": "MCowBQYDK2VwAyEAGhimXyWyVIb0RbfE+TBBVaHvzFaIbf6zuPxKShSWmVU=",
+    "signature": "WNmeTHadfaxA9DP+XnOIpVxNL1aEWJFeyWah/zlBwiWO8IXPa9o/okuoKPeCto2RkI/DlTncs5bwXqrOkqznBA=="
   },
   "privacy": {
     "classification": "metadata-only",

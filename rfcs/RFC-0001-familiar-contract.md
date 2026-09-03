@@ -576,7 +576,8 @@ appears in either profile. An invalid encoding or unverifiable signature
 **MUST** fail closed for dispatch and session creation.
 
 Lineage predecessors **MUST** name a content-addressed predecessor bundle and
-an authenticated Ed25519 transition edge. The verifier **MUST** reject a
+an authenticated Ed25519 transition edge that signs its relationship,
+predecessor digest, and successor root/revision. The verifier **MUST** reject a
 self-predecessor, repeated/non-monotonic position, root/revision mismatch, or
 relation/root-evidence mismatch. Thus continuation, restoration, fork/new-root,
 and succession are mechanically—not merely narratively—distinct.

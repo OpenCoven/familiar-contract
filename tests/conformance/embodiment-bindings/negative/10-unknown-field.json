@@ -16,10 +16,16 @@
         "status": "superseded",
         "identityBundleRef": "urn:sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
         "transition": {
-          "method": "ed25519",
-          "signerId": "authority:oak",
-          "publicKey": "MCowBQYDK2VwAyEAlWU5gXFdbNc2qSkWVDd9IqarCUNox0b3bCjP7GBqMoQ=",
-          "signature": "WSh3L873lxKqD1NH20yEYH6US9Z4iekdsGY+MCxa6kvXtpcJC1FhSnDVyfchp2m9h/t1cS3iTtbXxEV7yAbqBA=="
+          "relationship": "same_familiar_revision",
+          "predecessorBundleDigest": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "successorFamiliarRootId": "familiar-root:oak",
+          "successorIdentityRevisionId": "familiar-revision:oak:3",
+          "authentication": {
+            "method": "ed25519",
+            "signerId": "authority:oak",
+            "publicKey": "MCowBQYDK2VwAyEAQkG/VhNV6PMLDJkTpqALVYWkatDr13W0qMC0vTbjnT8=",
+            "signature": "b1r0aYcFh+xhfIdkL0qt1lUfE/mzAmZ0487eRPygreXZb3kyy0MRV6FNHZ3FvuABB/9NRRbFxhKN8ifsJqS3Bg=="
+          }
         }
       }
     }
@@ -77,13 +83,13 @@
   "integrity": {
     "algorithm": "sha-256",
     "canonicalization": "jcs-rfc8785",
-    "bindingDigest": "3fedbf76221ef052c432ed463d6582706531bde908a2f876949a48bc43c3088c"
+    "bindingDigest": "87836ad9467f1f1ef7f09e804a3ab54c0d4e0dc28f8b9f8d7267b6269edfce58"
   },
   "authentication": {
     "method": "ed25519",
     "signerId": "authority:oak",
-    "publicKey": "MCowBQYDK2VwAyEAlWU5gXFdbNc2qSkWVDd9IqarCUNox0b3bCjP7GBqMoQ=",
-    "signature": "fde/kW09gactNcYmEQfHcbCs+SJRDlrC83FJD3vfspn8MboiOGlQEx8ZbUX0vXCOfpNfa2wJ2+SDENrukdvwAA=="
+    "publicKey": "MCowBQYDK2VwAyEAQkG/VhNV6PMLDJkTpqALVYWkatDr13W0qMC0vTbjnT8=",
+    "signature": "axTPAritAC4jOpiQCpV0E5T8nJV5MRAdy1kSC8RPkidPFWCOt29CnTDTJFkWONrd4lbIXksiSkAGeN8Mn8llDw=="
   },
   "privacy": {
     "classification": "metadata-only",
@@ -98,7 +104,7 @@
     "state": "committed",
     "finalValidityCheckAt": "2026-09-03T09:00:00Z",
     "committedAt": "2026-09-03T09:00:00Z",
-    "verifiedBindingDigest": "3fedbf76221ef052c432ed463d6582706531bde908a2f876949a48bc43c3088c"
+    "verifiedBindingDigest": "87836ad9467f1f1ef7f09e804a3ab54c0d4e0dc28f8b9f8d7267b6269edfce58"
   },
   "unknownField": "must-fail-closed",
   "resolutionSnapshot": {
