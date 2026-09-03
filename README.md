@@ -46,6 +46,13 @@ These are not soft design preferences. Each one has architectural implications, 
 4. Run `npm install` to install the reference validator's TOML parser and JSON Schema validator.
 5. For a v0.7.0 structural-conformance claim, run both `node validators/validate.js ./your-directory` and `npm test`
 
+**If you're binding a concrete execution:** validate its independently
+consumable embodiment record with
+`node validators/validate.js --embodiment-binding ./binding.json`. The
+[`familiar.embodiment_binding.v1` schema](schemas/familiar-embodiment-binding.schema.json)
+proves the selected root and exact identity revision without copying sensitive
+identity content; it does not grant authority or define scheduler lifecycle.
+
 **If you're evaluating a familiar:**
 - Five properties. All five. Fewer than five is an agent, not a familiar.
 - Protected surface: can the familiar modify its own `SOUL.md` without human authorization? If yes, it's not compliant.
@@ -97,6 +104,7 @@ schemas/
   identity.schema.json   ← JSON Schema for IDENTITY.md
   ward.schema.json       ← JSON Schema for ward.toml
   role.schema.json       ← JSON Schema for ROLE.md
+  familiar-embodiment-binding.schema.json ← Exact root/revision execution binding
 examples/
   sage/                  ← Sage (canonical structurally conformant familiar directory)
   minimal/               ← Lumen (minimal structurally conformant familiar directory)

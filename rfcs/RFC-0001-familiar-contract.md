@@ -495,6 +495,68 @@ These gaps are intentional. The file-level conformance suite verifies the **stru
 
 ---
 
+## 10.2 Familiar embodiment binding profile
+
+`familiar.embodiment_binding.v1`, defined by
+[`schemas/familiar-embodiment-binding.schema.json`](../schemas/familiar-embodiment-binding.schema.json),
+is a universal, independently consumable JSON profile. It proves which stable
+familiar root and *exact identity revision* a direct session, automation
+run/attempt, or Psyche-delegated execution embodies. It binds identity to a
+concrete target; it is **not** scheduler-lifecycle state, and it grants,
+changes, or proves no protected-action authority.
+
+A binding **MUST** carry an opaque `bindingId`, stable opaque
+`familiarRootId`, exact `identityRevisionId`, and monotonic `lineagePosition`.
+It **MUST** record a JCS/RFC 8785 canonical identity-declaration digest, bundle
+digest, and `urn:sha256:` content-addressed historical bundle reference. The
+resolver **MUST** reject malformed digest encodings or unequal bundle digest and
+reference. Bindings **MUST NOT** copy identity declarations, memory,
+relationships, credentials, or other sensitive contents: opaque identifiers
+and digests are the default. `privacy.classification` is therefore
+`metadata-only`, with an explicit minimum-retention class.
+
+`lineageEvidence` **MUST** distinguish genesis, same-familiar revision,
+restoration, fork/new-root, and succession. A continuation has the immediately
+preceding position and same root; restoration additionally follows a retired
+predecessor. A fork/new-root and succession begin position zero on a distinct
+root and name their distinct predecessor and relationship. These records
+describe continuity evidence only: a fork/new-root is not silently a
+continuation, and succession is not an alias for the predecessor familiar.
+
+The record **MUST** state revision-recorded time, valid-time interval, decision
+status (`active`, `retired`, `revoked`, or `superseded`), authenticated
+principal (and optional project/scope), target type and correlation target,
+binding purpose, schema/profile/policy versions, issued/decision timestamps,
+and resolver/verifier identities. `identityMeaning` **MUST** be `unchanged`;
+the purpose only contextualizes embodiment and cannot alter identity meaning.
+The target's principal **MUST** equal the authenticated principal.
+
+Aliases are non-authoritative resolution evidence only. When an alias is used,
+resolution **MUST** yield exactly one root, and that root **MUST** equal the
+recorded root. Ambiguity, stale cache, malformed or tampered digest, invalid or
+unverifiable revision, or principal mismatch **MUST** fail closed. The exact
+revision is selected at dispatch or session creation, never frozen during
+routine authoring.
+
+A new dispatch or session creation is eligible only when the selected revision
+is active, currently valid, verified, and not revoked. Retired, superseded, and
+revoked revisions remain meaningful historical records but are not new
+dispatch authority. A restored revision is a new active revision with explicit
+restoration lineage. Historical verification may be `verified`, `degraded`,
+`unavailable`, or `unverifiable`; only `verified` may authorize current
+dispatch. An unauthorized historical read **MUST** be recorded as unavailable
+historical verification, not treated as authority.
+
+The resolver and verifier **MUST** perform the final eligibility check and
+immutable binding commit on the same snapshot/transaction boundary. The
+committed binding digest **MUST** recompute from JCS canonical bytes (excluding
+only the digest and its redundant commit-verification field), and the commit
+**MUST** attest to that exact digest before launch success. A revocation before
+commit rejects the launch; revocation strictly after an immutable commit does
+not rewrite that historical binding, but prevents later dispatches. Integrity
+and authenticated attestation are mandatory, while cryptographic key-policy
+verification remains the verifier's policy responsibility.
+
 ## 11. Changelog
 
 ### v0.7.0 (2026-07-26)

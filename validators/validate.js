@@ -21,6 +21,7 @@ const fs = require('fs');
 const path = require('path');
 const TOML = require('@iarna/toml');
 const Ajv = require('ajv');
+const crypto = require('crypto');
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -32,6 +33,132 @@ function dim(s)    { return `\x1b[2m${s}\x1b[0m`; }
 
 function violation(file, field, message) {
   return { file, field, message };
+}
+
+// ── familiar.embodiment_binding.v1 validation ───────────────────────────────
+
+const embodimentBindingSchema = JSON.parse(fs.readFileSync(
+  path.join(__dirname, '..', 'schemas', 'familiar-embodiment-binding.schema.json'), 'utf8'
+));
+const validateEmbodimentBindingSchema = new Ajv({ allErrors: true, strict: false })
+  .compile(embodimentBindingSchema);
+
+function canonicalJson(value) {
+  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(',')}]`;
+  if (isObject(value)) {
+    return `{${Object.keys(value).sort().map(key => `${JSON.stringify(key)}:${canonicalJson(value[key])}`).join(',')}}`;
+  }
+  return JSON.stringify(value);
+}
+
+function bindingDigest(binding) {
+  const committed = JSON.parse(JSON.stringify(binding));
+  delete committed.integrity.bindingDigest;
+  delete committed.commit.verifiedBindingDigest;
+  return crypto.createHash('sha256').update(canonicalJson(committed), 'utf8').digest('hex');
+}
+
+function isTimestamp(value) {
+  return typeof value === 'string' && !Number.isNaN(Date.parse(value));
+}
+
+function validateEmbodimentBinding(binding, file) {
+  const violations = [];
+  if (!isObject(binding)) return [violation(file, 'shape', 'An embodiment binding must be one JSON object.')];
+  if (!validateEmbodimentBindingSchema(binding)) {
+    return (validateEmbodimentBindingSchema.errors || []).map(error =>
+      violation(file, `schema ${error.instancePath || '/'} [${error.keyword}]`, error.message || 'schema violation')
+    );
+  }
+
+  const { familiar, identityBundle, statusAtDecision, principal, target, historicalVerification, revocation, commit, integrity } = binding;
+  const times = [binding.revisionRecordedAt, binding.validTime.notBefore, binding.validTime.notAfter,
+    statusAtDecision.decisionTime, binding.issuedAt, binding.decisionAt, commit.finalValidityCheckAt, commit.committedAt,
+    revocation.revokedAt].filter(Boolean);
+  if (times.some(value => !isTimestamp(value))) violations.push(violation(file, 'timestamps', 'All present timestamps must be valid RFC 3339 date-times.'));
+  const at = value => new Date(value).getTime();
+
+  if (identityBundle.historicalBundleRef !== `urn:sha256:${identityBundle.bundleDigest.value}`) {
+    violations.push(violation(file, 'identityBundle.historicalBundleRef', 'The content-addressed historical bundle reference must exactly carry bundleDigest.value.'));
+  }
+  if (integrity.bindingDigest !== bindingDigest(binding)) {
+    violations.push(violation(file, 'integrity.bindingDigest', 'The SHA-256 digest of the JCS-canonical binding bytes (with integrity.bindingDigest and the redundant commit verification omitted) does not match.'));
+  }
+  if (commit.verifiedBindingDigest !== integrity.bindingDigest) {
+    violations.push(violation(file, 'commit.verifiedBindingDigest', 'The immutable commit must verify the exact committed binding digest.'));
+  }
+  if (binding.aliasResolution) {
+    const roots = binding.aliasResolution.resolvedRootIds;
+    if (roots.length !== 1 || roots[0] !== familiar.familiarRootId) {
+      violations.push(violation(file, 'aliasResolution', 'Aliases are non-authoritative evidence and must resolve to exactly the declared familiar root.'));
+    }
+  }
+  if (principal.authenticatedPrincipalId !== target.authenticatedPrincipalId) {
+    violations.push(violation(file, 'target.authenticatedPrincipalId', 'The target principal must equal the authenticated binding principal.'));
+  }
+  if (isTimestamp(binding.revisionRecordedAt) && isTimestamp(binding.decisionAt) && at(binding.revisionRecordedAt) > at(binding.decisionAt)) {
+    violations.push(violation(file, 'revisionRecordedAt', 'The revision cannot be recorded after the binding decision.'));
+  }
+  if (isTimestamp(binding.validTime.notBefore) && isTimestamp(binding.decisionAt) && at(binding.validTime.notBefore) > at(binding.decisionAt)) {
+    violations.push(violation(file, 'validTime.notBefore', 'The revision is not yet valid at the decision time.'));
+  }
+  if (binding.validTime.notAfter && isTimestamp(binding.validTime.notAfter) && isTimestamp(binding.decisionAt) && at(binding.validTime.notAfter) < at(binding.decisionAt)) {
+    violations.push(violation(file, 'validTime.notAfter', 'The revision is stale at the decision time.'));
+  }
+  if (isTimestamp(commit.finalValidityCheckAt) && isTimestamp(commit.committedAt) && at(commit.finalValidityCheckAt) > at(commit.committedAt)) {
+    violations.push(violation(file, 'commit', 'The final validity check and binding commit must share an immutable snapshot boundary; the check cannot follow commit.'));
+  }
+
+  const lineage = familiar.lineageEvidence;
+  const predecessor = lineage.predecessor;
+  if (lineage.relationship === 'genesis' && (familiar.lineagePosition !== 0 || lineage.rootEvidence !== 'genesis' || predecessor)) {
+    violations.push(violation(file, 'familiar.lineageEvidence', 'Genesis requires position 0, genesis root evidence, and no predecessor.'));
+  }
+  if (['same_familiar_revision', 'restoration'].includes(lineage.relationship)) {
+    if (!predecessor || lineage.rootEvidence !== 'continued' || predecessor.familiarRootId !== familiar.familiarRootId ||
+      predecessor.lineagePosition !== familiar.lineagePosition - 1) {
+      violations.push(violation(file, 'familiar.lineageEvidence', 'Same-familiar continuation/restoration requires the immediately preceding revision on the same root.'));
+    }
+  }
+  if (lineage.relationship === 'restoration' && (!predecessor || predecessor.status !== 'retired')) {
+    violations.push(violation(file, 'familiar.lineageEvidence', 'Restoration requires a retired predecessor on the same familiar root.'));
+  }
+  if (['fork_new_root', 'succession'].includes(lineage.relationship) &&
+    (!predecessor || familiar.lineagePosition !== 0 || predecessor.familiarRootId === familiar.familiarRootId ||
+      lineage.rootEvidence !== (lineage.relationship === 'fork_new_root' ? 'fork' : 'succession'))) {
+    violations.push(violation(file, 'familiar.lineageEvidence', 'Fork/new-root and succession require position 0, a distinct predecessor root, and matching root evidence.'));
+  }
+
+  const isAuthorityAttempt = ['dispatch', 'session_creation'].includes(binding.bindingPurpose);
+  if (isAuthorityAttempt && statusAtDecision.status !== 'active') {
+    violations.push(violation(file, 'statusAtDecision.status', 'Only an active revision is eligible for a new dispatch or session creation.'));
+  }
+  if (isAuthorityAttempt && historicalVerification.state !== 'verified') {
+    violations.push(violation(file, 'historicalVerification.state', 'Degraded, unavailable, or unverifiable history is never authority for a new dispatch.'));
+  }
+  if (historicalVerification.readAuthorization === 'not_authorized' &&
+    (historicalVerification.state !== 'unavailable' || binding.bindingPurpose !== 'historical_verification')) {
+    violations.push(violation(file, 'historicalVerification', 'An unauthorized historical read must be recorded as unavailable historical verification, never as dispatch authority.'));
+  }
+  if (revocation.outcome === 'before_commit') {
+    violations.push(violation(file, 'revocation', 'A revocation observed before commit must fail closed and cannot produce a binding.'));
+  }
+  if (revocation.outcome === 'after_commit') {
+    if (!revocation.revokedAt || !isTimestamp(revocation.revokedAt) || !isTimestamp(commit.committedAt) || at(revocation.revokedAt) <= at(commit.committedAt)) {
+      violations.push(violation(file, 'revocation', 'An after-commit revocation must be timestamped strictly after the immutable commit.'));
+    }
+  }
+  return violations;
+}
+
+function validateEmbodimentBindingFile(filePath) {
+  let binding;
+  try {
+    binding = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  } catch (error) {
+    return [violation(filePath, 'syntax', `JSON syntax violation: ${error.message}`)];
+  }
+  return validateEmbodimentBinding(binding, filePath);
 }
 
 // ── SOUL.md parser ────────────────────────────────────────────────────────────
@@ -420,6 +547,7 @@ ${bold('familiar-contract validator')} — checks a familiar directory for spec 
 ${bold('Usage:')}
   npm install
   node validate.js <path-to-familiar-directory>
+  node validate.js --embodiment-binding <path-to-binding.json>
 
 ${bold('Examples:')}
   node validate.js examples/sage
@@ -433,12 +561,35 @@ ${bold('Checks:')}
   • MEMORY.md    — Persistent Memory (required; missing is a violation)
   • audit/*.json — Optional §5.6 audit-record samples (JSON Schema; §5.6.1 hash encodings)
   • Cross-file   — Name consistency between SOUL.md and ward.toml
+  • Embodiment binding — exact root/revision dispatch binding and its integrity
 
 ${bold('Exit codes:')}
   0  — PASS (all checks pass)
   1  — FAIL (one or more violations)
 `);
     process.exit(0);
+  }
+
+  if (args[0] === '--embodiment-binding') {
+    if (args.length !== 2) {
+      console.error(red('Error: --embodiment-binding requires exactly one JSON file path.'));
+      process.exit(1);
+    }
+    const filePath = path.resolve(args[1]);
+    if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
+      console.error(red(`Error: Binding file not found: ${filePath}`));
+      process.exit(1);
+    }
+    const bindingViolations = validateEmbodimentBindingFile(filePath);
+    if (bindingViolations.length === 0) {
+      console.log(green(bold('✓ PASS')) + ' — Embodiment binding validation passed.');
+      process.exit(0);
+    }
+    console.log(red(bold(`✗ FAIL`)) + ` — ${bindingViolations.length} embodiment-binding violation${bindingViolations.length !== 1 ? 's' : ''}:`);
+    for (const v of bindingViolations) {
+      console.log(`  ${red('✗')} ${bold(v.field)}\n    ${v.message}`);
+    }
+    process.exit(1);
   }
 
   const dirPath = path.resolve(args[0]);

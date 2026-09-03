@@ -5,6 +5,12 @@
 > ⚠️ **This document is preserved for reproducibility.** The current normative specification is [RFC-0001 v0.7.0](rfcs/RFC-0001-familiar-contract.md), which uses RFC 2119 keywords (MUST/SHOULD/MAY), references the conformance suite at [`tests/conformance/`](tests/conformance/), and hardens the authority-layer separation requirement.
 >
 > If you are looking for the current spec, go to [`rfcs/RFC-0001-familiar-contract.md`](rfcs/RFC-0001-familiar-contract.md). This file remains for historical and citation purposes.
+>
+> **Current profile addendum:** the universal
+> [`familiar.embodiment_binding.v1`](schemas/familiar-embodiment-binding.schema.json)
+> profile is normative as specified in [RFC-0001 §10.2](rfcs/RFC-0001-familiar-contract.md#102-familiar-embodiment-binding-profile).
+> It records an exact root/revision embodiment for a concrete execution; it
+> does not modify this historical identity, role, soul, or Ward text.
 
 ---
 

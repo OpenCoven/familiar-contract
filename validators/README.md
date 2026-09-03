@@ -11,6 +11,7 @@ A Node.js CLI that checks one claimant directory for the familiar-contract v0.7.
 
 ```bash
 node validators/validate.js <path-to-familiar-directory>
+node validators/validate.js --embodiment-binding <path-to-binding.json>
 ```
 
 ### Examples
@@ -42,6 +43,7 @@ node validators/validate.js --help
 | `MEMORY.md` | Existence | Persistent Memory (required; missing is a violation) |
 | `audit/*.json` | Optional §5.6 audit-record samples validated against `schemas/audit-record.schema.json` (§5.6.1 hash encodings); absence of `audit/` is not a violation, a present-but-empty `audit/` is | Bounded Authority, Persistent Memory |
 | Cross-file | Name consistency between SOUL.md and ward.toml | Consistency |
+| Embodiment binding | `familiar.embodiment_binding.v1` schema, canonical digest, lineage, dispatch eligibility, principal, alias, revocation, and immutable-commit semantics | Exact execution embodiment |
 
 ## Output
 
@@ -80,6 +82,12 @@ There are no warnings for missing required files; `MEMORY.md` absence is a failu
 - Whether the familiar's behavior matches its declared purpose (behavioral compliance requires runtime evaluation)
 
 This validator checks whether one claimant directory satisfies the required file-level declarations for v0.7.0. That claimant-directory run is necessary, but not sufficient, for a structural-conformance claim: you must also run `bash tests/conformance/run-conformance.sh` so the bundled reference validator is shown to accept the positive fixtures and reject the negative fixtures for the same contract version. Full conformance additionally requires runtime Ward enforcement beyond this file-level check, and missing `MEMORY.md` is a violation, not a warning.
+
+The explicit embodiment-binding mode validates one portable JSON record. It
+fails closed for non-unique aliases, stale or non-active revisions, degraded
+history used as current authority, principal mismatches, digest tampering, and
+pre-commit revocation. It accepts degraded/unavailable history only as a
+non-authority historical-verification record.
 
 ## For CI Integration
 

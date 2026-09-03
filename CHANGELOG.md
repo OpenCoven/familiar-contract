@@ -7,6 +7,27 @@ This project uses [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [Unreleased]
+
+### Added
+
+- **`familiar.embodiment_binding.v1`** — A universal, versioned,
+  privacy-minimized JSON profile for proving the stable familiar root and exact
+  identity revision embodied by one direct session, automation run/attempt, or
+  Psyche-delegated execution. It is explicitly separate from scheduler
+  lifecycle and protected-action authority.
+- **`schemas/familiar-embodiment-binding.schema.json`** and semantic
+  `--embodiment-binding` validation — Canonical digest/reference equality,
+  lineage, revision status and validity, alias cardinality, principal
+  consistency, historical-read privacy, revocation races, and immutable
+  final-check/commit verification fail closed.
+- **Embodiment-binding conformance lane** — 15 positive and 12 negative
+  vectors covering active, retired/restored, continuation, fork, succession,
+  direct/automation/Psyche targets, degraded history, privacy authorization,
+  tampering, ambiguity, stale/revoked revisions, and malformed data.
+
+---
+
 ## [0.7.0] — 2026-07-26
 
 Draft minor under the **v0.5.0** §6.3 rule (unchanged through v0.6.0): rescopes an existing normative MUST and promotes the reference `ward_hash` leaf construction to a normative definition. Closes both findings of the v0.6.0 post-merge review (beads `threads-8gg`, `threads-df9`).
