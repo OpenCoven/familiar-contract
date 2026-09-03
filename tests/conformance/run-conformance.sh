@@ -64,9 +64,15 @@ run_binding_case() {
   vector_path=$1
   expected=$2
   label=$3
+  expected_code=$4
 
   output_file="$SUITE_DIR/.conformance-output.$$"
-  node "$VALIDATOR" --embodiment-binding "$vector_path" >"$output_file" 2>&1
+  bundle_path="$SUITE_DIR/embodiment-bindings/bundles/$(basename "$vector_path")"
+  if [ -f "$bundle_path" ]; then
+    node "$VALIDATOR" --embodiment-binding "$vector_path" --historical-bundle "$bundle_path" >"$output_file" 2>&1
+  else
+    node "$VALIDATOR" --embodiment-binding "$vector_path" >"$output_file" 2>&1
+  fi
   status=$?
 
   if [ "$expected" = "pass" ]; then
@@ -83,7 +89,7 @@ embodiment positive expected pass but failed: ${label}"
     fi
   else
     binding_negative_total=$((binding_negative_total + 1))
-    if [ "$status" -ne 0 ]; then
+    if [ "$status" -ne 0 ] && grep -Fq "[$expected_code]" "$output_file"; then
       binding_negative_failed=$((binding_negative_failed + 1))
       printf 'FAIL expected: %s\n' "$label"
     else
@@ -119,14 +125,34 @@ binding_positive_passed=0
 binding_negative_total=0
 binding_negative_failed=0
 
+MANIFEST="$SUITE_DIR/embodiment-bindings/manifest.json"
+if ! node -e '
+const fs = require("fs"), path = require("path"), manifest = JSON.parse(fs.readFileSync(process.argv[1]));
+const root = path.dirname(process.argv[1]);
+const expected = new Set([...manifest.positive, ...manifest.negative].map(v => `${v.expected}/${v.file}`));
+const actual = new Set(["positive", "negative"].flatMap(kind => fs.readdirSync(path.join(root, kind)).filter(f => f.endsWith(".json")).map(f => `${kind}/${f}`)));
+if (!manifest.positive.every(v => v.expected === "positive" && v.errorCode === null) || !manifest.negative.every(v => v.expected === "negative" && typeof v.errorCode === "string") || expected.size !== actual.size || [...expected].some(f => !actual.has(f)) || [...actual].some(f => !expected.has(f))) process.exit(1);
+' "$MANIFEST"; then
+  unexpected=$((unexpected + 1))
+  details="${details}
+embodiment manifest is missing, malformed, or does not exactly enumerate every vector"
+  printf 'UNEXPECTED manifest: embodiment-bindings\n'
+fi
+
+binding_code() {
+  node -e 'const m=require(process.argv[1]); const v=[...m.positive,...m.negative].find(v => v.expected === process.argv[2] && v.file === process.argv[3]); process.stdout.write(v ? (v.errorCode || "") : "E_MANIFEST")' "$MANIFEST" "$1" "$2"
+}
+
 for vector_path in "$SUITE_DIR"/embodiment-bindings/positive/*.json; do
   [ -f "$vector_path" ] || continue
-  run_binding_case "$vector_path" "pass" "embodiment-bindings/positive/$(basename "$vector_path")"
+  name=$(basename "$vector_path")
+  run_binding_case "$vector_path" "pass" "embodiment-bindings/positive/$name" "$(binding_code positive "$name")"
 done
 
 for vector_path in "$SUITE_DIR"/embodiment-bindings/negative/*.json; do
   [ -f "$vector_path" ] || continue
-  run_binding_case "$vector_path" "fail" "embodiment-bindings/negative/$(basename "$vector_path")"
+  name=$(basename "$vector_path")
+  run_binding_case "$vector_path" "fail" "embodiment-bindings/negative/$name" "$(binding_code negative "$name")"
 done
 
 printf '\n'

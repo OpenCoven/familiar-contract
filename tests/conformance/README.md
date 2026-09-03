@@ -17,3 +17,8 @@ A claim of v0.7.0 structural conformance = the claimant directory passes `node v
 `familiar.embodiment_binding.v1` profile. It exercises the semantic checks that
 JSON Schema alone cannot express, including canonical digest recomputation,
 lineage, eligibility, alias cardinality, and revocation-commit ordering.
+`embodiment-bindings/manifest.json` is a required fixed inventory: the runner
+fails if a mandatory vector is missing, added without registration, or rejects
+for a reason other than its listed semantic error code. Detached identity
+bundles in `embodiment-bindings/bundles/` exercise retained-component digest
+recomputation and Ed25519 attestation without private-key material.

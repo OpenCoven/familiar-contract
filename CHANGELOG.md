@@ -21,7 +21,14 @@ This project uses [Semantic Versioning](https://semver.org/).
   lineage, revision status and validity, alias cardinality, principal
   consistency, historical-read privacy, revocation races, and immutable
   final-check/commit verification fail closed.
-- **Embodiment-binding conformance lane** — 15 positive and 12 negative
+- **Detached historical bundles and cryptographic verification** —
+  `familiar.identity_bundle.v1` retains canonical identity/soul (and optional
+  Ward) components under restricted verifier access; the validator recomputes
+  component/bundle digests and verifies non-circular Ed25519 attestations.
+  Resolution snapshots, strict RFC 3339 timestamps, authenticated lineage
+  edges, retention tombstone/purge evidence, and a fixed error-code conformance
+  manifest close stale-cache and vector-integrity gaps.
+- **Embodiment-binding conformance lane** — 16 positive and 20 negative
   vectors covering active, retired/restored, continuation, fork, succession,
   direct/automation/Psyche targets, degraded history, privacy authorization,
   tampering, ambiguity, stale/revoked revisions, and malformed data.

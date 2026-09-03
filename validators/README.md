@@ -89,6 +89,19 @@ history used as current authority, principal mismatches, digest tampering, and
 pre-commit revocation. It accepts degraded/unavailable history only as a
 non-authority historical-verification record.
 
+Pass a detached, independently consumable historical identity bundle to
+recompute the retained component and bundle digests and verify the binding:
+
+```bash
+node validators/validate.js --embodiment-binding binding.json \
+  --historical-bundle historical-bundle.json
+```
+
+Bindings use an Ed25519 DER/SPKI public key and base64 signature over a
+SHA-256 JCS binding digest. The digest excludes the complete `integrity` and
+`authentication` members, so verification is non-circular; no private key is
+accepted or stored in the profile.
+
 ## For CI Integration
 
 ```yaml

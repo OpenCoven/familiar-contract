@@ -105,6 +105,7 @@ schemas/
   ward.schema.json       ← JSON Schema for ward.toml
   role.schema.json       ← JSON Schema for ROLE.md
   familiar-embodiment-binding.schema.json ← Exact root/revision execution binding
+  familiar-identity-bundle.schema.json ← Detached retained historical identity bundle
 examples/
   sage/                  ← Sage (canonical structurally conformant familiar directory)
   minimal/               ← Lumen (minimal structurally conformant familiar directory)

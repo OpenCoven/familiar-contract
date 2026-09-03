@@ -515,6 +515,17 @@ relationships, credentials, or other sensitive contents: opaque identifiers
 and digests are the default. `privacy.classification` is therefore
 `metadata-only`, with an explicit minimum-retention class.
 
+The independently consumable detached historical record is
+`familiar.identity_bundle.v1`, defined by
+[`schemas/familiar-identity-bundle.schema.json`](../schemas/familiar-identity-bundle.schema.json).
+It **MUST** retain canonical JSON identity- and soul-declaration components
+(and MAY retain a Ward declaration), their individual SHA-256 digests, its
+root/revision/position, and a SHA-256 digest of the canonical bundle. A
+verifier supplied this bundle **MUST** recompute every component and bundle
+digest, then match them to the binding declaration digest, bundle digest, and
+URN. A missing bundle is distinguishable from a present bundle; only the former
+may yield explicit `degraded`, `unavailable`, or `unverifiable` history.
+
 `lineageEvidence` **MUST** distinguish genesis, same-familiar revision,
 restoration, fork/new-root, and succession. A continuation has the immediately
 preceding position and same root; restoration additionally follows a retired
@@ -530,6 +541,15 @@ binding purpose, schema/profile/policy versions, issued/decision timestamps,
 and resolver/verifier identities. `identityMeaning` **MUST** be `unchanged`;
 the purpose only contextualizes embodiment and cannot alter identity meaning.
 The target's principal **MUST** equal the authenticated principal.
+
+All recorded, valid, resolution, decision, final-check, commit, issue, and
+revocation times **MUST** be strict RFC 3339 calendar times with a `Z` or
+numeric offset. Recorded time describes when evidence was observed; valid time
+describes when the revision was eligible and the two are not interchangeable.
+The resolution snapshot **MUST** bind root, revision, lineage position, bundle
+digest, and status; its snapshot id **MUST** be the final-check/commit snapshot.
+Resolution precedes final validity check, which precedes decision, commit, and
+issuance; the decision timestamp and `statusAtDecision.decisionTime` are equal.
 
 Aliases are non-authoritative resolution evidence only. When an alias is used,
 resolution **MUST** yield exactly one root, and that root **MUST** equal the
@@ -547,6 +567,20 @@ restoration lineage. Historical verification may be `verified`, `degraded`,
 dispatch. An unauthorized historical read **MUST** be recorded as unavailable
 historical verification, not treated as authority.
 
+`authentication` **MUST** be a Node-core-verifiable Ed25519 public-key
+attestation: DER/SPKI public key and base64 signature over the hexadecimal
+SHA-256 binding digest. The binding digest is calculated from JCS canonical
+binding bytes with the entire `integrity` and `authentication` members omitted
+(and the redundant commit digest-verification field omitted). No private key
+appears in either profile. An invalid encoding or unverifiable signature
+**MUST** fail closed for dispatch and session creation.
+
+Lineage predecessors **MUST** name a content-addressed predecessor bundle and
+an authenticated Ed25519 transition edge. The verifier **MUST** reject a
+self-predecessor, repeated/non-monotonic position, root/revision mismatch, or
+relation/root-evidence mismatch. Thus continuation, restoration, fork/new-root,
+and succession are mechanically—not merely narratively—distinct.
+
 The resolver and verifier **MUST** perform the final eligibility check and
 immutable binding commit on the same snapshot/transaction boundary. The
 committed binding digest **MUST** recompute from JCS canonical bytes (excluding
@@ -556,6 +590,16 @@ commit rejects the launch; revocation strictly after an immutable commit does
 not rewrite that historical binding, but prevents later dispatches. Integrity
 and authenticated attestation are mandatory, while cryptographic key-policy
 verification remains the verifier's policy responsibility.
+
+Retention is lifecycle evidence, not a license to replicate identity content.
+The binding carries metadata-only classification plus retention time,
+tombstone/erasure state, and replica/device-purge state; a tombstoned or erased
+record **MUST** carry erasure evidence, and requested replica or device
+revocation **MUST** remain pending or complete rather than disappear. The
+detached bundle records restricted-historical-identity classification and
+authorized/denied verifier access. A denied reader **MUST NOT** receive
+component content and records unavailable history. Tombstone, erasure, or purge
+does not alter already-recorded time or valid-time facts.
 
 ## 11. Changelog
 

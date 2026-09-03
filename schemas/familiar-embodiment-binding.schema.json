@@ -5,7 +5,7 @@
   "description": "A privacy-minimized, versioned dispatch or historical-verification record proving the exact stable familiar root and identity revision embodied by one concrete execution. It is not a scheduler lifecycle record or protected-action authorization.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["profile", "schemaVersion", "bindingId", "familiar", "identityBundle", "revisionRecordedAt", "validTime", "statusAtDecision", "principal", "target", "bindingPurpose", "identityMeaning", "issuedAt", "decisionAt", "policyVersion", "resolver", "verifier", "historicalVerification", "revocation", "commit", "integrity", "authentication", "privacy"],
+  "required": ["profile", "schemaVersion", "bindingId", "familiar", "resolutionSnapshot", "identityBundle", "revisionRecordedAt", "validTime", "statusAtDecision", "principal", "target", "bindingPurpose", "identityMeaning", "issuedAt", "decisionAt", "policyVersion", "resolver", "verifier", "historicalVerification", "revocation", "commit", "integrity", "authentication", "privacy"],
   "properties": {
     "profile": { "const": "familiar.embodiment_binding.v1" },
     "schemaVersion": { "$ref": "#/definitions/version" },
@@ -16,7 +16,7 @@
       "properties": {
         "familiarRootId": { "$ref": "#/definitions/opaqueId" },
         "identityRevisionId": { "$ref": "#/definitions/opaqueId" },
-        "lineagePosition": { "type": "integer", "minimum": 0 },
+        "lineagePosition": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
         "lineageEvidence": {
           "type": "object", "additionalProperties": false,
           "required": ["relationship", "rootEvidence"],
@@ -25,16 +25,27 @@
             "rootEvidence": { "enum": ["genesis", "continued", "fork", "succession"] },
             "predecessor": {
               "type": "object", "additionalProperties": false,
-              "required": ["familiarRootId", "identityRevisionId", "lineagePosition", "status"],
+              "required": ["familiarRootId", "identityRevisionId", "lineagePosition", "status", "identityBundleRef", "transition"],
               "properties": {
                 "familiarRootId": { "$ref": "#/definitions/opaqueId" },
                 "identityRevisionId": { "$ref": "#/definitions/opaqueId" },
-                "lineagePosition": { "type": "integer", "minimum": 0 },
-                "status": { "enum": ["active", "retired", "revoked", "superseded"] }
+                "lineagePosition": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+                "status": { "enum": ["active", "retired", "revoked", "superseded"] },
+                "identityBundleRef": { "type": "string", "pattern": "^urn:sha256:[0-9a-f]{64}$" },
+                "transition": { "$ref": "#/definitions/authentication" }
               }
             }
           }
         }
+      }
+    },
+    "resolutionSnapshot": {
+      "type": "object", "additionalProperties": false,
+      "required": ["snapshotId", "resolvedAt", "familiarRootId", "identityRevisionId", "lineagePosition", "bundleDigest", "status"],
+      "properties": {
+        "snapshotId": { "$ref": "#/definitions/opaqueId" }, "resolvedAt": { "$ref": "#/definitions/timestamp" }, "familiarRootId": { "$ref": "#/definitions/opaqueId" },
+        "identityRevisionId": { "$ref": "#/definitions/opaqueId" }, "lineagePosition": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+        "bundleDigest": { "$ref": "#/definitions/hash" }, "status": { "enum": ["active", "retired", "revoked", "superseded"] }
       }
     },
     "aliasResolution": {
@@ -104,19 +115,16 @@
       "type": "object", "additionalProperties": false, "required": ["algorithm", "canonicalization", "bindingDigest"],
       "properties": { "algorithm": { "const": "sha-256" }, "canonicalization": { "const": "jcs-rfc8785" }, "bindingDigest": { "$ref": "#/definitions/hash" } }
     },
-    "authentication": {
-      "type": "object", "additionalProperties": false, "required": ["method", "signerId", "signature"],
-      "properties": { "method": { "enum": ["signature", "mTLS-attestation", "authenticated-channel"] }, "signerId": { "$ref": "#/definitions/opaqueId" }, "signature": { "type": "string", "minLength": 1 } }
-    },
+    "authentication": { "$ref": "#/definitions/authentication" },
     "privacy": {
-      "type": "object", "additionalProperties": false, "required": ["classification", "retention", "containsSensitiveIdentityContent"],
-      "properties": { "classification": { "const": "metadata-only" }, "retention": { "enum": ["dispatch-audit-minimum", "historical-verification-minimum"] }, "containsSensitiveIdentityContent": { "const": false } }
+      "type": "object", "additionalProperties": false,       "required": ["classification", "retention", "containsSensitiveIdentityContent", "recordedAt", "tombstoneState", "replicaPurgeState"],
+      "properties": { "classification": { "const": "metadata-only" }, "retention": { "enum": ["dispatch-audit-minimum", "historical-verification-minimum"] }, "containsSensitiveIdentityContent": { "const": false }, "recordedAt": { "$ref": "#/definitions/timestamp" }, "tombstoneState": { "enum": ["live", "tombstoned", "erased"] }, "replicaPurgeState": { "enum": ["not_requested", "pending", "complete"] }, "erasureEvidence": { "type": "string", "minLength": 1 }, "deviceRevocationEvidence": { "type": "string", "minLength": 1 } }
     }
   },
   "definitions": {
     "opaqueId": { "type": "string", "pattern": "^[a-z][a-z0-9_-]*:[A-Za-z0-9._:-]+$" },
     "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
-    "timestamp": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T" },
+    "timestamp": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$" },
     "hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
     "digest": {
       "type": "object", "additionalProperties": false, "required": ["algorithm", "value"],
@@ -125,6 +133,10 @@
     "actor": {
       "type": "object", "additionalProperties": false, "required": ["id", "version"],
       "properties": { "id": { "$ref": "#/definitions/opaqueId" }, "version": { "$ref": "#/definitions/version" } }
+    }
+    ,"authentication": {
+      "type": "object", "additionalProperties": false, "required": ["method", "signerId", "publicKey", "signature"],
+      "properties": { "method": { "const": "ed25519" }, "signerId": { "$ref": "#/definitions/opaqueId" }, "publicKey": { "type": "string", "pattern": "^[A-Za-z0-9+/]+={0,2}$" }, "signature": { "type": "string", "pattern": "^[A-Za-z0-9+/]+={0,2}$" } }
     }
   }
 }

@@ -13,7 +13,14 @@
         "familiarRootId": "familiar-root:oak",
         "identityRevisionId": "familiar-revision:oak:2",
         "lineagePosition": 2,
-        "status": "superseded"
+        "status": "superseded",
+        "identityBundleRef": "urn:sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "transition": {
+          "method": "ed25519",
+          "signerId": "authority:oak",
+          "publicKey": "MCowBQYDK2VwAyEAlWU5gXFdbNc2qSkWVDd9IqarCUNox0b3bCjP7GBqMoQ=",
+          "signature": "WSh3L873lxKqD1NH20yEYH6US9Z4iekdsGY+MCxa6kvXtpcJC1FhSnDVyfchp2m9h/t1cS3iTtbXxEV7yAbqBA=="
+        }
       }
     }
   },
@@ -21,13 +28,13 @@
     "canonicalization": "jcs-rfc8785",
     "declarationDigest": {
       "algorithm": "sha-256",
-      "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      "value": "8392e679b9e15102cac7593352a44ccf8bcf76421f2546e3e2eb29ab1e1e6dd6"
     },
     "bundleDigest": {
       "algorithm": "sha-256",
-      "value": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      "value": "ca973605cef73dd456884adcbda64d698a849a295837e9fd1fdf13b3afcd74e3"
     },
-    "historicalBundleRef": "urn:sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    "historicalBundleRef": "urn:sha256:ca973605cef73dd456884adcbda64d698a849a295837e9fd1fdf13b3afcd74e3"
   },
   "revisionRecordedAt": "2026-09-03T08:00:00Z",
   "validTime": {
@@ -71,23 +78,36 @@
   "integrity": {
     "algorithm": "sha-256",
     "canonicalization": "jcs-rfc8785",
-    "bindingDigest": "f0c89e078e7ec61cde5a0e0aef3279ba1137376562f04c7bd3de649e0459e9ac"
+    "bindingDigest": "551d4d71952a9b00aa3e9c46fe26045d4cfcf9cd862b1457da4c74cdc9f7c6cd"
   },
   "authentication": {
-    "method": "signature",
+    "method": "ed25519",
     "signerId": "authority:oak",
-    "signature": "attested:opaque"
+    "publicKey": "MCowBQYDK2VwAyEAlWU5gXFdbNc2qSkWVDd9IqarCUNox0b3bCjP7GBqMoQ=",
+    "signature": "lTyixJiuN/uKjmuOYxYQU4Tb74iYvtwgkNLuxBYZ75wr9UYzMTDQ2Zy+FK6N4M4cf0+kprCmrE0lgv7smUKcAA=="
   },
   "privacy": {
     "classification": "metadata-only",
     "retention": "dispatch-audit-minimum",
-    "containsSensitiveIdentityContent": false
+    "containsSensitiveIdentityContent": false,
+    "recordedAt": "2026-09-03T09:00:00Z",
+    "tombstoneState": "live",
+    "replicaPurgeState": "not_requested"
   },
   "commit": {
     "snapshotId": "snapshot:oak-dispatch-001",
     "state": "committed",
     "finalValidityCheckAt": "2026-09-03T09:00:00Z",
     "committedAt": "2026-09-03T09:00:00Z",
-    "verifiedBindingDigest": "f0c89e078e7ec61cde5a0e0aef3279ba1137376562f04c7bd3de649e0459e9ac"
+    "verifiedBindingDigest": "551d4d71952a9b00aa3e9c46fe26045d4cfcf9cd862b1457da4c74cdc9f7c6cd"
+  },
+  "resolutionSnapshot": {
+    "snapshotId": "snapshot:oak-dispatch-001",
+    "resolvedAt": "2026-09-03T09:00:00Z",
+    "familiarRootId": "familiar-root:oak",
+    "identityRevisionId": "familiar-revision:oak:3",
+    "lineagePosition": 3,
+    "bundleDigest": "ca973605cef73dd456884adcbda64d698a849a295837e9fd1fdf13b3afcd74e3",
+    "status": "active"
   }
 }

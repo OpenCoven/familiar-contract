@@ -42,6 +42,15 @@ const embodimentBindingSchema = JSON.parse(fs.readFileSync(
 ));
 const validateEmbodimentBindingSchema = new Ajv({ allErrors: true, strict: false })
   .compile(embodimentBindingSchema);
+const identityBundleSchema = JSON.parse(fs.readFileSync(
+  path.join(__dirname, '..', 'schemas', 'familiar-identity-bundle.schema.json'), 'utf8'
+));
+const validateIdentityBundleSchema = new Ajv({ allErrors: true, strict: false })
+  .compile(identityBundleSchema);
+
+function bindingViolation(code, field, message) {
+  return violation('embodiment-binding', `[${code}] ${field}`, message);
+}
 
 function canonicalJson(value) {
   if (Array.isArray(value)) return `[${value.map(canonicalJson).join(',')}]`;
@@ -53,112 +62,210 @@ function canonicalJson(value) {
 
 function bindingDigest(binding) {
   const committed = JSON.parse(JSON.stringify(binding));
-  delete committed.integrity.bindingDigest;
+  delete committed.integrity;
+  delete committed.authentication;
   delete committed.commit.verifiedBindingDigest;
   return crypto.createHash('sha256').update(canonicalJson(committed), 'utf8').digest('hex');
 }
 
 function isTimestamp(value) {
-  return typeof value === 'string' && !Number.isNaN(Date.parse(value));
+  if (typeof value !== 'string') return false;
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|([+-])(\d{2}):(\d{2}))$/);
+  if (!match) return false;
+  const [year, month, day, hour, minute, second] = match.slice(1, 7).map(Number);
+  const offsetHour = match[9] === undefined ? 0 : Number(match[9]);
+  const offsetMinute = match[10] === undefined ? 0 : Number(match[10]);
+  const calendar = new Date(Date.UTC(year, month - 1, day));
+  return month >= 1 && month <= 12 && hour <= 23 && minute <= 59 && second <= 59
+    && offsetHour <= 23 && offsetMinute <= 59
+    && calendar.getUTCFullYear() === year && calendar.getUTCMonth() === month - 1 && calendar.getUTCDate() === day;
 }
 
-function validateEmbodimentBinding(binding, file) {
+function verifyEd25519(authentication, digest) {
+  try {
+    return crypto.verify(null, Buffer.from(digest, 'hex'), {
+      key: Buffer.from(authentication.publicKey, 'base64'), format: 'der', type: 'spki'
+    }, Buffer.from(authentication.signature, 'base64'));
+  } catch (_) {
+    return false;
+  }
+}
+
+function digestObject(value) {
+  return crypto.createHash('sha256').update(canonicalJson(value), 'utf8').digest('hex');
+}
+
+function validateHistoricalBundle(bundle, binding) {
   const violations = [];
-  if (!isObject(binding)) return [violation(file, 'shape', 'An embodiment binding must be one JSON object.')];
+  if (!isObject(bundle) || !validateIdentityBundleSchema(bundle)) {
+    return [bindingViolation('E_BUNDLE_SCHEMA', 'historicalBundle', 'The detached historical bundle is malformed.')];
+  }
+  const idsMatch = bundle.familiarRootId === binding.familiar.familiarRootId
+    && bundle.identityRevisionId === binding.familiar.identityRevisionId
+    && bundle.lineagePosition === binding.familiar.lineagePosition;
+  if (!idsMatch) violations.push(bindingViolation('E_BUNDLE_IDENTITY', 'historicalBundle', 'The detached bundle does not identify the bound root, revision, and lineage position.'));
+  const seen = new Set();
+  for (const component of bundle.components) {
+    if (seen.has(component.componentId) || component.digest.value !== digestObject(component.content)) {
+      violations.push(bindingViolation('E_COMPONENT_DIGEST', 'historicalBundle.components', 'Every unique retained component digest must recompute from its canonical content.'));
+      break;
+    }
+    seen.add(component.componentId);
+  }
+  if (!seen.has('identity-declaration') || !seen.has('soul-declaration')) {
+    violations.push(bindingViolation('E_COMPONENT_REQUIRED', 'historicalBundle.components', 'Historical bundles retain identity-declaration and soul-declaration components.'));
+  }
+  const copy = JSON.parse(JSON.stringify(bundle));
+  delete copy.bundleDigest;
+  const computedBundleDigest = digestObject(copy);
+  if (bundle.bundleDigest.value !== computedBundleDigest ||
+      binding.identityBundle.bundleDigest.value !== computedBundleDigest ||
+      binding.identityBundle.declarationDigest.value !== bundle.components.find(c => c.componentId === 'identity-declaration')?.digest.value) {
+    violations.push(bindingViolation('E_BUNDLE_DIGEST', 'historicalBundle.bundleDigest', 'The detached bundle and its retained identity declaration must recompute to the bound digests.'));
+  }
+  if (bundle.retention.verifierAccess !== 'authorized') {
+    violations.push(bindingViolation('E_BUNDLE_ACCESS', 'historicalBundle.retention', 'A supplied detached bundle must be authorized for verifier access.'));
+  }
+  if (bundle.retention.tombstoneState !== 'live' &&
+      (!bundle.retention.erasureEvidence || bundle.retention.replicaPurgeState === 'not_requested')) {
+    violations.push(bindingViolation('E_RETENTION', 'historicalBundle.retention', 'Tombstoned or erased bundles require erasure evidence and a requested replica purge.'));
+  }
+  return violations;
+}
+
+function validateEmbodimentBinding(binding, file, historicalBundle) {
+  const violations = [];
+  if (!isObject(binding)) return [bindingViolation('E_SCHEMA', 'shape', 'An embodiment binding must be one JSON object.')];
   if (!validateEmbodimentBindingSchema(binding)) {
     return (validateEmbodimentBindingSchema.errors || []).map(error =>
-      violation(file, `schema ${error.instancePath || '/'} [${error.keyword}]`, error.message || 'schema violation')
+      bindingViolation('E_SCHEMA', `schema ${error.instancePath || '/'} [${error.keyword}]`, error.message || 'schema violation')
     );
   }
 
-  const { familiar, identityBundle, statusAtDecision, principal, target, historicalVerification, revocation, commit, integrity } = binding;
-  const times = [binding.revisionRecordedAt, binding.validTime.notBefore, binding.validTime.notAfter,
+  const { familiar, resolutionSnapshot, identityBundle, statusAtDecision, principal, target, historicalVerification, revocation, commit, integrity } = binding;
+  const times = [binding.revisionRecordedAt, binding.validTime.notBefore, binding.validTime.notAfter, resolutionSnapshot.resolvedAt,
     statusAtDecision.decisionTime, binding.issuedAt, binding.decisionAt, commit.finalValidityCheckAt, commit.committedAt,
     revocation.revokedAt].filter(Boolean);
-  if (times.some(value => !isTimestamp(value))) violations.push(violation(file, 'timestamps', 'All present timestamps must be valid RFC 3339 date-times.'));
+  if (times.some(value => !isTimestamp(value))) violations.push(bindingViolation('E_TIMESTAMP', 'timestamps', 'All present timestamps must be strict RFC 3339 calendar date-times with an offset or Z.'));
   const at = value => new Date(value).getTime();
 
   if (identityBundle.historicalBundleRef !== `urn:sha256:${identityBundle.bundleDigest.value}`) {
-    violations.push(violation(file, 'identityBundle.historicalBundleRef', 'The content-addressed historical bundle reference must exactly carry bundleDigest.value.'));
+    violations.push(bindingViolation('E_BUNDLE_REFERENCE', 'identityBundle.historicalBundleRef', 'The content-addressed historical bundle reference must exactly carry bundleDigest.value.'));
   }
   if (integrity.bindingDigest !== bindingDigest(binding)) {
-    violations.push(violation(file, 'integrity.bindingDigest', 'The SHA-256 digest of the JCS-canonical binding bytes (with integrity.bindingDigest and the redundant commit verification omitted) does not match.'));
+    violations.push(bindingViolation('E_BINDING_DIGEST', 'integrity.bindingDigest', 'The SHA-256 digest of JCS-canonical binding bytes with the entire integrity/authentication members and redundant commit digest verification omitted does not match.'));
   }
   if (commit.verifiedBindingDigest !== integrity.bindingDigest) {
-    violations.push(violation(file, 'commit.verifiedBindingDigest', 'The immutable commit must verify the exact committed binding digest.'));
+    violations.push(bindingViolation('E_COMMIT_DIGEST', 'commit.verifiedBindingDigest', 'The immutable commit must verify the exact committed binding digest.'));
+  }
+  if (!verifyEd25519(binding.authentication, integrity.bindingDigest)) violations.push(bindingViolation('E_AUTHENTICATION', 'authentication', 'The Ed25519 public key and signature do not verify the binding digest.'));
+  if (resolutionSnapshot.snapshotId !== commit.snapshotId || resolutionSnapshot.familiarRootId !== familiar.familiarRootId ||
+      resolutionSnapshot.identityRevisionId !== familiar.identityRevisionId || resolutionSnapshot.lineagePosition !== familiar.lineagePosition ||
+      resolutionSnapshot.bundleDigest !== identityBundle.bundleDigest.value || resolutionSnapshot.status !== statusAtDecision.status) {
+    violations.push(bindingViolation('E_SNAPSHOT', 'resolutionSnapshot', 'The immutable resolution snapshot must bind root, revision, lineage position, bundle digest, and decision status.'));
   }
   if (binding.aliasResolution) {
     const roots = binding.aliasResolution.resolvedRootIds;
     if (roots.length !== 1 || roots[0] !== familiar.familiarRootId) {
-      violations.push(violation(file, 'aliasResolution', 'Aliases are non-authoritative evidence and must resolve to exactly the declared familiar root.'));
+      violations.push(bindingViolation('E_ALIAS', 'aliasResolution', 'Aliases are non-authoritative evidence and must resolve to exactly the declared familiar root.'));
     }
   }
   if (principal.authenticatedPrincipalId !== target.authenticatedPrincipalId) {
-    violations.push(violation(file, 'target.authenticatedPrincipalId', 'The target principal must equal the authenticated binding principal.'));
+    violations.push(bindingViolation('E_PRINCIPAL', 'target.authenticatedPrincipalId', 'The target principal must equal the authenticated binding principal.'));
   }
   if (isTimestamp(binding.revisionRecordedAt) && isTimestamp(binding.decisionAt) && at(binding.revisionRecordedAt) > at(binding.decisionAt)) {
-    violations.push(violation(file, 'revisionRecordedAt', 'The revision cannot be recorded after the binding decision.'));
+    violations.push(bindingViolation('E_ORDERING', 'revisionRecordedAt', 'The revision cannot be recorded after the binding decision.'));
   }
   if (isTimestamp(binding.validTime.notBefore) && isTimestamp(binding.decisionAt) && at(binding.validTime.notBefore) > at(binding.decisionAt)) {
-    violations.push(violation(file, 'validTime.notBefore', 'The revision is not yet valid at the decision time.'));
+    violations.push(bindingViolation('E_STALE', 'validTime.notBefore', 'The revision is not yet valid at the decision time.'));
   }
   if (binding.validTime.notAfter && isTimestamp(binding.validTime.notAfter) && isTimestamp(binding.decisionAt) && at(binding.validTime.notAfter) < at(binding.decisionAt)) {
-    violations.push(violation(file, 'validTime.notAfter', 'The revision is stale at the decision time.'));
+    violations.push(bindingViolation('E_STALE', 'validTime.notAfter', 'The revision is stale at the decision time.'));
   }
   if (isTimestamp(commit.finalValidityCheckAt) && isTimestamp(commit.committedAt) && at(commit.finalValidityCheckAt) > at(commit.committedAt)) {
-    violations.push(violation(file, 'commit', 'The final validity check and binding commit must share an immutable snapshot boundary; the check cannot follow commit.'));
+    violations.push(bindingViolation('E_ORDERING', 'commit', 'The final validity check cannot follow the immutable commit.'));
+  }
+  if (isTimestamp(resolutionSnapshot.resolvedAt) && isTimestamp(commit.finalValidityCheckAt) && isTimestamp(binding.decisionAt) && isTimestamp(commit.committedAt) &&
+      !(at(resolutionSnapshot.resolvedAt) <= at(commit.finalValidityCheckAt) && at(commit.finalValidityCheckAt) <= at(binding.decisionAt) && at(binding.decisionAt) <= at(commit.committedAt) && at(commit.committedAt) <= at(binding.issuedAt)) ||
+      statusAtDecision.decisionTime !== binding.decisionAt) {
+    violations.push(bindingViolation('E_ORDERING', 'decisionAt', 'Snapshot resolution, final validity check, decision, commit, and issue must be ordered; statusAtDecision.decisionTime equals decisionAt.'));
   }
 
   const lineage = familiar.lineageEvidence;
   const predecessor = lineage.predecessor;
+  if (predecessor && predecessor.identityRevisionId === familiar.identityRevisionId) {
+    violations.push(bindingViolation('E_LINEAGE', 'familiar.lineageEvidence.predecessor', 'A lineage predecessor must be a distinct identity revision.'));
+  }
   if (lineage.relationship === 'genesis' && (familiar.lineagePosition !== 0 || lineage.rootEvidence !== 'genesis' || predecessor)) {
     violations.push(violation(file, 'familiar.lineageEvidence', 'Genesis requires position 0, genesis root evidence, and no predecessor.'));
   }
   if (['same_familiar_revision', 'restoration'].includes(lineage.relationship)) {
     if (!predecessor || lineage.rootEvidence !== 'continued' || predecessor.familiarRootId !== familiar.familiarRootId ||
-      predecessor.lineagePosition !== familiar.lineagePosition - 1) {
-      violations.push(violation(file, 'familiar.lineageEvidence', 'Same-familiar continuation/restoration requires the immediately preceding revision on the same root.'));
+      predecessor.lineagePosition !== familiar.lineagePosition - 1 || predecessor.identityRevisionId === familiar.identityRevisionId ||
+      !predecessor.identityBundleRef || !predecessor.transition || !verifyEd25519(predecessor.transition, predecessor.identityBundleRef.slice('urn:sha256:'.length))) {
+      violations.push(bindingViolation('E_LINEAGE', 'familiar.lineageEvidence', 'Same-familiar continuation/restoration requires an authenticated, content-addressed edge from the immediately preceding distinct revision on the same root.'));
     }
   }
   if (lineage.relationship === 'restoration' && (!predecessor || predecessor.status !== 'retired')) {
-    violations.push(violation(file, 'familiar.lineageEvidence', 'Restoration requires a retired predecessor on the same familiar root.'));
+    violations.push(bindingViolation('E_LINEAGE', 'familiar.lineageEvidence', 'Restoration requires a retired predecessor on the same familiar root.'));
   }
   if (['fork_new_root', 'succession'].includes(lineage.relationship) &&
-    (!predecessor || familiar.lineagePosition !== 0 || predecessor.familiarRootId === familiar.familiarRootId ||
+    (!predecessor || !predecessor.identityBundleRef || !predecessor.transition ||
+      !verifyEd25519(predecessor.transition, predecessor.identityBundleRef.slice('urn:sha256:'.length)) ||
+      familiar.lineagePosition !== 0 || predecessor.familiarRootId === familiar.familiarRootId ||
       lineage.rootEvidence !== (lineage.relationship === 'fork_new_root' ? 'fork' : 'succession'))) {
-    violations.push(violation(file, 'familiar.lineageEvidence', 'Fork/new-root and succession require position 0, a distinct predecessor root, and matching root evidence.'));
+    violations.push(bindingViolation('E_LINEAGE', 'familiar.lineageEvidence', 'Fork/new-root and succession require authenticated, content-addressed predecessor evidence, position 0, a distinct root, and matching root evidence.'));
   }
 
   const isAuthorityAttempt = ['dispatch', 'session_creation'].includes(binding.bindingPurpose);
   if (isAuthorityAttempt && statusAtDecision.status !== 'active') {
-    violations.push(violation(file, 'statusAtDecision.status', 'Only an active revision is eligible for a new dispatch or session creation.'));
+    violations.push(bindingViolation('E_STATUS', 'statusAtDecision.status', 'Only an active revision is eligible for a new dispatch or session creation.'));
   }
   if (isAuthorityAttempt && historicalVerification.state !== 'verified') {
-    violations.push(violation(file, 'historicalVerification.state', 'Degraded, unavailable, or unverifiable history is never authority for a new dispatch.'));
+    violations.push(bindingViolation('E_HISTORY', 'historicalVerification.state', 'Degraded, unavailable, or unverifiable history is never authority for a new dispatch.'));
   }
   if (historicalVerification.readAuthorization === 'not_authorized' &&
     (historicalVerification.state !== 'unavailable' || binding.bindingPurpose !== 'historical_verification')) {
-    violations.push(violation(file, 'historicalVerification', 'An unauthorized historical read must be recorded as unavailable historical verification, never as dispatch authority.'));
+    violations.push(bindingViolation('E_HISTORY', 'historicalVerification', 'An unauthorized historical read must be recorded as unavailable historical verification, never as dispatch authority.'));
+  }
+  if (binding.privacy.tombstoneState !== 'live' &&
+      (!binding.privacy.erasureEvidence || binding.privacy.replicaPurgeState === 'not_requested')) {
+    violations.push(bindingViolation('E_RETENTION', 'privacy', 'Tombstoned or erased binding metadata requires erasure evidence and a requested replica purge.'));
+  }
+  if (historicalBundle) violations.push(...validateHistoricalBundle(historicalBundle, binding));
+  if (!historicalBundle && historicalVerification.state === 'verified') {
+    violations.push(bindingViolation('E_BUNDLE_MISSING', 'historicalBundle', 'Verified history requires a supplied detached historical bundle.'));
   }
   if (revocation.outcome === 'before_commit') {
-    violations.push(violation(file, 'revocation', 'A revocation observed before commit must fail closed and cannot produce a binding.'));
+    violations.push(bindingViolation('E_REVOCATION', 'revocation', 'A revocation observed before commit must fail closed and cannot produce a binding.'));
+  }
+  if (revocation.revokedAt && isTimestamp(revocation.revokedAt) && isTimestamp(commit.committedAt) && at(revocation.revokedAt) <= at(commit.committedAt) && isAuthorityAttempt) {
+    violations.push(bindingViolation('E_REVOCATION', 'revocation.revokedAt', 'Any revocation at or before decision/commit rejects dispatch regardless of the asserted outcome.'));
   }
   if (revocation.outcome === 'after_commit') {
     if (!revocation.revokedAt || !isTimestamp(revocation.revokedAt) || !isTimestamp(commit.committedAt) || at(revocation.revokedAt) <= at(commit.committedAt)) {
-      violations.push(violation(file, 'revocation', 'An after-commit revocation must be timestamped strictly after the immutable commit.'));
+      violations.push(bindingViolation('E_REVOCATION', 'revocation', 'An after-commit revocation must be timestamped strictly after the immutable commit.'));
     }
   }
   return violations;
 }
 
-function validateEmbodimentBindingFile(filePath) {
+function validateEmbodimentBindingFile(filePath, historicalBundlePath) {
   let binding;
   try {
     binding = JSON.parse(fs.readFileSync(filePath, 'utf8'));
   } catch (error) {
-    return [violation(filePath, 'syntax', `JSON syntax violation: ${error.message}`)];
+    return [bindingViolation('E_JSON', 'syntax', `JSON syntax violation: ${error.message}`)];
   }
-  return validateEmbodimentBinding(binding, filePath);
+  let historicalBundle;
+  if (historicalBundlePath) {
+    try {
+      historicalBundle = JSON.parse(fs.readFileSync(historicalBundlePath, 'utf8'));
+    } catch (error) {
+      return [bindingViolation('E_BUNDLE_SCHEMA', 'historicalBundle', `JSON syntax violation: ${error.message}`)];
+    }
+  }
+  return validateEmbodimentBinding(binding, filePath, historicalBundle);
 }
 
 // ── SOUL.md parser ────────────────────────────────────────────────────────────
@@ -547,7 +654,7 @@ ${bold('familiar-contract validator')} — checks a familiar directory for spec 
 ${bold('Usage:')}
   npm install
   node validate.js <path-to-familiar-directory>
-  node validate.js --embodiment-binding <path-to-binding.json>
+  node validate.js --embodiment-binding <path-to-binding.json> [--historical-bundle <path-to-bundle.json>]
 
 ${bold('Examples:')}
   node validate.js examples/sage
@@ -571,8 +678,8 @@ ${bold('Exit codes:')}
   }
 
   if (args[0] === '--embodiment-binding') {
-    if (args.length !== 2) {
-      console.error(red('Error: --embodiment-binding requires exactly one JSON file path.'));
+    if (args.length !== 2 && (args.length !== 4 || args[2] !== '--historical-bundle')) {
+      console.error(red('Error: --embodiment-binding requires a JSON file and optionally --historical-bundle <file>.'));
       process.exit(1);
     }
     const filePath = path.resolve(args[1]);
@@ -580,7 +687,12 @@ ${bold('Exit codes:')}
       console.error(red(`Error: Binding file not found: ${filePath}`));
       process.exit(1);
     }
-    const bindingViolations = validateEmbodimentBindingFile(filePath);
+    const historicalBundlePath = args[3] && path.resolve(args[3]);
+    if (historicalBundlePath && (!fs.existsSync(historicalBundlePath) || !fs.statSync(historicalBundlePath).isFile())) {
+      console.error(red(`Error: Historical bundle file not found: ${historicalBundlePath}`));
+      process.exit(1);
+    }
+    const bindingViolations = validateEmbodimentBindingFile(filePath, historicalBundlePath);
     if (bindingViolations.length === 0) {
       console.log(green(bold('✓ PASS')) + ' — Embodiment binding validation passed.');
       process.exit(0);
