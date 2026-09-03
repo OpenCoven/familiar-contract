@@ -11,7 +11,15 @@ A Node.js CLI that checks one claimant directory for the familiar-contract v0.7.
 
 ```bash
 node validators/validate.js <path-to-familiar-directory>
-node validators/validate.js --embodiment-binding <path-to-binding.json>
+node validators/validate.js --embodiment-binding <path-to-binding.json> \
+  --historical-bundle <path-to-bundle.json> \
+  --trusted-ledger <path-to-ledger.json>
+
+# Optionally verify a separately signed revocation recorded after commit:
+node validators/validate.js --embodiment-binding <path-to-binding.json> \
+  --historical-bundle <path-to-bundle.json> \
+  --trusted-ledger <path-to-ledger.json> \
+  --post-commit-revocation <path-to-revocation.json>
 ```
 
 ### Examples

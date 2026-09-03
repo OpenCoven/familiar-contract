@@ -47,8 +47,18 @@ These are not soft design preferences. Each one has architectural implications, 
 5. For a v0.7.0 structural-conformance claim, run both `node validators/validate.js ./your-directory` and `npm test`
 
 **If you're binding a concrete execution:** validate its independently
-consumable embodiment record with
-`node validators/validate.js --embodiment-binding ./binding.json`. The
+consumable embodiment record with its required evidence:
+
+```bash
+node validators/validate.js --embodiment-binding ./binding.json \
+  --historical-bundle ./identity-bundle.json \
+  --trusted-ledger ./trusted-ledger.json
+```
+
+Historical records may omit sidecars only when their declared degraded or
+denied-read state permits that absence. A later revocation is a separately
+signed append-only event supplied with `--post-commit-revocation`; it never
+rewrites the immutable binding. The
 [`familiar.embodiment_binding.v1` schema](schemas/familiar-embodiment-binding.schema.json)
 proves the selected root and exact identity revision without copying sensitive
 identity content; it does not grant authority or define scheduler lifecycle.

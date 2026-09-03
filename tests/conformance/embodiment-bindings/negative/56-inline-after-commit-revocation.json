@@ -80,18 +80,19 @@
     "readAuthorization": "not_requested"
   },
   "revocation": {
-    "outcome": "none"
+    "outcome": "after_commit",
+    "revokedAt": "2026-09-03T09:00:01Z"
   },
   "integrity": {
     "algorithm": "sha-256",
     "canonicalization": "jcs-rfc8785",
-    "bindingDigest": "5bc96e5b529b41e4cf64f1b2399ed384ccfcd6693223f205d4d57217ea39421d"
+    "bindingDigest": "480d5f34266fa9804d4ebb474c02fa1bd9f266440650f12712c9a8d48efffab4"
   },
   "authentication": {
     "method": "ed25519",
     "signerId": "authority:oak",
-    "publicKey": "MCowBQYDK2VwAyEAxuPXVSd0Y2PbUCuLXkxhxYq6eBSE3ynGSiImgav3Ho0=",
-    "signature": "qincl9bPUysIs99MeNe1564DD17n1pM0DOc2AQmXY+EZlMd5/U7pykQvXGRaP/iLiMJWFeQDXDVw56Q91NYICA=="
+    "publicKey": "MCowBQYDK2VwAyEAByZtD1Euajw91B5qCNDsKoyXXeRj1bKoBf7uEy332WI=",
+    "signature": "KdXis2ZANHA1/ce4tVHEXE+RKvMApYEf1shXKkcJTco4eHmdbYi6uj4MxTChNu86+lOQ4J2pEQmxPokNQ3M/DQ=="
   },
   "privacy": {
     "classification": "metadata-only",
@@ -106,7 +107,7 @@
     "state": "committed",
     "finalValidityCheckAt": "2026-09-03T09:00:00Z",
     "committedAt": "2026-09-03T09:00:00Z",
-    "verifiedBindingDigest": "5bc96e5b529b41e4cf64f1b2399ed384ccfcd6693223f205d4d57217ea39421d"
+    "verifiedBindingDigest": "480d5f34266fa9804d4ebb474c02fa1bd9f266440650f12712c9a8d48efffab4"
   },
   "resolutionSnapshot": {
     "snapshotId": "snapshot:oak-dispatch-001",

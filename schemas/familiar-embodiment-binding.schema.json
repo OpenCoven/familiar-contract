@@ -107,7 +107,7 @@
     },
     "revocation": {
       "type": "object", "additionalProperties": false, "required": ["outcome"],
-      "properties": { "outcome": { "enum": ["none", "before_commit", "after_commit"] }, "revokedAt": { "$ref": "#/definitions/timestamp" } }
+      "properties": { "outcome": { "enum": ["none", "before_commit"] }, "revokedAt": { "$ref": "#/definitions/timestamp" } }
     },
     "commit": {
       "type": "object", "additionalProperties": false, "required": ["snapshotId", "state", "finalValidityCheckAt", "committedAt", "verifiedBindingDigest"],

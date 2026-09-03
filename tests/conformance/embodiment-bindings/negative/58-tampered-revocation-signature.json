@@ -1,7 +1,7 @@
 {
   "profile": "familiar.embodiment_binding.v1",
   "schemaVersion": "1.0.0",
-  "bindingId": "binding-15-revocation-after-commit",
+  "bindingId": "binding-58-tampered-revocation-signature",
   "familiar": {
     "familiarRootId": "familiar-root:oak",
     "identityRevisionId": "familiar-revision:oak:3",
@@ -85,13 +85,13 @@
   "integrity": {
     "algorithm": "sha-256",
     "canonicalization": "jcs-rfc8785",
-    "bindingDigest": "5bc96e5b529b41e4cf64f1b2399ed384ccfcd6693223f205d4d57217ea39421d"
+    "bindingDigest": "7ee02677f9b79169f8b442915c573b05d0a8cb4766f1ef6042e27fac8be9f902"
   },
   "authentication": {
     "method": "ed25519",
     "signerId": "authority:oak",
-    "publicKey": "MCowBQYDK2VwAyEAxuPXVSd0Y2PbUCuLXkxhxYq6eBSE3ynGSiImgav3Ho0=",
-    "signature": "qincl9bPUysIs99MeNe1564DD17n1pM0DOc2AQmXY+EZlMd5/U7pykQvXGRaP/iLiMJWFeQDXDVw56Q91NYICA=="
+    "publicKey": "MCowBQYDK2VwAyEAsC5Tk7cFzqmlgTiDPH4lpf4H94+wtZOHtOQfHXmAsN4=",
+    "signature": "wao3KSAqDYN/fIuQwS+eEuv8Csnf1vE7MXB7wiEVvwyCKUFzw4nu0JGttT9zMzc7rOMkvqZeI1wWujZhf6xcDA=="
   },
   "privacy": {
     "classification": "metadata-only",
@@ -106,7 +106,7 @@
     "state": "committed",
     "finalValidityCheckAt": "2026-09-03T09:00:00Z",
     "committedAt": "2026-09-03T09:00:00Z",
-    "verifiedBindingDigest": "5bc96e5b529b41e4cf64f1b2399ed384ccfcd6693223f205d4d57217ea39421d"
+    "verifiedBindingDigest": "7ee02677f9b79169f8b442915c573b05d0a8cb4766f1ef6042e27fac8be9f902"
   },
   "resolutionSnapshot": {
     "snapshotId": "snapshot:oak-dispatch-001",

@@ -4,7 +4,9 @@ Each JSON file is one independently consumable
 `familiar.embodiment_binding.v1` document. Run an individual vector with:
 
 ```bash
-node validators/validate.js --embodiment-binding path/to/vector.json
+node validators/validate.js --embodiment-binding path/to/vector.json \
+  --historical-bundle path/to/bundle.json \
+  --trusted-ledger path/to/ledger.json
 ```
 
 The `positive/` vectors are dispatch-eligible bindings or non-authority
@@ -33,3 +35,8 @@ the final validity check, and at most 300 seconds old at that check. Stale and
 future-dated trusted-ledger vectors must fail closed. The effective cache age
 is the stricter of the signed `freshnessBoundSeconds` and the fixed 300-second
 verifier maximum.
+
+Post-commit revocation is represented only by a separately signed
+`familiar.embodiment_revocation.v1` event passed with
+`--post-commit-revocation`. The event references the immutable binding digest
+and cannot alter the binding's committed preimage.

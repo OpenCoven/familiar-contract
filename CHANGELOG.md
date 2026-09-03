@@ -31,11 +31,16 @@ This project uses [Semantic Versioning](https://semver.org/).
 - **Rereview hardening** — Defines one non-circular digest preimage, records
   authoritative snapshot freshness, supports erased/redacted detached bundles
   with retained digest/audit evidence, rejects duplicate JSON keys and unknown
-  profile versions, and classifies every timestamped revocation outcome.
-- **Embodiment-binding conformance lane** — 16 positive and 20 negative
-  vectors covering active, retired/restored, continuation, fork, succession,
-  direct/automation/Psyche targets, degraded history, privacy authorization,
-  tampering, ambiguity, stale/revoked revisions, and malformed data.
+  profile versions, rejects non-finite I-JSON numbers and non-Ed25519 keys, and
+  separates post-commit revocation into an immutable-binding-referenced,
+  append-only signed `familiar.embodiment_revocation.v1` event.
+- **Embodiment-binding conformance lane** — 22 positive and 59 negative
+  vectors covering active and historical revision states, continuation,
+  restoration, fork, succession, direct/automation/Psyche targets, retained
+  and redacted history, privacy authorization, transaction timing, key-type
+  confusion, revocation events, tampering, ambiguity, stale revisions, and
+  malformed data. The runner uses system-temporary output and works from a
+  read-only source checkout.
 
 ---
 

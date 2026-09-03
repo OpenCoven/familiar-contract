@@ -602,7 +602,9 @@ SHA-256 binding digest. The binding digest is calculated from JCS canonical
 binding bytes with the entire `integrity` and `authentication` members omitted
 (and the redundant commit digest-verification field omitted). No private key
 appears in either profile. An invalid encoding or unverifiable signature
-**MUST** fail closed for dispatch and session creation.
+**MUST** fail closed. The verifier **MUST** parse the SPKI key and require its
+asymmetric key type to be Ed25519; trusting the declared method while accepting
+RSA, ECDSA, Ed448, or another key type does not conform.
 
 Lineage predecessors **MUST** name a content-addressed predecessor bundle and
 an authenticated Ed25519 transition edge that signs its relationship,
@@ -623,15 +625,20 @@ immutable binding commit on the same snapshot/transaction boundary. The
 final validity check, authority decision, and immutable commit therefore
 **MUST** identify the same instant for dispatch and session creation. Revision
 validity and authoritative-ledger freshness extend through that commit instant.
-The
-committed binding digest **MUST** recompute from the same JCS canonical preimage
+The committed binding digest **MUST** recompute from the same JCS canonical preimage
 defined above: the binding with its entire `integrity` and `authentication`
 members and redundant `commit.verifiedBindingDigest` omitted, and the commit
-**MUST** attest to that exact digest before launch success. A revocation before
-commit rejects the launch; revocation strictly after an immutable commit does
-not rewrite that historical binding, but prevents later dispatches. Integrity
-and authenticated attestation are mandatory, while cryptographic key-policy
-verification remains the verifier's policy responsibility.
+**MUST** attest to that exact digest before launch success. A revocation known
+at or before commit is represented inside the binding as
+`outcome: before_commit` and rejects an authority attempt. A revocation learned
+strictly after commit **MUST NOT** be inserted into or re-sign the immutable
+binding. It is recorded as a separately signed, append-only
+`familiar.embodiment_revocation.v1` event that references the exact binding id,
+binding digest, familiar root, and identity revision, and whose own canonical
+event digest is Ed25519-authenticated. Such an event preserves historical
+evidence while preventing later dispatches. Integrity and authenticated
+attestation are mandatory, while cryptographic key-policy verification remains
+the verifier's policy responsibility.
 
 Retention is lifecycle evidence, not a license to replicate identity content.
 Retained components carry content and always recompute their digest.

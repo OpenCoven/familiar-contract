@@ -372,6 +372,41 @@
       "expected": "negative",
       "file": "52-denied-read-with-bundle.json",
       "errorCode": "E_BUNDLE_ACCESS"
+    },
+    {
+      "expected": "negative",
+      "file": "53-rsa-key-mislabeled-ed25519.json",
+      "errorCode": "E_AUTHENTICATION"
+    },
+    {
+      "expected": "negative",
+      "file": "54-ecdsa-key-mislabeled-ed25519.json",
+      "errorCode": "E_AUTHENTICATION"
+    },
+    {
+      "expected": "negative",
+      "file": "55-ed448-key-mislabeled-ed25519.json",
+      "errorCode": "E_AUTHENTICATION"
+    },
+    {
+      "expected": "negative",
+      "file": "56-inline-after-commit-revocation.json",
+      "errorCode": "E_SCHEMA"
+    },
+    {
+      "expected": "negative",
+      "file": "57-tampered-revocation-reference.json",
+      "errorCode": "E_REVOCATION"
+    },
+    {
+      "expected": "negative",
+      "file": "58-tampered-revocation-signature.json",
+      "errorCode": "E_AUTHENTICATION"
+    },
+    {
+      "expected": "negative",
+      "file": "59-revoked-status-without-revocation.json",
+      "errorCode": "E_REVOCATION"
     }
   ]
 }

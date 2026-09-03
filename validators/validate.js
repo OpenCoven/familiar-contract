@@ -47,6 +47,11 @@ const identityBundleSchema = JSON.parse(fs.readFileSync(
 ));
 const validateIdentityBundleSchema = new Ajv({ allErrors: true, strict: false })
   .compile(identityBundleSchema);
+const embodimentRevocationSchema = JSON.parse(fs.readFileSync(
+  path.join(__dirname, '..', 'schemas', 'familiar-embodiment-revocation.schema.json'), 'utf8'
+));
+const validateEmbodimentRevocationSchema = new Ajv({ allErrors: true, strict: false })
+  .compile(embodimentRevocationSchema);
 const MAX_CACHE_AGE_SECONDS = 300;
 
 function bindingViolation(code, field, message) {
@@ -93,6 +98,13 @@ function bindingDigest(binding) {
   return crypto.createHash('sha256').update(canonicalJson(committed), 'utf8').digest('hex');
 }
 
+function revocationDigest(revocation) {
+  const committed = JSON.parse(JSON.stringify(revocation));
+  delete committed.integrity;
+  delete committed.authentication;
+  return crypto.createHash('sha256').update(canonicalJson(committed), 'utf8').digest('hex');
+}
+
 function isTimestamp(value) {
   if (typeof value !== 'string') return false;
   const match = value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d{1,3})?(?:Z|([+-])(\d{2}):(\d{2}))$/);
@@ -108,9 +120,12 @@ function isTimestamp(value) {
 
 function verifyEd25519(authentication, digest) {
   try {
-    return crypto.verify(null, Buffer.from(digest, 'hex'), {
+    const key = crypto.createPublicKey({
       key: Buffer.from(authentication.publicKey, 'base64'), format: 'der', type: 'spki'
-    }, Buffer.from(authentication.signature, 'base64'));
+    });
+    const signature = Buffer.from(authentication.signature, 'base64');
+    return key.asymmetricKeyType === 'ed25519' && signature.length === 64 &&
+      crypto.verify(null, Buffer.from(digest, 'hex'), key, signature);
   } catch (_) {
     return false;
   }
@@ -204,7 +219,32 @@ function validateHistoricalBundle(bundle, binding) {
   return violations;
 }
 
-function validateEmbodimentBinding(binding, file, historicalBundle, trustedLedger, historicalBundleSupplied = false) {
+function validatePostCommitRevocation(revocation, binding) {
+  if (!isObject(revocation) || !validateEmbodimentRevocationSchema(revocation)) {
+    return [bindingViolation('E_REVOCATION', 'postCommitRevocation', 'The post-commit revocation event is malformed.')];
+  }
+  if (hasInvalidIJsonValue(revocation) || !isTimestamp(revocation.revokedAt)) {
+    return [bindingViolation('E_REVOCATION', 'postCommitRevocation', 'The post-commit revocation event must be valid I-JSON with a strict timestamp.')];
+  }
+  const violations = [];
+  if (revocation.bindingId !== binding.bindingId ||
+      revocation.bindingDigest !== binding.integrity.bindingDigest ||
+      revocation.familiarRootId !== binding.familiar.familiarRootId ||
+      revocation.identityRevisionId !== binding.familiar.identityRevisionId ||
+      new Date(revocation.revokedAt).getTime() <= new Date(binding.commit.committedAt).getTime()) {
+    violations.push(bindingViolation('E_REVOCATION', 'postCommitRevocation', 'A post-commit revocation must reference the exact immutable binding and occur strictly after its commit.'));
+  }
+  const digest = revocationDigest(revocation);
+  if (revocation.integrity.eventDigest !== digest) {
+    violations.push(bindingViolation('E_REVOCATION', 'postCommitRevocation.integrity', 'The post-commit revocation event digest does not match its canonical preimage.'));
+  }
+  if (!verifyEd25519(revocation.authentication, digest)) {
+    violations.push(bindingViolation('E_AUTHENTICATION', 'postCommitRevocation.authentication', 'The post-commit revocation Ed25519 signature does not verify.'));
+  }
+  return violations;
+}
+
+function validateEmbodimentBinding(binding, file, historicalBundle, trustedLedger, historicalBundleSupplied = false, postCommitRevocation) {
   const violations = [];
   if (!isObject(binding)) return [bindingViolation('E_SCHEMA', 'shape', 'An embodiment binding must be one JSON object.')];
   if (binding.schemaVersion !== '1.0.0') return [bindingViolation('E_VERSION', 'schemaVersion', 'Only familiar.embodiment_binding.v1 schemaVersion 1.0.0 is supported.')];
@@ -378,15 +418,16 @@ function validateEmbodimentBinding(binding, file, historicalBundle, trustedLedge
   if (revocation.revokedAt && isTimestamp(revocation.revokedAt) && isTimestamp(commit.committedAt) && at(revocation.revokedAt) <= at(commit.committedAt) && isAuthorityAttempt) {
     violations.push(bindingViolation('E_REVOCATION', 'revocation.revokedAt', 'Any revocation at or before decision/commit rejects dispatch regardless of the asserted outcome.'));
   }
-  if (revocation.outcome === 'after_commit') {
-    if (!revocation.revokedAt || !isTimestamp(revocation.revokedAt) || !isTimestamp(commit.committedAt) || at(revocation.revokedAt) <= at(commit.committedAt)) {
-      violations.push(bindingViolation('E_REVOCATION', 'revocation', 'An after-commit revocation must be timestamped strictly after the immutable commit.'));
-    }
+  if (statusAtDecision.status === 'revoked' &&
+      (revocation.outcome !== 'before_commit' || !revocation.revokedAt ||
+       !isTimestamp(revocation.revokedAt) || at(revocation.revokedAt) > at(binding.decisionAt))) {
+    violations.push(bindingViolation('E_REVOCATION', 'revocation', 'A revision recorded as revoked at decision time requires a before-commit revocation at or before that decision.'));
   }
+  if (postCommitRevocation) violations.push(...validatePostCommitRevocation(postCommitRevocation, binding));
   return violations;
 }
 
-function validateEmbodimentBindingFile(filePath, historicalBundlePath, trustedLedgerPath) {
+function validateEmbodimentBindingFile(filePath, historicalBundlePath, trustedLedgerPath, postCommitRevocationPath) {
   let binding;
   try {
     binding = parseJsonNoDuplicate(fs.readFileSync(filePath, 'utf8'));
@@ -411,7 +452,15 @@ function validateEmbodimentBindingFile(filePath, historicalBundlePath, trustedLe
     }
     catch (error) { return [bindingViolation('E_TRUSTED_LEDGER', 'trustedLedger', `JSON syntax violation: ${error.message}`)]; }
   }
-  return validateEmbodimentBinding(binding, filePath, historicalBundle, trustedLedger, Boolean(historicalBundlePath));
+  let postCommitRevocation;
+  if (postCommitRevocationPath) {
+    try {
+      postCommitRevocation = parseJsonNoDuplicate(fs.readFileSync(postCommitRevocationPath, 'utf8'));
+    } catch (error) {
+      return [bindingViolation('E_REVOCATION', 'postCommitRevocation', `JSON syntax violation: ${error.message}`)];
+    }
+  }
+  return validateEmbodimentBinding(binding, filePath, historicalBundle, trustedLedger, Boolean(historicalBundlePath), postCommitRevocation);
 }
 
 // ── SOUL.md parser ────────────────────────────────────────────────────────────
@@ -800,7 +849,7 @@ ${bold('familiar-contract validator')} — checks a familiar directory for spec 
 ${bold('Usage:')}
   npm install
   node validate.js <path-to-familiar-directory>
-  node validate.js --embodiment-binding <path-to-binding.json> [--historical-bundle <path-to-bundle.json>]
+  node validate.js --embodiment-binding <path-to-binding.json> [--historical-bundle <path-to-bundle.json>] [--trusted-ledger <path-to-ledger.json>] [--post-commit-revocation <path-to-revocation.json>]
 
 ${bold('Examples:')}
   node validate.js examples/sage
@@ -835,13 +884,23 @@ ${bold('Exit codes:')}
     }
     const bundleIndex = args.indexOf('--historical-bundle');
     const ledgerIndex = args.indexOf('--trusted-ledger');
+    const revocationIndex = args.indexOf('--post-commit-revocation');
     const historicalBundlePath = bundleIndex >= 0 && args[bundleIndex + 1] && path.resolve(args[bundleIndex + 1]);
     const trustedLedgerPath = ledgerIndex >= 0 && args[ledgerIndex + 1] && path.resolve(args[ledgerIndex + 1]);
+    const postCommitRevocationPath = revocationIndex >= 0 && args[revocationIndex + 1] && path.resolve(args[revocationIndex + 1]);
     if (historicalBundlePath && (!fs.existsSync(historicalBundlePath) || !fs.statSync(historicalBundlePath).isFile())) {
       console.error(red(`Error: Historical bundle file not found: ${historicalBundlePath}`));
       process.exit(1);
     }
-    const bindingViolations = validateEmbodimentBindingFile(filePath, historicalBundlePath, trustedLedgerPath);
+    if (trustedLedgerPath && (!fs.existsSync(trustedLedgerPath) || !fs.statSync(trustedLedgerPath).isFile())) {
+      console.error(red(`Error: Trusted ledger file not found: ${trustedLedgerPath}`));
+      process.exit(1);
+    }
+    if (postCommitRevocationPath && (!fs.existsSync(postCommitRevocationPath) || !fs.statSync(postCommitRevocationPath).isFile())) {
+      console.error(red(`Error: Post-commit revocation file not found: ${postCommitRevocationPath}`));
+      process.exit(1);
+    }
+    const bindingViolations = validateEmbodimentBindingFile(filePath, historicalBundlePath, trustedLedgerPath, postCommitRevocationPath);
     if (bindingViolations.length === 0) {
       console.log(green(bold('✓ PASS')) + ' — Embodiment binding validation passed.');
       process.exit(0);

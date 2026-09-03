@@ -14,6 +14,8 @@ set -u
 ROOT_DIR=$(cd "$(dirname "$0")/../.." && pwd)
 SUITE_DIR="$ROOT_DIR/tests/conformance"
 VALIDATOR="$ROOT_DIR/validators/validate.js"
+OUTPUT_FILE=$(mktemp "${TMPDIR:-/tmp}/familiar-contract-conformance.XXXXXX") || exit 1
+trap 'rm -f "$OUTPUT_FILE"' EXIT HUP INT TERM
 
 positive_total=0
 positive_passed=0
@@ -27,7 +29,7 @@ run_case() {
   expected=$2
   label=$3
 
-  output_file="$SUITE_DIR/.conformance-output.$$"
+  output_file="$OUTPUT_FILE"
   node "$VALIDATOR" "$case_path" >"$output_file" 2>&1
   status=$?
 
@@ -57,7 +59,6 @@ negative expected fail but passed: ${label}"
     fi
   fi
 
-  rm -f "$output_file"
 }
 
 run_binding_case() {
@@ -66,16 +67,15 @@ run_binding_case() {
   label=$3
   expected_code=$4
 
-  output_file="$SUITE_DIR/.conformance-output.$$"
+  output_file="$OUTPUT_FILE"
   bundle_path="$SUITE_DIR/embodiment-bindings/bundles/$(basename "$vector_path")"
   ledger_path="$SUITE_DIR/embodiment-bindings/ledgers/$(basename "$vector_path")"
-  if [ -f "$bundle_path" ] && [ -f "$ledger_path" ]; then
-    node "$VALIDATOR" --embodiment-binding "$vector_path" --historical-bundle "$bundle_path" --trusted-ledger "$ledger_path" >"$output_file" 2>&1
-  elif [ -f "$bundle_path" ]; then
-    node "$VALIDATOR" --embodiment-binding "$vector_path" --historical-bundle "$bundle_path" >"$output_file" 2>&1
-  else
-    node "$VALIDATOR" --embodiment-binding "$vector_path" >"$output_file" 2>&1
-  fi
+  revocation_path="$SUITE_DIR/embodiment-bindings/revocations/$(basename "$vector_path")"
+  binding_args=(--embodiment-binding "$vector_path")
+  [ -f "$bundle_path" ] && binding_args+=(--historical-bundle "$bundle_path")
+  [ -f "$ledger_path" ] && binding_args+=(--trusted-ledger "$ledger_path")
+  [ -f "$revocation_path" ] && binding_args+=(--post-commit-revocation "$revocation_path")
+  node "$VALIDATOR" "${binding_args[@]}" >"$output_file" 2>&1
   status=$?
 
   if [ "$expected" = "pass" ]; then
@@ -104,7 +104,6 @@ embodiment negative expected fail but passed: ${label}"
     fi
   fi
 
-  rm -f "$output_file"
 }
 
 printf 'Familiar Contract conformance suite\n\n'

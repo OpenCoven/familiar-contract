@@ -1,7 +1,7 @@
 {
   "profile": "familiar.embodiment_binding.v1",
   "schemaVersion": "1.0.0",
-  "bindingId": "binding-15-revocation-after-commit",
+  "bindingId": "binding-53-rsa-key-mislabeled-ed25519",
   "familiar": {
     "familiarRootId": "familiar-root:oak",
     "identityRevisionId": "familiar-revision:oak:3",
@@ -25,8 +25,8 @@
           "authentication": {
             "method": "ed25519",
             "signerId": "authority:oak",
-            "publicKey": "MCowBQYDK2VwAyEAByZtD1Euajw91B5qCNDsKoyXXeRj1bKoBf7uEy332WI=",
-            "signature": "aE5s51D51dA3NpCG/bQ3XGOM1DbEHeIw7Tnt6oxFgSB+jQ7hVbfdve2BS0NXkzmtjuFm7ZaHEQcbgunchEVvAg=="
+            "publicKey": "MCowBQYDK2VwAyEAfdYzaCdqpJpkkVuYxI2Tx+QrQFAoNJZo81HsU+1fL20=",
+            "signature": "pGZZtV42GQFbDJSkSLQiqJEe0VXHyuF+Xv3O/Aty1vgsFCqVKzlEwR/kxJs8hPAFCM5yu4xgiiswyff9AdSmAw=="
           }
         }
       }
@@ -85,13 +85,13 @@
   "integrity": {
     "algorithm": "sha-256",
     "canonicalization": "jcs-rfc8785",
-    "bindingDigest": "5bc96e5b529b41e4cf64f1b2399ed384ccfcd6693223f205d4d57217ea39421d"
+    "bindingDigest": "daf6760e9d4c79adc22851cad15298bca0af2b09bf4a63419d795ffd0085dbd0"
   },
   "authentication": {
     "method": "ed25519",
     "signerId": "authority:oak",
-    "publicKey": "MCowBQYDK2VwAyEAxuPXVSd0Y2PbUCuLXkxhxYq6eBSE3ynGSiImgav3Ho0=",
-    "signature": "qincl9bPUysIs99MeNe1564DD17n1pM0DOc2AQmXY+EZlMd5/U7pykQvXGRaP/iLiMJWFeQDXDVw56Q91NYICA=="
+    "publicKey": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlll1v8Q7EpWEdPZjONxLLUkaT5VCs/Hd/gIwI5loFunWsyAKqNHtvDI50UJV6jO6o/sAn0ZPgCCgYbhL9JzEozWIY/mNzcfZYAEUJwBAQdK3e8WEUOlrK0VESkyUmU6bOzlv0hQ/bBa66Lqn9suTSw3nKcXwNt6RHh2S1aUK/t1OJp4otxEfp5H/w2j+mXZEj3It2mhOOuRs23+VWU4Uaj2P646WN1lPZ0kntBx8Y/rF53qp3j2MCr/a9NpfmH6awTS9Q7xERB13ohBUnMJp0cb02PSmFzwHpkZ5t3F34SHHYnq6qrVCFypCT1pWzZ499ioDNr7Om6TEiWA83Zz/HQIDAQAB",
+    "signature": "C3rqzthqrg1XaaCohi38tkBbgfUs8+CYbqvMOXqI8Mw030k5Lc2SKJfU7UjdJMzXibsKYvwoLKZx+QsB44pTHZjdG5JYjeZgsa7D9SO5xPT2+bWb1HqXrV5cuv2SvSlfBUFhVWA7csGUihhL1Bc87JFhT8oRBpphZ/JsVC/7KMbb0m1y4/tihx7NgezeCqNDfRfNXPHva3b0Ox9beCac6osFfE1y8CoraBB9XKUJXJaqdyzvJqWaGqRkYce4Kqr2NrmG+NvCg5t9MlNs/lIYZ88DygNP9RbA5JG1lvPiwbXZ6ZBobEk22RKaeuXJKF5VfwZQG80QNO5907XO1p/fBw=="
   },
   "privacy": {
     "classification": "metadata-only",
@@ -106,7 +106,7 @@
     "state": "committed",
     "finalValidityCheckAt": "2026-09-03T09:00:00Z",
     "committedAt": "2026-09-03T09:00:00Z",
-    "verifiedBindingDigest": "5bc96e5b529b41e4cf64f1b2399ed384ccfcd6693223f205d4d57217ea39421d"
+    "verifiedBindingDigest": "daf6760e9d4c79adc22851cad15298bca0af2b09bf4a63419d795ffd0085dbd0"
   },
   "resolutionSnapshot": {
     "snapshotId": "snapshot:oak-dispatch-001",
