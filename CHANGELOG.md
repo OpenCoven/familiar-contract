@@ -34,13 +34,14 @@ This project uses [Semantic Versioning](https://semver.org/).
   profile versions, rejects non-finite I-JSON numbers and non-Ed25519 keys, and
   separates post-commit revocation into an immutable-binding-referenced,
   append-only signed `familiar.embodiment_revocation.v1` event.
-- **Embodiment-binding conformance lane** — 22 positive and 59 negative
+- **Embodiment-binding conformance lane** — 22 positive and 61 negative
   vectors covering active and historical revision states, continuation,
   restoration, fork, succession, direct/automation/Psyche targets, retained
   and redacted history, privacy authorization, transaction timing, key-type
   confusion, revocation events, tampering, ambiguity, stale revisions, and
-  malformed data. The runner uses system-temporary output and works from a
-  read-only source checkout.
+  malformed data. The runner uses system-temporary output, works from a
+  read-only source checkout, and rejects unknown, duplicate, or valueless
+  sidecar options.
 
 ---
 

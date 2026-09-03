@@ -362,6 +362,8 @@ function validateEmbodimentBinding(binding, file, historicalBundle, trustedLedge
       ? at(resolutionSnapshot.cacheObservedAt)
       : Number.NaN;
     if (!trustedLedger || !isObject(trustedLedger) ||
+        !Number.isSafeInteger(trustedLedger.generation) ||
+        trustedLedger.generation < 0 ||
         trustedLedger.generation !== resolutionSnapshot.authoritativeLedgerGeneration ||
         trustedLedger.headRevisionId !== familiar.identityRevisionId ||
         trustedLedger.status !== statusAtDecision.status ||
@@ -882,12 +884,27 @@ ${bold('Exit codes:')}
       console.error(red(`Error: Binding file not found: ${filePath}`));
       process.exit(1);
     }
-    const bundleIndex = args.indexOf('--historical-bundle');
-    const ledgerIndex = args.indexOf('--trusted-ledger');
-    const revocationIndex = args.indexOf('--post-commit-revocation');
-    const historicalBundlePath = bundleIndex >= 0 && args[bundleIndex + 1] && path.resolve(args[bundleIndex + 1]);
-    const trustedLedgerPath = ledgerIndex >= 0 && args[ledgerIndex + 1] && path.resolve(args[ledgerIndex + 1]);
-    const postCommitRevocationPath = revocationIndex >= 0 && args[revocationIndex + 1] && path.resolve(args[revocationIndex + 1]);
+    const sidecarOptions = new Map([
+      ['--historical-bundle', 'historicalBundlePath'],
+      ['--trusted-ledger', 'trustedLedgerPath'],
+      ['--post-commit-revocation', 'postCommitRevocationPath']
+    ]);
+    const parsedOptions = {};
+    for (let index = 2; index < args.length; index += 2) {
+      const option = args[index];
+      const property = sidecarOptions.get(option);
+      const value = args[index + 1];
+      if (!property || !value || value.startsWith('--') || parsedOptions[property]) {
+        console.error(red(`Error: Unknown, duplicate, or valueless embodiment option: ${option}`));
+        process.exit(1);
+      }
+      parsedOptions[property] = path.resolve(value);
+    }
+    const {
+      historicalBundlePath,
+      trustedLedgerPath,
+      postCommitRevocationPath
+    } = parsedOptions;
     if (historicalBundlePath && (!fs.existsSync(historicalBundlePath) || !fs.statSync(historicalBundlePath).isFile())) {
       console.error(red(`Error: Historical bundle file not found: ${historicalBundlePath}`));
       process.exit(1);

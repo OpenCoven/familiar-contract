@@ -407,6 +407,16 @@
       "expected": "negative",
       "file": "59-revoked-status-without-revocation.json",
       "errorCode": "E_REVOCATION"
+    },
+    {
+      "expected": "negative",
+      "file": "60-rounded-generation-collision.json",
+      "errorCode": "E_SCHEMA"
+    },
+    {
+      "expected": "negative",
+      "file": "61-unsafe-trusted-ledger-generation.json",
+      "errorCode": "E_TRUSTED_LEDGER"
     }
   ]
 }

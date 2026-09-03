@@ -22,6 +22,9 @@ node validators/validate.js --embodiment-binding <path-to-binding.json> \
   --post-commit-revocation <path-to-revocation.json>
 ```
 
+Embodiment options are parsed strictly. Unknown or duplicate flags, trailing
+arguments, and sidecar flags without a value fail closed.
+
 ### Examples
 
 ```bash

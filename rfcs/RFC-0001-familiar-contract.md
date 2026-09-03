@@ -566,6 +566,9 @@ The trusted ledger observation **MUST NOT** precede the recorded cache
 observation, **MUST NOT** follow the final validity check, and **MUST** be no
 more than 300 seconds old at that check. A stale, future-dated, mismatched, or
 missing trusted ledger observation fails closed.
+All counters and generations **MUST** be non-negative I-JSON safe integers no
+greater than `9007199254740991`; implementations must reject rather than round
+larger values.
 
 Aliases are non-authoritative resolution evidence only. When an alias is used,
 resolution **MUST** yield exactly one root, and that root **MUST** equal the

@@ -43,7 +43,7 @@
       "type": "object", "additionalProperties": false,
       "required": ["snapshotId", "resolvedAt", "authoritativeLedgerGeneration", "authoritativeHeadRevisionId", "freshnessBoundSeconds", "cacheObservedAt", "cacheProvenance", "familiarRootId", "identityRevisionId", "lineagePosition", "bundleDigest", "status"],
       "properties": {
-        "snapshotId": { "$ref": "#/definitions/opaqueId" }, "resolvedAt": { "$ref": "#/definitions/timestamp" }, "authoritativeLedgerGeneration": { "type": "integer", "minimum": 0 }, "authoritativeHeadRevisionId": { "$ref": "#/definitions/opaqueId" }, "freshnessBoundSeconds": { "type": "integer", "minimum": 0 }, "cacheObservedAt": { "$ref": "#/definitions/timestamp" }, "cacheProvenance": { "enum": ["authoritative-read", "validated-cache"] }, "familiarRootId": { "$ref": "#/definitions/opaqueId" },
+        "snapshotId": { "$ref": "#/definitions/opaqueId" }, "resolvedAt": { "$ref": "#/definitions/timestamp" }, "authoritativeLedgerGeneration": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 }, "authoritativeHeadRevisionId": { "$ref": "#/definitions/opaqueId" }, "freshnessBoundSeconds": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 }, "cacheObservedAt": { "$ref": "#/definitions/timestamp" }, "cacheProvenance": { "enum": ["authoritative-read", "validated-cache"] }, "familiarRootId": { "$ref": "#/definitions/opaqueId" },
         "identityRevisionId": { "$ref": "#/definitions/opaqueId" }, "lineagePosition": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
         "bundleDigest": { "$ref": "#/definitions/hash" }, "status": { "enum": ["active", "retired", "revoked", "superseded"] }
       }

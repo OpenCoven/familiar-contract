@@ -159,6 +159,35 @@ done
 
 printf '\n'
 
+run_cli_rejection() {
+  label=$1
+  shift
+  "$@" >"$OUTPUT_FILE" 2>&1
+  status=$?
+  if [ "$status" -ne 0 ]; then
+    printf 'FAIL expected: %s\n' "$label"
+  else
+    unexpected=$((unexpected + 1))
+    details="${details}
+embodiment CLI misuse unexpectedly passed: ${label}"
+    printf 'UNEXPECTED pass: %s\n' "$label"
+    sed 's/^/  /' "$OUTPUT_FILE"
+  fi
+}
+
+run_cli_rejection "embodiment-cli/missing-sidecar-value" \
+  node "$VALIDATOR" --embodiment-binding \
+  "$SUITE_DIR/embodiment-bindings/positive/16-missing-historical-bundle.json" \
+  --historical-bundle
+run_cli_rejection "embodiment-cli/unknown-sidecar-option" \
+  node "$VALIDATOR" --embodiment-binding \
+  "$SUITE_DIR/embodiment-bindings/positive/15-revocation-after-commit.json" \
+  --historical-bundle "$SUITE_DIR/embodiment-bindings/bundles/15-revocation-after-commit.json" \
+  --trusted-ledger "$SUITE_DIR/embodiment-bindings/ledgers/15-revocation-after-commit.json" \
+  --post-commit-revokation "$SUITE_DIR/embodiment-bindings/revocations/15-revocation-after-commit.json"
+
+printf '\n'
+
 audit_records_status="READY"
 if ! node "$ROOT_DIR/validators/check-audit-records.js"; then
   audit_records_status="BROKEN"
