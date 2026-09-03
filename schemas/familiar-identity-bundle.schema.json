@@ -28,7 +28,7 @@
     "bundleDigest": { "$ref": "#/definitions/digest" },
     "retention": {
       "type": "object", "additionalProperties": false,
-      "required": ["classification", "verifierAccess", "recordedAt", "tombstoneState", "replicaPurgeState"],
+      "required": ["classification", "verifierAccess", "recordedAt", "tombstoneState", "replicaPurgeState", "redactionState"],
       "properties": {
         "classification": { "const": "restricted-historical-identity" },
         "verifierAccess": { "enum": ["authorized", "denied"] },

@@ -557,6 +557,8 @@ selected revision, **MUST** fail closed even when its copied status is active.
 The record's freshness assertion is observational metadata only: the verifier's
 fixed v1 maximum cache age is 300 seconds, a runtime-policy input outside the
 signed record. A cache observation after final validity evaluation is invalid.
+Dispatch additionally requires verifier-supplied current authoritative ledger
+state at final validation/commit; cache evidence alone never authorizes launch.
 
 Aliases are non-authoritative resolution evidence only. When an alias is used,
 resolution **MUST** yield exactly one root, and that root **MUST** equal the

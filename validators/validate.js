@@ -179,7 +179,7 @@ function validateHistoricalBundle(bundle, binding) {
   return violations;
 }
 
-function validateEmbodimentBinding(binding, file, historicalBundle) {
+function validateEmbodimentBinding(binding, file, historicalBundle, trustedLedger) {
   const violations = [];
   if (!isObject(binding)) return [bindingViolation('E_SCHEMA', 'shape', 'An embodiment binding must be one JSON object.')];
   if (binding.schemaVersion !== '1.0.0') return [bindingViolation('E_VERSION', 'schemaVersion', 'Only familiar.embodiment_binding.v1 schemaVersion 1.0.0 is supported.')];
@@ -274,6 +274,16 @@ function validateEmbodimentBinding(binding, file, historicalBundle) {
   }
 
   const isAuthorityAttempt = ['dispatch', 'session_creation'].includes(binding.bindingPurpose);
+  if (isAuthorityAttempt) {
+    if (!trustedLedger || !isObject(trustedLedger) ||
+        trustedLedger.generation !== resolutionSnapshot.authoritativeLedgerGeneration ||
+        trustedLedger.headRevisionId !== familiar.identityRevisionId ||
+        trustedLedger.status !== statusAtDecision.status ||
+        !isTimestamp(trustedLedger.observedAt) ||
+        (trustedLedger.revokedAt && (!isTimestamp(trustedLedger.revokedAt) || at(trustedLedger.revokedAt) <= at(commit.committedAt)))) {
+      violations.push(bindingViolation('E_TRUSTED_LEDGER', 'trustedLedger', 'Dispatch requires a verifier-supplied current authoritative ledger state matching the snapshot and with no revocation at or before commit.'));
+    }
+  }
   if (isAuthorityAttempt && statusAtDecision.status !== 'active') {
     violations.push(bindingViolation('E_STATUS', 'statusAtDecision.status', 'Only an active revision is eligible for a new dispatch or session creation.'));
   }
@@ -309,7 +319,7 @@ function validateEmbodimentBinding(binding, file, historicalBundle) {
   return violations;
 }
 
-function validateEmbodimentBindingFile(filePath, historicalBundlePath) {
+function validateEmbodimentBindingFile(filePath, historicalBundlePath, trustedLedgerPath) {
   let binding;
   try {
     binding = parseJsonNoDuplicate(fs.readFileSync(filePath, 'utf8'));
@@ -326,7 +336,12 @@ function validateEmbodimentBindingFile(filePath, historicalBundlePath) {
       return [bindingViolation('E_BUNDLE_SCHEMA', 'historicalBundle', `JSON syntax violation: ${error.message}`)];
     }
   }
-  return validateEmbodimentBinding(binding, filePath, historicalBundle);
+  let trustedLedger;
+  if (trustedLedgerPath) {
+    try { trustedLedger = parseJsonNoDuplicate(fs.readFileSync(trustedLedgerPath, 'utf8')); }
+    catch (error) { return [bindingViolation('E_TRUSTED_LEDGER', 'trustedLedger', `JSON syntax violation: ${error.message}`)]; }
+  }
+  return validateEmbodimentBinding(binding, filePath, historicalBundle, trustedLedger);
 }
 
 // ── SOUL.md parser ────────────────────────────────────────────────────────────
@@ -739,8 +754,8 @@ ${bold('Exit codes:')}
   }
 
   if (args[0] === '--embodiment-binding') {
-    if (args.length !== 2 && (args.length !== 4 || args[2] !== '--historical-bundle')) {
-      console.error(red('Error: --embodiment-binding requires a JSON file and optionally --historical-bundle <file>.'));
+    if (args.length < 2) {
+      console.error(red('Error: --embodiment-binding requires a JSON file.'));
       process.exit(1);
     }
     const filePath = path.resolve(args[1]);
@@ -748,12 +763,15 @@ ${bold('Exit codes:')}
       console.error(red(`Error: Binding file not found: ${filePath}`));
       process.exit(1);
     }
-    const historicalBundlePath = args[3] && path.resolve(args[3]);
+    const bundleIndex = args.indexOf('--historical-bundle');
+    const ledgerIndex = args.indexOf('--trusted-ledger');
+    const historicalBundlePath = bundleIndex >= 0 && args[bundleIndex + 1] && path.resolve(args[bundleIndex + 1]);
+    const trustedLedgerPath = ledgerIndex >= 0 && args[ledgerIndex + 1] && path.resolve(args[ledgerIndex + 1]);
     if (historicalBundlePath && (!fs.existsSync(historicalBundlePath) || !fs.statSync(historicalBundlePath).isFile())) {
       console.error(red(`Error: Historical bundle file not found: ${historicalBundlePath}`));
       process.exit(1);
     }
-    const bindingViolations = validateEmbodimentBindingFile(filePath, historicalBundlePath);
+    const bindingViolations = validateEmbodimentBindingFile(filePath, historicalBundlePath, trustedLedgerPath);
     if (bindingViolations.length === 0) {
       console.log(green(bold('✓ PASS')) + ' — Embodiment binding validation passed.');
       process.exit(0);

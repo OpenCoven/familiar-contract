@@ -68,7 +68,10 @@ run_binding_case() {
 
   output_file="$SUITE_DIR/.conformance-output.$$"
   bundle_path="$SUITE_DIR/embodiment-bindings/bundles/$(basename "$vector_path")"
-  if [ -f "$bundle_path" ]; then
+  ledger_path="$SUITE_DIR/embodiment-bindings/ledgers/$(basename "$vector_path")"
+  if [ -f "$bundle_path" ] && [ -f "$ledger_path" ]; then
+    node "$VALIDATOR" --embodiment-binding "$vector_path" --historical-bundle "$bundle_path" --trusted-ledger "$ledger_path" >"$output_file" 2>&1
+  elif [ -f "$bundle_path" ]; then
     node "$VALIDATOR" --embodiment-binding "$vector_path" --historical-bundle "$bundle_path" >"$output_file" 2>&1
   else
     node "$VALIDATOR" --embodiment-binding "$vector_path" >"$output_file" 2>&1
