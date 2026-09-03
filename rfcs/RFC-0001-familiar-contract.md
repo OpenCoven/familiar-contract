@@ -554,6 +554,9 @@ Each resolution snapshot **MUST** include authoritative ledger generation and
 head revision, cache provenance/observation time, and a bounded freshness
 window. A cache older than that bound, or one whose head differs from the
 selected revision, **MUST** fail closed even when its copied status is active.
+The record's freshness assertion is observational metadata only: the verifier's
+fixed v1 maximum cache age is 300 seconds, a runtime-policy input outside the
+signed record. A cache observation after final validity evaluation is invalid.
 
 Aliases are non-authoritative resolution evidence only. When an alias is used,
 resolution **MUST** yield exactly one root, and that root **MUST** equal the
@@ -603,6 +606,13 @@ and authenticated attestation are mandatory, while cryptographic key-policy
 verification remains the verifier's policy responsibility.
 
 Retention is lifecycle evidence, not a license to replicate identity content.
+Retained components carry content and always recompute their digest.
+Redacted/erased components retain only digest plus redaction/audit evidence and
+are unavailable or unverifiable, never verified; supplied-redacted and missing
+bundles are distinct states but neither grants current authority. An erased
+bundle MUST NOT retain sensitive component content. Canonical inputs MUST be
+I-JSON: duplicate object keys and lone UTF-16 surrogates are rejected before
+canonicalization, digest, or signature verification.
 The binding carries metadata-only classification plus retention time,
 tombstone/erasure state, and replica/device-purge state; a tombstoned or erased
 record **MUST** carry erasure evidence, and requested replica or device

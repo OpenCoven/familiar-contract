@@ -47,6 +47,7 @@ const identityBundleSchema = JSON.parse(fs.readFileSync(
 ));
 const validateIdentityBundleSchema = new Ajv({ allErrors: true, strict: false })
   .compile(identityBundleSchema);
+const MAX_CACHE_AGE_SECONDS = 300;
 
 function bindingViolation(code, field, message) {
   return violation('embodiment-binding', `[${code}] ${field}`, message);
@@ -60,6 +61,19 @@ function parseJsonNoDuplicate(text) {
   const array = () => { i++; ws(); while (text[i] !== ']') { value(); ws(); if (text[i] === ',') { i++; ws(); } else break; } i++; };
   const object = () => { const keys = new Set(); i++; ws(); while (text[i] !== '}') { const key = string(); if (keys.has(key)) duplicate = true; keys.add(key); ws(); if (text[i++] !== ':') throw new Error('expected colon'); value(); ws(); if (text[i] === ',') { i++; ws(); } else break; } i++; };
   value(); ws(); if (i !== text.length) throw new Error('trailing input'); if (duplicate) throw new Error('duplicate object key'); return JSON.parse(text);
+}
+
+function hasInvalidIJsonString(value) {
+  if (typeof value === 'string') {
+    for (let i = 0; i < value.length; i++) {
+      const unit = value.charCodeAt(i);
+      if (unit >= 0xd800 && unit <= 0xdbff) {
+        if (++i >= value.length || value.charCodeAt(i) < 0xdc00 || value.charCodeAt(i) > 0xdfff) return true;
+      } else if (unit >= 0xdc00 && unit <= 0xdfff) return true;
+    }
+  } else if (Array.isArray(value)) return value.some(hasInvalidIJsonString);
+  else if (isObject(value)) return Object.entries(value).some(([key, item]) => hasInvalidIJsonString(key) || hasInvalidIJsonString(item));
+  return false;
 }
 
 function canonicalJson(value) {
@@ -159,6 +173,9 @@ function validateHistoricalBundle(bundle, binding) {
   if (redacted && (bundle.retention.redactionState !== 'redacted' || binding.historicalVerification.state === 'verified')) {
     violations.push(bindingViolation('E_REDACTION', 'historicalBundle.retention', 'Redacted retained components require redaction lifecycle evidence and cannot claim verified history.'));
   }
+  if (bundle.retention.tombstoneState === 'erased' && bundle.components.some(component => component.redactionState === 'retained' || component.content)) {
+    violations.push(bindingViolation('E_REDACTION', 'historicalBundle.components', 'An erased bundle cannot retain sensitive component content.'));
+  }
   return violations;
 }
 
@@ -196,8 +213,12 @@ function validateEmbodimentBinding(binding, file, historicalBundle) {
   }
   if (resolutionSnapshot.authoritativeHeadRevisionId !== familiar.identityRevisionId ||
       (isTimestamp(resolutionSnapshot.cacheObservedAt) && isTimestamp(binding.decisionAt) &&
-       at(binding.decisionAt) - at(resolutionSnapshot.cacheObservedAt) > resolutionSnapshot.freshnessBoundSeconds * 1000)) {
-    violations.push(bindingViolation('E_STALE_CACHE', 'resolutionSnapshot', 'The snapshot must name the authoritative head revision and cache evidence within its declared freshness bound.'));
+       at(binding.decisionAt) - at(resolutionSnapshot.cacheObservedAt) > MAX_CACHE_AGE_SECONDS * 1000)) {
+    violations.push(bindingViolation('E_STALE_CACHE', 'resolutionSnapshot', 'The snapshot must name the authoritative head revision and cache evidence within the verifier policy maximum age.'));
+  }
+  if (isTimestamp(resolutionSnapshot.cacheObservedAt) && isTimestamp(commit.finalValidityCheckAt) &&
+      at(resolutionSnapshot.cacheObservedAt) > at(commit.finalValidityCheckAt)) {
+    violations.push(bindingViolation('E_CACHE_TIME', 'resolutionSnapshot.cacheObservedAt', 'Cache observation cannot be after the trusted final validity evaluation.'));
   }
   if (binding.aliasResolution) {
     const roots = binding.aliasResolution.resolvedRootIds;
@@ -292,6 +313,7 @@ function validateEmbodimentBindingFile(filePath, historicalBundlePath) {
   let binding;
   try {
     binding = parseJsonNoDuplicate(fs.readFileSync(filePath, 'utf8'));
+    if (hasInvalidIJsonString(binding)) return [bindingViolation('E_IJSON', 'input', 'JCS inputs must be I-JSON and cannot contain lone UTF-16 surrogates.')];
   } catch (error) {
     return [bindingViolation('E_JSON', 'syntax', `JSON syntax violation: ${error.message}`)];
   }
@@ -299,6 +321,7 @@ function validateEmbodimentBindingFile(filePath, historicalBundlePath) {
   if (historicalBundlePath) {
     try {
       historicalBundle = parseJsonNoDuplicate(fs.readFileSync(historicalBundlePath, 'utf8'));
+      if (hasInvalidIJsonString(historicalBundle)) return [bindingViolation('E_IJSON', 'historicalBundle', 'JCS inputs must be I-JSON and cannot contain lone UTF-16 surrogates.')];
     } catch (error) {
       return [bindingViolation('E_BUNDLE_SCHEMA', 'historicalBundle', `JSON syntax violation: ${error.message}`)];
     }
