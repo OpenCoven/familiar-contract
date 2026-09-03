@@ -244,7 +244,7 @@ function validatePostCommitRevocation(revocation, binding) {
   return violations;
 }
 
-function validateEmbodimentBinding(binding, file, historicalBundle, trustedLedger, historicalBundleSupplied = false, postCommitRevocation) {
+function validateEmbodimentBinding(binding, file, historicalBundle, trustedLedger, historicalBundleSupplied = false, postCommitRevocation, postCommitRevocationSupplied = false) {
   const violations = [];
   if (!isObject(binding)) return [bindingViolation('E_SCHEMA', 'shape', 'An embodiment binding must be one JSON object.')];
   if (binding.schemaVersion !== '1.0.0') return [bindingViolation('E_VERSION', 'schemaVersion', 'Only familiar.embodiment_binding.v1 schemaVersion 1.0.0 is supported.')];
@@ -425,7 +425,7 @@ function validateEmbodimentBinding(binding, file, historicalBundle, trustedLedge
        !isTimestamp(revocation.revokedAt) || at(revocation.revokedAt) > at(binding.decisionAt))) {
     violations.push(bindingViolation('E_REVOCATION', 'revocation', 'A revision recorded as revoked at decision time requires a before-commit revocation at or before that decision.'));
   }
-  if (postCommitRevocation) violations.push(...validatePostCommitRevocation(postCommitRevocation, binding));
+  if (postCommitRevocationSupplied) violations.push(...validatePostCommitRevocation(postCommitRevocation, binding));
   return violations;
 }
 
@@ -462,7 +462,15 @@ function validateEmbodimentBindingFile(filePath, historicalBundlePath, trustedLe
       return [bindingViolation('E_REVOCATION', 'postCommitRevocation', `JSON syntax violation: ${error.message}`)];
     }
   }
-  return validateEmbodimentBinding(binding, filePath, historicalBundle, trustedLedger, Boolean(historicalBundlePath), postCommitRevocation);
+  return validateEmbodimentBinding(
+    binding,
+    filePath,
+    historicalBundle,
+    trustedLedger,
+    Boolean(historicalBundlePath),
+    postCommitRevocation,
+    Boolean(postCommitRevocationPath)
+  );
 }
 
 // ── SOUL.md parser ────────────────────────────────────────────────────────────

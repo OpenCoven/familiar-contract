@@ -417,6 +417,26 @@
       "expected": "negative",
       "file": "61-unsafe-trusted-ledger-generation.json",
       "errorCode": "E_TRUSTED_LEDGER"
+    },
+    {
+      "expected": "negative",
+      "file": "62-falsy-null-revocation.json",
+      "errorCode": "E_REVOCATION"
+    },
+    {
+      "expected": "negative",
+      "file": "63-falsy-false-revocation.json",
+      "errorCode": "E_REVOCATION"
+    },
+    {
+      "expected": "negative",
+      "file": "64-falsy-zero-revocation.json",
+      "errorCode": "E_REVOCATION"
+    },
+    {
+      "expected": "negative",
+      "file": "65-falsy-empty-string-revocation.json",
+      "errorCode": "E_REVOCATION"
     }
   ]
 }
