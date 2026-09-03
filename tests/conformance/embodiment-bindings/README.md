@@ -24,3 +24,8 @@ Historical bundle lifecycle results are deterministic:
 Every supported state has a positive vector. Contradictory component,
 retention, tombstone, purge, and history-state combinations are mandatory
 negative vectors with an asserted semantic error code in `manifest.json`.
+
+Dispatch vectors also supply verifier-trusted ledger sidecars. Their
+observation must be at least as recent as the cache observation, no later than
+the final validity check, and at most 300 seconds old at that check. Stale and
+future-dated trusted-ledger vectors must fail closed.

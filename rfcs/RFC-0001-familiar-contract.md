@@ -559,6 +559,10 @@ fixed v1 maximum cache age is 300 seconds, a runtime-policy input outside the
 signed record. A cache observation after final validity evaluation is invalid.
 Dispatch additionally requires verifier-supplied current authoritative ledger
 state at final validation/commit; cache evidence alone never authorizes launch.
+The trusted ledger observation **MUST NOT** precede the recorded cache
+observation, **MUST NOT** follow the final validity check, and **MUST** be no
+more than 300 seconds old at that check. A stale, future-dated, mismatched, or
+missing trusted ledger observation fails closed.
 
 Aliases are non-authoritative resolution evidence only. When an alias is used,
 resolution **MUST** yield exactly one root, and that root **MUST** equal the

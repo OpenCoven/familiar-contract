@@ -298,13 +298,27 @@ function validateEmbodimentBinding(binding, file, historicalBundle, trustedLedge
 
   const isAuthorityAttempt = ['dispatch', 'session_creation'].includes(binding.bindingPurpose);
   if (isAuthorityAttempt) {
+    const trustedObservedAt = trustedLedger && isTimestamp(trustedLedger.observedAt)
+      ? at(trustedLedger.observedAt)
+      : Number.NaN;
+    const finalValidityCheckAt = isTimestamp(commit.finalValidityCheckAt)
+      ? at(commit.finalValidityCheckAt)
+      : Number.NaN;
+    const cacheObservedAt = isTimestamp(resolutionSnapshot.cacheObservedAt)
+      ? at(resolutionSnapshot.cacheObservedAt)
+      : Number.NaN;
     if (!trustedLedger || !isObject(trustedLedger) ||
         trustedLedger.generation !== resolutionSnapshot.authoritativeLedgerGeneration ||
         trustedLedger.headRevisionId !== familiar.identityRevisionId ||
         trustedLedger.status !== statusAtDecision.status ||
-        !isTimestamp(trustedLedger.observedAt) ||
+        !Number.isFinite(trustedObservedAt) ||
+        !Number.isFinite(finalValidityCheckAt) ||
+        !Number.isFinite(cacheObservedAt) ||
+        trustedObservedAt < cacheObservedAt ||
+        trustedObservedAt > finalValidityCheckAt ||
+        finalValidityCheckAt - trustedObservedAt > MAX_CACHE_AGE_SECONDS * 1000 ||
         (trustedLedger.revokedAt && (!isTimestamp(trustedLedger.revokedAt) || at(trustedLedger.revokedAt) <= at(commit.committedAt)))) {
-      violations.push(bindingViolation('E_TRUSTED_LEDGER', 'trustedLedger', 'Dispatch requires a verifier-supplied current authoritative ledger state matching the snapshot and with no revocation at or before commit.'));
+      violations.push(bindingViolation('E_TRUSTED_LEDGER', 'trustedLedger', 'Dispatch requires verifier-supplied authoritative ledger state observed no earlier than the cache, no more than 300 seconds before the final validity check, never after that check, matching the snapshot, and with no revocation at or before commit.'));
     }
   }
   if (isAuthorityAttempt && statusAtDecision.status !== 'active') {

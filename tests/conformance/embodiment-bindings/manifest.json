@@ -262,6 +262,16 @@
       "expected": "negative",
       "file": "33-missing-unverifiable.json",
       "errorCode": "E_REDACTION"
+    },
+    {
+      "expected": "negative",
+      "file": "34-stale-trusted-ledger.json",
+      "errorCode": "E_TRUSTED_LEDGER"
+    },
+    {
+      "expected": "negative",
+      "file": "35-future-trusted-ledger.json",
+      "errorCode": "E_TRUSTED_LEDGER"
     }
   ]
 }
