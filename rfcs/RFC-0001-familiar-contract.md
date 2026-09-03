@@ -518,13 +518,13 @@ and digests are the default. `privacy.classification` is therefore
 The independently consumable detached historical record is
 `familiar.identity_bundle.v1`, defined by
 [`schemas/familiar-identity-bundle.schema.json`](../schemas/familiar-identity-bundle.schema.json).
-It **MUST** retain canonical JSON identity- and soul-declaration components
-(and MAY retain a Ward declaration), their individual SHA-256 digests, its
+It **MUST** retain identity- and soul-declaration component evidence (and MAY
+retain Ward-declaration evidence), their individual SHA-256 digests, its
 root/revision/position, and a SHA-256 digest of the canonical bundle. A
-verifier supplied this bundle **MUST** recompute every component and bundle
-digest, then match them to the binding declaration digest, bundle digest, and
-URN. A missing bundle is distinguishable from a present bundle; only the former
-may yield explicit `degraded`, `unavailable`, or `unverifiable` history.
+verifier supplied retained component content **MUST** recompute that component
+digest; redacted or erased components retain only their digest and audit
+evidence. The verifier **MUST** always recompute the bundle digest and match the
+binding declaration digest, bundle digest, and URN.
 
 `lineageEvidence` **MUST** distinguish genesis, same-familiar revision,
 restoration, fork/new-root, and succession. A continuation has the immediately
@@ -571,10 +571,21 @@ A new dispatch or session creation is eligible only when the selected revision
 is active, currently valid, verified, and not revoked. Retired, superseded, and
 revoked revisions remain meaningful historical records but are not new
 dispatch authority. A restored revision is a new active revision with explicit
-restoration lineage. Historical verification may be `verified`, `degraded`,
-`unavailable`, or `unverifiable`; only `verified` may authorize current
-dispatch. An unauthorized historical read **MUST** be recorded as unavailable
-historical verification, not treated as authority.
+restoration lineage. Historical verification uses one deterministic lifecycle classification:
+a supplied live bundle with all component bytes retained is `verified`; a
+supplied live bundle with redacted component bytes is `unverifiable`; a
+supplied tombstoned or erased bundle is `unavailable`; and a missing bundle is
+`degraded`. A denied historical read is also `unavailable`, but is
+distinguished by `readAuthorization: not_authorized`. Only `verified` may
+authorize current dispatch.
+
+| Detached evidence | Bundle lifecycle | Required history state |
+| --- | --- | --- |
+| Supplied, all component bytes retained | live, unredacted, unpurged | `verified` |
+| Supplied, one or more component bytes redacted | live, redacted, unpurged | `unverifiable` |
+| Supplied, all component bytes removed | tombstoned with active purge, or erased with completed purge | `unavailable` |
+| Missing despite authorized or unrequested read | no detached bundle | `degraded` |
+| Withheld because verifier access was denied | no detached bundle | `unavailable` |
 
 `authentication` **MUST** be a Node-core-verifiable Ed25519 public-key
 attestation: DER/SPKI public key and base64 signature over the hexadecimal
@@ -586,10 +597,12 @@ appears in either profile. An invalid encoding or unverifiable signature
 
 Lineage predecessors **MUST** name a content-addressed predecessor bundle and
 an authenticated Ed25519 transition edge that signs its relationship,
-predecessor digest, and successor root/revision. The verifier **MUST** reject a
-self-predecessor, repeated/non-monotonic position, root/revision mismatch, or
-relation/root-evidence mismatch. Thus continuation, restoration, fork/new-root,
-and succession are mechanically—not merely narratively—distinct.
+predecessor digest, successor root/revision, successor bundle digest, and
+successor identity-declaration digest. The verifier **MUST** reject a
+self-predecessor, repeated/non-monotonic position, root/revision or successor
+digest mismatch, or relation/root-evidence mismatch. Thus continuation,
+restoration, fork/new-root, and succession are mechanically—not merely
+narratively—distinct.
 
 Implementations **MUST** reject duplicate JSON object member names before JSON
 Schema, digest, or signature processing; ordinary JSON parsing that silently
@@ -609,10 +622,14 @@ verification remains the verifier's policy responsibility.
 
 Retention is lifecycle evidence, not a license to replicate identity content.
 Retained components carry content and always recompute their digest.
-Redacted/erased components retain only digest plus redaction/audit evidence and
-are unavailable or unverifiable, never verified; supplied-redacted and missing
-bundles are distinct states but neither grants current authority. An erased
-bundle MUST NOT retain sensitive component content. Canonical inputs MUST be
+Redacted/erased components retain only digest plus redaction/audit evidence.
+A live supplied-redacted bundle is `unverifiable`; tombstoned or erased
+supplied evidence is `unavailable`; a missing bundle is `degraded`. A denied
+read is `unavailable` without exposing a bundle. Fully retained supplied
+evidence is always live, unredacted, unpurged, and `verified`. Tombstoned and
+erased bundles contain no retained component bytes; erased evidence additionally
+requires completed replica purge and device-revocation evidence. These states
+never imply current authority. Canonical inputs MUST be
 I-JSON: duplicate object keys and lone UTF-16 surrogates are rejected before
 canonicalization, digest, or signature verification.
 The binding carries metadata-only classification plus retention time,

@@ -78,12 +78,22 @@
     },
     {
       "expected": "positive",
-      "file": "16-unverifiable-historical-bundle.json",
+      "file": "16-missing-historical-bundle.json",
       "errorCode": null
     },
     {
       "expected": "positive",
       "file": "17-erased-redacted-historical.json",
+      "errorCode": null
+    },
+    {
+      "expected": "positive",
+      "file": "18-redacted-historical.json",
+      "errorCode": null
+    },
+    {
+      "expected": "positive",
+      "file": "19-tombstoned-historical.json",
       "errorCode": null
     }
   ],
@@ -232,6 +242,26 @@
       "expected": "negative",
       "file": "29-replayed-transition-successor.json",
       "errorCode": "E_LINEAGE"
+    },
+    {
+      "expected": "negative",
+      "file": "30-retained-degraded.json",
+      "errorCode": "E_REDACTION"
+    },
+    {
+      "expected": "negative",
+      "file": "31-retained-marked-redacted.json",
+      "errorCode": "E_REDACTION"
+    },
+    {
+      "expected": "negative",
+      "file": "32-redacted-degraded.json",
+      "errorCode": "E_REDACTION"
+    },
+    {
+      "expected": "negative",
+      "file": "33-missing-unverifiable.json",
+      "errorCode": "E_REDACTION"
     }
   ]
 }

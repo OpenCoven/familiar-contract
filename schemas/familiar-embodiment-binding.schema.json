@@ -97,7 +97,13 @@
     "verifier": { "$ref": "#/definitions/actor" },
     "historicalVerification": {
       "type": "object", "additionalProperties": false, "required": ["state", "readAuthorization"],
-      "properties": { "state": { "enum": ["verified", "degraded", "unavailable", "unverifiable"] }, "readAuthorization": { "enum": ["authorized", "not_authorized", "not_requested"] } }
+      "properties": { "state": { "enum": ["verified", "degraded", "unavailable", "unverifiable"] }, "readAuthorization": { "enum": ["authorized", "not_authorized", "not_requested"] } },
+      "allOf": [
+        {
+          "if": { "properties": { "readAuthorization": { "const": "not_authorized" } } },
+          "then": { "properties": { "state": { "const": "unavailable" } } }
+        }
+      ]
     },
     "revocation": {
       "type": "object", "additionalProperties": false, "required": ["outcome"],

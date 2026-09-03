@@ -22,7 +22,23 @@
           "mediaType": { "const": "application/json" },
           "content": { "type": "object" }, "redactionState": { "enum": ["retained", "redacted"] }, "redactionEvidence": { "type": "string", "minLength": 1 },
           "digest": { "$ref": "#/definitions/digest" }
-        }
+        },
+        "allOf": [
+          {
+            "if": { "properties": { "redactionState": { "const": "retained" } } },
+            "then": {
+              "required": ["content"],
+              "not": { "required": ["redactionEvidence"] }
+            }
+          },
+          {
+            "if": { "properties": { "redactionState": { "const": "redacted" } } },
+            "then": {
+              "required": ["redactionEvidence"],
+              "not": { "required": ["content"] }
+            }
+          }
+        ]
       }
     },
     "bundleDigest": { "$ref": "#/definitions/digest" },
@@ -38,7 +54,51 @@
         "erasureEvidence": { "type": "string", "minLength": 1 },
         "deviceRevocationEvidence": { "type": "string", "minLength": 1 },
         "redactionState": { "enum": ["none", "redacted"] }
-      }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "redactionState": { "const": "none" } } },
+          "then": {
+            "properties": {
+              "tombstoneState": { "const": "live" },
+              "replicaPurgeState": { "const": "not_requested" }
+            },
+            "not": {
+              "anyOf": [
+                { "required": ["erasureEvidence"] },
+                { "required": ["deviceRevocationEvidence"] }
+              ]
+            }
+          }
+        },
+        {
+          "if": { "properties": { "tombstoneState": { "const": "live" } } },
+          "then": {
+            "properties": { "replicaPurgeState": { "const": "not_requested" } },
+            "not": { "required": ["erasureEvidence"] }
+          }
+        },
+        {
+          "if": { "properties": { "tombstoneState": { "const": "tombstoned" } } },
+          "then": {
+            "required": ["erasureEvidence"],
+            "properties": {
+              "redactionState": { "const": "redacted" },
+              "replicaPurgeState": { "enum": ["pending", "complete"] }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "tombstoneState": { "const": "erased" } } },
+          "then": {
+            "required": ["erasureEvidence", "deviceRevocationEvidence"],
+            "properties": {
+              "redactionState": { "const": "redacted" },
+              "replicaPurgeState": { "const": "complete" }
+            }
+          }
+        }
+      ]
     }
   },
   "definitions": {

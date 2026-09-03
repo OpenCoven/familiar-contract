@@ -84,10 +84,13 @@ There are no warnings for missing required files; `MEMORY.md` absence is a failu
 This validator checks whether one claimant directory satisfies the required file-level declarations for v0.7.0. That claimant-directory run is necessary, but not sufficient, for a structural-conformance claim: you must also run `bash tests/conformance/run-conformance.sh` so the bundled reference validator is shown to accept the positive fixtures and reject the negative fixtures for the same contract version. Full conformance additionally requires runtime Ward enforcement beyond this file-level check, and missing `MEMORY.md` is a violation, not a warning.
 
 The explicit embodiment-binding mode validates one portable JSON record. It
-fails closed for non-unique aliases, stale or non-active revisions, degraded
+fails closed for non-unique aliases, stale or non-active revisions, non-verified
 history used as current authority, principal mismatches, digest tampering, and
-pre-commit revocation. It accepts degraded/unavailable history only as a
-non-authority historical-verification record.
+pre-commit revocation. Historical evidence is classified deterministically:
+retained supplied bytes are verified, live redacted evidence is unverifiable,
+tombstoned or erased evidence is unavailable, a missing bundle is degraded,
+and a denied read is unavailable. None of the non-verified states grants
+authority.
 
 Pass a detached, independently consumable historical identity bundle to
 recompute the retained component and bundle digests and verify the binding:

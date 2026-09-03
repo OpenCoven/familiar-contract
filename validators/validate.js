@@ -146,14 +146,14 @@ function validateHistoricalBundle(bundle, binding) {
     && bundle.lineagePosition === binding.familiar.lineagePosition;
   if (!idsMatch) violations.push(bindingViolation('E_BUNDLE_IDENTITY', 'historicalBundle', 'The detached bundle does not identify the bound root, revision, and lineage position.'));
   const seen = new Set();
-  let redacted = false;
+  let redactedCount = 0;
   for (const component of bundle.components) {
     if (seen.has(component.componentId) || (component.redactionState === 'retained' && (!component.content || component.digest.value !== digestObject(component.content))) ||
       (component.redactionState === 'redacted' && (component.content || !component.redactionEvidence))) {
       violations.push(bindingViolation('E_COMPONENT_DIGEST', 'historicalBundle.components', 'Every unique retained component digest must recompute from its canonical content.'));
       break;
     }
-    redacted ||= component.redactionState === 'redacted';
+    if (component.redactionState === 'redacted') redactedCount++;
     seen.add(component.componentId);
   }
   if (!seen.has('identity-declaration') || !seen.has('soul-declaration')) {
@@ -170,18 +170,32 @@ function validateHistoricalBundle(bundle, binding) {
   if (bundle.retention.verifierAccess !== 'authorized') {
     violations.push(bindingViolation('E_BUNDLE_ACCESS', 'historicalBundle.retention', 'A supplied detached bundle must be authorized for verifier access.'));
   }
-  if (bundle.retention.tombstoneState !== 'live' &&
-      (!bundle.retention.erasureEvidence || bundle.retention.replicaPurgeState === 'not_requested')) {
-    violations.push(bindingViolation('E_RETENTION', 'historicalBundle.retention', 'Tombstoned or erased bundles require erasure evidence and a requested replica purge.'));
-  }
-  if (redacted && (bundle.retention.redactionState !== 'redacted' || binding.historicalVerification.state === 'verified')) {
-    violations.push(bindingViolation('E_REDACTION', 'historicalBundle.retention', 'Redacted retained components require redaction lifecycle evidence and cannot claim verified history.'));
-  }
-  if (bundle.retention.tombstoneState === 'erased' && bundle.components.some(component => component.redactionState === 'retained' || component.content)) {
-    violations.push(bindingViolation('E_REDACTION', 'historicalBundle.components', 'An erased bundle cannot retain sensitive component content.'));
-  }
-  if (!redacted && (bundle.retention.redactionState !== 'none' || bundle.retention.tombstoneState !== 'live' || binding.historicalVerification.state !== 'verified')) {
-    violations.push(bindingViolation('E_REDACTION', 'historicalBundle.retention', 'A fully retained supplied bundle is live, unredacted, and verified.'));
+  const allRetained = redactedCount === 0;
+  const allRedacted = redactedCount === bundle.components.length;
+  const { redactionState, tombstoneState, replicaPurgeState } = bundle.retention;
+  const historyState = binding.historicalVerification.state;
+  if (allRetained) {
+    if (redactionState !== 'none' || tombstoneState !== 'live' ||
+        replicaPurgeState !== 'not_requested' || historyState !== 'verified') {
+      violations.push(bindingViolation('E_REDACTION', 'historicalBundle.retention', 'A fully retained supplied bundle must be live, unredacted, unpurged, and verified.'));
+    }
+  } else if (redactionState !== 'redacted') {
+    violations.push(bindingViolation('E_REDACTION', 'historicalBundle.retention.redactionState', 'Any unavailable component content requires bundle-level redaction state.'));
+  } else if (tombstoneState === 'live') {
+    if (replicaPurgeState !== 'not_requested' || historyState !== 'unverifiable') {
+      violations.push(bindingViolation('E_REDACTION', 'historicalBundle.retention', 'A live supplied redacted bundle must be unpurged and classified as unverifiable.'));
+    }
+  } else if (!allRedacted) {
+    violations.push(bindingViolation('E_REDACTION', 'historicalBundle.components', 'A tombstoned or erased bundle cannot retain sensitive component content.'));
+  } else if (tombstoneState === 'tombstoned') {
+    if (!bundle.retention.erasureEvidence || !['pending', 'complete'].includes(replicaPurgeState) ||
+        historyState !== 'unavailable') {
+      violations.push(bindingViolation('E_REDACTION', 'historicalBundle.retention', 'A tombstoned supplied bundle requires erasure evidence, an active purge, and unavailable history.'));
+    }
+  } else if (tombstoneState === 'erased' &&
+      (!bundle.retention.erasureEvidence || !bundle.retention.deviceRevocationEvidence ||
+       replicaPurgeState !== 'complete' || historyState !== 'unavailable')) {
+    violations.push(bindingViolation('E_REDACTION', 'historicalBundle.retention', 'An erased supplied bundle requires complete purge evidence and unavailable history.'));
   }
   return violations;
 }
@@ -308,8 +322,16 @@ function validateEmbodimentBinding(binding, file, historicalBundle, trustedLedge
     violations.push(bindingViolation('E_RETENTION', 'privacy', 'Tombstoned or erased binding metadata requires erasure evidence and a requested replica purge.'));
   }
   if (historicalBundle) violations.push(...validateHistoricalBundle(historicalBundle, binding));
-  if (!historicalBundle && historicalVerification.state === 'verified') {
-    violations.push(bindingViolation('E_BUNDLE_MISSING', 'historicalBundle', 'Verified history requires a supplied detached historical bundle.'));
+  if (!historicalBundle) {
+    const expectedMissingState = historicalVerification.readAuthorization === 'not_authorized'
+      ? 'unavailable'
+      : 'degraded';
+    if (historicalVerification.state !== expectedMissingState) {
+      const code = historicalVerification.state === 'verified'
+        ? 'E_BUNDLE_MISSING'
+        : 'E_REDACTION';
+      violations.push(bindingViolation(code, 'historicalVerification', `A missing historical bundle must be ${expectedMissingState} for the recorded read-authorization state.`));
+    }
   }
   if (revocation.outcome === 'before_commit') {
     violations.push(bindingViolation('E_REVOCATION', 'revocation', 'A revocation observed before commit must fail closed and cannot produce a binding.'));
