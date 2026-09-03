@@ -25,6 +25,10 @@ node validators/validate.js --embodiment-binding <path-to-binding.json> \
 Embodiment options are parsed strictly. Unknown or duplicate flags, trailing
 arguments, and sidecar flags without a value fail closed.
 
+All profile signatures use Ed25519 over the 32 raw SHA-256 digest octets. The
+lowercase hexadecimal digest strings carried in JSON are decoded before
+verification; their UTF-8 text is not the signature message.
+
 ### Examples
 
 ```bash

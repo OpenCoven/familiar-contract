@@ -40,3 +40,7 @@ Post-commit revocation is represented only by a separately signed
 `familiar.embodiment_revocation.v1` event passed with
 `--post-commit-revocation`. The event references the immutable binding digest
 and cannot alter the binding's committed preimage.
+
+Bindings, lineage transitions, and revocation events sign the 32 raw SHA-256
+digest octets decoded from the lowercase hexadecimal digest. They do not sign
+the UTF-8 hexadecimal text.

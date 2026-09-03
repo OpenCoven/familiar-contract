@@ -600,19 +600,27 @@ authorize current dispatch.
 | Withheld because verifier access was denied | no detached bundle | `unavailable` |
 
 `authentication` **MUST** be a Node-core-verifiable Ed25519 public-key
-attestation: DER/SPKI public key and base64 signature over the hexadecimal
-SHA-256 binding digest. The binding digest is calculated from JCS canonical
+attestation with a DER/SPKI public key and base64 signature. The binding digest
+is the lowercase hexadecimal encoding of SHA-256 over the UTF-8 JCS canonical
 binding bytes with the entire `integrity` and `authentication` members omitted
-(and the redundant commit digest-verification field omitted). No private key
-appears in either profile. An invalid encoding or unverifiable signature
-**MUST** fail closed. The verifier **MUST** parse the SPKI key and require its
-asymmetric key type to be Ed25519; trusting the declared method while accepting
-RSA, ECDSA, Ed448, or another key type does not conform.
+(and the redundant commit digest-verification field omitted). The Ed25519
+message is the **32 raw digest octets obtained by decoding that 64-character
+lowercase hexadecimal digest**, not the UTF-8 bytes of the hexadecimal text.
+No private key appears in either profile. An invalid encoding or unverifiable
+signature **MUST** fail closed. The verifier **MUST** parse the SPKI key and
+require its asymmetric key type to be Ed25519; trusting the declared method
+while accepting RSA, ECDSA, Ed448, or another key type does not conform.
 
 Lineage predecessors **MUST** name a content-addressed predecessor bundle and
 an authenticated Ed25519 transition edge that signs its relationship,
 predecessor digest, successor root/revision, successor bundle digest, and
-successor identity-declaration digest. The verifier **MUST** reject a
+successor identity-declaration digest. The transition preimage is the JCS
+canonical UTF-8 encoding of an object containing exactly those six fields:
+`relationship`, `predecessorBundleDigest`, `successorFamiliarRootId`,
+`successorIdentityRevisionId`, `successorBundleDigest`, and
+`successorDeclarationDigest`. The transition digest is SHA-256 over those
+bytes; the Ed25519 message is the 32 raw transition-digest octets. The verifier
+**MUST** reject a
 self-predecessor, repeated/non-monotonic position, root/revision or successor
 digest mismatch, or relation/root-evidence mismatch. Thus continuation,
 restoration, fork/new-root, and succession are mechanically—not merely
@@ -638,7 +646,10 @@ strictly after commit **MUST NOT** be inserted into or re-sign the immutable
 binding. It is recorded as a separately signed, append-only
 `familiar.embodiment_revocation.v1` event that references the exact binding id,
 binding digest, familiar root, and identity revision, and whose own canonical
-event digest is Ed25519-authenticated. Such an event preserves historical
+event digest is Ed25519-authenticated. Its preimage is the JCS canonical UTF-8
+encoding of the complete event with `integrity` and `authentication` omitted;
+the event digest is SHA-256 over those bytes, and the Ed25519 message is the 32
+raw event-digest octets. Such an event preserves historical
 evidence while preventing later dispatches. Integrity and authenticated
 attestation are mandatory, while cryptographic key-policy verification remains
 the verifier's policy responsibility.
