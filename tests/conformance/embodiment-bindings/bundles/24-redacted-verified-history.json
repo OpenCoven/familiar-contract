@@ -9,54 +9,46 @@
     {
       "componentId": "identity-declaration",
       "mediaType": "application/json",
-      "content": {
-        "familiarRootId": "familiar-root:oak",
-        "identityRevisionId": "familiar-revision:oak:3",
-        "lineagePosition": 3,
-        "name": "Tampered"
-      },
       "digest": {
         "algorithm": "sha-256",
         "value": "8392e679b9e15102cac7593352a44ccf8bcf76421f2546e3e2eb29ab1e1e6dd6"
       },
-      "redactionState": "retained"
+      "redactionState": "redacted",
+      "redactionEvidence": "audit:redaction-001"
     },
     {
       "componentId": "soul-declaration",
       "mediaType": "application/json",
-      "content": {
-        "purpose": "Research familiar",
-        "identityMeaning": "unchanged"
-      },
       "digest": {
         "algorithm": "sha-256",
         "value": "30fc8e732377c164fcd1b85f83eee874620973cce5de3bfe6e2f02344adb64ad"
       },
-      "redactionState": "retained"
+      "redactionState": "redacted",
+      "redactionEvidence": "audit:redaction-001"
     },
     {
       "componentId": "ward-declaration",
       "mediaType": "application/json",
-      "content": {
-        "policyVersion": "policy-2026-09"
-      },
       "digest": {
         "algorithm": "sha-256",
         "value": "cf8e16b4da166041d4a6cb15437e028d6100f417fac10c45255ee318c6512230"
       },
-      "redactionState": "retained"
+      "redactionState": "redacted",
+      "redactionEvidence": "audit:redaction-001"
     }
   ],
   "retention": {
     "classification": "restricted-historical-identity",
     "verifierAccess": "authorized",
     "recordedAt": "2026-09-03T08:00:00Z",
-    "tombstoneState": "live",
-    "replicaPurgeState": "not_requested",
-    "redactionState": "none"
+    "tombstoneState": "erased",
+    "replicaPurgeState": "complete",
+    "erasureEvidence": "audit:tombstone-001",
+    "deviceRevocationEvidence": "audit:device-purge-001",
+    "redactionState": "redacted"
   },
   "bundleDigest": {
     "algorithm": "sha-256",
-    "value": "33e7f2d5c7d88d8b0e305ad058b08da24152ef7efd2464d6cc4ede297b787226"
+    "value": "d8bf5ff8d456eee731fd272fd30c4efc5210055e642290c80ec2dad3bc905bba"
   }
 }

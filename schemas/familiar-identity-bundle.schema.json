@@ -16,11 +16,11 @@
       "type": "array", "minItems": 2,
       "items": {
         "type": "object", "additionalProperties": false,
-        "required": ["componentId", "mediaType", "content", "digest"],
+        "required": ["componentId", "mediaType", "digest", "redactionState"],
         "properties": {
           "componentId": { "enum": ["identity-declaration", "soul-declaration", "ward-declaration"] },
           "mediaType": { "const": "application/json" },
-          "content": { "type": "object" },
+          "content": { "type": "object" }, "redactionState": { "enum": ["retained", "redacted"] }, "redactionEvidence": { "type": "string", "minLength": 1 },
           "digest": { "$ref": "#/definitions/digest" }
         }
       }
@@ -36,7 +36,8 @@
         "tombstoneState": { "enum": ["live", "tombstoned", "erased"] },
         "replicaPurgeState": { "enum": ["not_requested", "pending", "complete"] },
         "erasureEvidence": { "type": "string", "minLength": 1 },
-        "deviceRevocationEvidence": { "type": "string", "minLength": 1 }
+        "deviceRevocationEvidence": { "type": "string", "minLength": 1 },
+        "redactionState": { "enum": ["none", "redacted"] }
       }
     }
   },

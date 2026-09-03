@@ -23,8 +23,8 @@
           "authentication": {
             "method": "ed25519",
             "signerId": "authority:oak",
-            "publicKey": "MCowBQYDK2VwAyEAoIM1QChAlVY8y4bHrWizmYNQDJr2cxws7hwDGkhl/gI=",
-            "signature": "6Hw7PiVlqwLFH45bqnZ7qxD72mGIG7arAarGnhr10MbWI2+Xo0WULjp2quFDEUj4PoksadZq6K2LlVhPUzOqAQ=="
+            "publicKey": "MCowBQYDK2VwAyEA3FjProvkSf4b75iPP25HysbiThtVt2jS2t0TrCHYpxg=",
+            "signature": "3VLymij1Ljhlef39Sf9meqACX14XpPd5SddcNZn7jegvchmeXGBypD5dJ1t2FG2WIQ77V01OP2vB23CguWoaCQ=="
           }
         }
       }
@@ -38,9 +38,9 @@
     },
     "bundleDigest": {
       "algorithm": "sha-256",
-      "value": "ca973605cef73dd456884adcbda64d698a849a295837e9fd1fdf13b3afcd74e3"
+      "value": "d048ee8d8081f7efce5b98a26565c6745f4ffc1dd72e107239e1e9b8df55c9c8"
     },
-    "historicalBundleRef": "urn:sha256:ca973605cef73dd456884adcbda64d698a849a295837e9fd1fdf13b3afcd74e3"
+    "historicalBundleRef": "urn:sha256:d048ee8d8081f7efce5b98a26565c6745f4ffc1dd72e107239e1e9b8df55c9c8"
   },
   "revisionRecordedAt": "2026-09-03T08:00:00Z",
   "validTime": {
@@ -83,13 +83,13 @@
   "integrity": {
     "algorithm": "sha-256",
     "canonicalization": "jcs-rfc8785",
-    "bindingDigest": "8a87502d0b4ca340e0993aebd17ab59a922d44f6f6b58140edeb2b3d97667279"
+    "bindingDigest": "6875013f623ff239b85d16f3cc99900b33cc755ae12fdbcd89e928a858eabe72"
   },
   "authentication": {
     "method": "ed25519",
     "signerId": "authority:oak",
-    "publicKey": "MCowBQYDK2VwAyEAoIM1QChAlVY8y4bHrWizmYNQDJr2cxws7hwDGkhl/gI=",
-    "signature": "3omFX9YPDcEPFJB5vQa+f8OYpB+HwrNaM+RuDhPa/5OojwycXfzwS+cxuuwTXJPpCL78dEPIJHl509aahUGgDQ=="
+    "publicKey": "MCowBQYDK2VwAyEA3FjProvkSf4b75iPP25HysbiThtVt2jS2t0TrCHYpxg=",
+    "signature": "hLUrwT5RftYHQpMNpz6d05X87yZ1BS2AJFmy8zYeaYLKm8UM29QMlcq+AyuSXSX3nNBUO29Nf9OhnitHHhwaCg=="
   },
   "privacy": {
     "classification": "metadata-only",
@@ -104,7 +104,7 @@
     "state": "committed",
     "finalValidityCheckAt": "2026-09-03T09:00:00Z",
     "committedAt": "2026-09-03T09:00:00Z",
-    "verifiedBindingDigest": "8a87502d0b4ca340e0993aebd17ab59a922d44f6f6b58140edeb2b3d97667279"
+    "verifiedBindingDigest": "6875013f623ff239b85d16f3cc99900b33cc755ae12fdbcd89e928a858eabe72"
   },
   "aliasResolution": {
     "alias": "Sage",
@@ -119,7 +119,12 @@
     "familiarRootId": "familiar-root:oak",
     "identityRevisionId": "familiar-revision:oak:3",
     "lineagePosition": 3,
-    "bundleDigest": "ca973605cef73dd456884adcbda64d698a849a295837e9fd1fdf13b3afcd74e3",
-    "status": "active"
+    "bundleDigest": "d048ee8d8081f7efce5b98a26565c6745f4ffc1dd72e107239e1e9b8df55c9c8",
+    "status": "active",
+    "authoritativeLedgerGeneration": 3,
+    "authoritativeHeadRevisionId": "familiar-revision:oak:3",
+    "freshnessBoundSeconds": 300,
+    "cacheObservedAt": "2026-09-03T09:00:00Z",
+    "cacheProvenance": "authoritative-read"
   }
 }

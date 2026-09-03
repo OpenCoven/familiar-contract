@@ -52,6 +52,16 @@ function bindingViolation(code, field, message) {
   return violation('embodiment-binding', `[${code}] ${field}`, message);
 }
 
+function parseJsonNoDuplicate(text) {
+  let i = 0; let duplicate = false;
+  const ws = () => { while (/\s/.test(text[i])) i++; };
+  const string = () => { const start = i++; while (i < text.length) { if (text[i] === '\\') i += 2; else if (text[i++] === '"') break; } return JSON.parse(text.slice(start, i)); };
+  const value = () => { ws(); if (text[i] === '"') return string(); if (text[i] === '{') return object(); if (text[i] === '[') return array(); while (i < text.length && !/[\s,\]}]/.test(text[i])) i++; };
+  const array = () => { i++; ws(); while (text[i] !== ']') { value(); ws(); if (text[i] === ',') { i++; ws(); } else break; } i++; };
+  const object = () => { const keys = new Set(); i++; ws(); while (text[i] !== '}') { const key = string(); if (keys.has(key)) duplicate = true; keys.add(key); ws(); if (text[i++] !== ':') throw new Error('expected colon'); value(); ws(); if (text[i] === ',') { i++; ws(); } else break; } i++; };
+  value(); ws(); if (i !== text.length) throw new Error('trailing input'); if (duplicate) throw new Error('duplicate object key'); return JSON.parse(text);
+}
+
 function canonicalJson(value) {
   if (Array.isArray(value)) return `[${value.map(canonicalJson).join(',')}]`;
   if (isObject(value)) {
@@ -118,11 +128,14 @@ function validateHistoricalBundle(bundle, binding) {
     && bundle.lineagePosition === binding.familiar.lineagePosition;
   if (!idsMatch) violations.push(bindingViolation('E_BUNDLE_IDENTITY', 'historicalBundle', 'The detached bundle does not identify the bound root, revision, and lineage position.'));
   const seen = new Set();
+  let redacted = false;
   for (const component of bundle.components) {
-    if (seen.has(component.componentId) || component.digest.value !== digestObject(component.content)) {
+    if (seen.has(component.componentId) || (component.redactionState === 'retained' && (!component.content || component.digest.value !== digestObject(component.content))) ||
+      (component.redactionState === 'redacted' && (component.content || !component.redactionEvidence))) {
       violations.push(bindingViolation('E_COMPONENT_DIGEST', 'historicalBundle.components', 'Every unique retained component digest must recompute from its canonical content.'));
       break;
     }
+    redacted ||= component.redactionState === 'redacted';
     seen.add(component.componentId);
   }
   if (!seen.has('identity-declaration') || !seen.has('soul-declaration')) {
@@ -143,12 +156,16 @@ function validateHistoricalBundle(bundle, binding) {
       (!bundle.retention.erasureEvidence || bundle.retention.replicaPurgeState === 'not_requested')) {
     violations.push(bindingViolation('E_RETENTION', 'historicalBundle.retention', 'Tombstoned or erased bundles require erasure evidence and a requested replica purge.'));
   }
+  if (redacted && (bundle.retention.redactionState !== 'redacted' || binding.historicalVerification.state === 'verified')) {
+    violations.push(bindingViolation('E_REDACTION', 'historicalBundle.retention', 'Redacted retained components require redaction lifecycle evidence and cannot claim verified history.'));
+  }
   return violations;
 }
 
 function validateEmbodimentBinding(binding, file, historicalBundle) {
   const violations = [];
   if (!isObject(binding)) return [bindingViolation('E_SCHEMA', 'shape', 'An embodiment binding must be one JSON object.')];
+  if (binding.schemaVersion !== '1.0.0') return [bindingViolation('E_VERSION', 'schemaVersion', 'Only familiar.embodiment_binding.v1 schemaVersion 1.0.0 is supported.')];
   if (!validateEmbodimentBindingSchema(binding)) {
     return (validateEmbodimentBindingSchema.errors || []).map(error =>
       bindingViolation('E_SCHEMA', `schema ${error.instancePath || '/'} [${error.keyword}]`, error.message || 'schema violation')
@@ -176,6 +193,11 @@ function validateEmbodimentBinding(binding, file, historicalBundle) {
       resolutionSnapshot.identityRevisionId !== familiar.identityRevisionId || resolutionSnapshot.lineagePosition !== familiar.lineagePosition ||
       resolutionSnapshot.bundleDigest !== identityBundle.bundleDigest.value || resolutionSnapshot.status !== statusAtDecision.status) {
     violations.push(bindingViolation('E_SNAPSHOT', 'resolutionSnapshot', 'The immutable resolution snapshot must bind root, revision, lineage position, bundle digest, and decision status.'));
+  }
+  if (resolutionSnapshot.authoritativeHeadRevisionId !== familiar.identityRevisionId ||
+      (isTimestamp(resolutionSnapshot.cacheObservedAt) && isTimestamp(binding.decisionAt) &&
+       at(binding.decisionAt) - at(resolutionSnapshot.cacheObservedAt) > resolutionSnapshot.freshnessBoundSeconds * 1000)) {
+    violations.push(bindingViolation('E_STALE_CACHE', 'resolutionSnapshot', 'The snapshot must name the authoritative head revision and cache evidence within its declared freshness bound.'));
   }
   if (binding.aliasResolution) {
     const roots = binding.aliasResolution.resolvedRootIds;
@@ -252,6 +274,9 @@ function validateEmbodimentBinding(binding, file, historicalBundle) {
   if (revocation.outcome === 'before_commit') {
     violations.push(bindingViolation('E_REVOCATION', 'revocation', 'A revocation observed before commit must fail closed and cannot produce a binding.'));
   }
+  if (revocation.outcome === 'none' && revocation.revokedAt) {
+    violations.push(bindingViolation('E_REVOCATION', 'revocation.outcome', 'A binding with revokedAt must classify the revocation outcome explicitly.'));
+  }
   if (revocation.revokedAt && isTimestamp(revocation.revokedAt) && isTimestamp(commit.committedAt) && at(revocation.revokedAt) <= at(commit.committedAt) && isAuthorityAttempt) {
     violations.push(bindingViolation('E_REVOCATION', 'revocation.revokedAt', 'Any revocation at or before decision/commit rejects dispatch regardless of the asserted outcome.'));
   }
@@ -266,14 +291,14 @@ function validateEmbodimentBinding(binding, file, historicalBundle) {
 function validateEmbodimentBindingFile(filePath, historicalBundlePath) {
   let binding;
   try {
-    binding = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    binding = parseJsonNoDuplicate(fs.readFileSync(filePath, 'utf8'));
   } catch (error) {
     return [bindingViolation('E_JSON', 'syntax', `JSON syntax violation: ${error.message}`)];
   }
   let historicalBundle;
   if (historicalBundlePath) {
     try {
-      historicalBundle = JSON.parse(fs.readFileSync(historicalBundlePath, 'utf8'));
+      historicalBundle = parseJsonNoDuplicate(fs.readFileSync(historicalBundlePath, 'utf8'));
     } catch (error) {
       return [bindingViolation('E_BUNDLE_SCHEMA', 'historicalBundle', `JSON syntax violation: ${error.message}`)];
     }

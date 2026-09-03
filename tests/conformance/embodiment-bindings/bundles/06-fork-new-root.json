@@ -18,7 +18,8 @@
       "digest": {
         "algorithm": "sha-256",
         "value": "e97cb110eb3ded123930545fe90cb20ce705c61419aa11f5a23f7f447e4ed079"
-      }
+      },
+      "redactionState": "retained"
     },
     {
       "componentId": "soul-declaration",
@@ -30,7 +31,8 @@
       "digest": {
         "algorithm": "sha-256",
         "value": "30fc8e732377c164fcd1b85f83eee874620973cce5de3bfe6e2f02344adb64ad"
-      }
+      },
+      "redactionState": "retained"
     },
     {
       "componentId": "ward-declaration",
@@ -41,7 +43,8 @@
       "digest": {
         "algorithm": "sha-256",
         "value": "cf8e16b4da166041d4a6cb15437e028d6100f417fac10c45255ee318c6512230"
-      }
+      },
+      "redactionState": "retained"
     }
   ],
   "retention": {
@@ -49,10 +52,11 @@
     "verifierAccess": "authorized",
     "recordedAt": "2026-09-03T08:00:00Z",
     "tombstoneState": "live",
-    "replicaPurgeState": "not_requested"
+    "replicaPurgeState": "not_requested",
+    "redactionState": "none"
   },
   "bundleDigest": {
     "algorithm": "sha-256",
-    "value": "83b0d222e510e1810969e6f1706f31ca1c91ab5b579a95e1b36b00138c879fe4"
+    "value": "06332d1e0d74cd50abfceca1594b2b3dcd03a0d27d25f3393c247d54a3f01534"
   }
 }

@@ -550,6 +550,10 @@ The resolution snapshot **MUST** bind root, revision, lineage position, bundle
 digest, and status; its snapshot id **MUST** be the final-check/commit snapshot.
 Resolution precedes final validity check, which precedes decision, commit, and
 issuance; the decision timestamp and `statusAtDecision.decisionTime` are equal.
+Each resolution snapshot **MUST** include authoritative ledger generation and
+head revision, cache provenance/observation time, and a bounded freshness
+window. A cache older than that bound, or one whose head differs from the
+selected revision, **MUST** fail closed even when its copied status is active.
 
 Aliases are non-authoritative resolution evidence only. When an alias is used,
 resolution **MUST** yield exactly one root, and that root **MUST** equal the
@@ -582,10 +586,16 @@ self-predecessor, repeated/non-monotonic position, root/revision mismatch, or
 relation/root-evidence mismatch. Thus continuation, restoration, fork/new-root,
 and succession are mechanically—not merely narratively—distinct.
 
+Implementations **MUST** reject duplicate JSON object member names before JSON
+Schema, digest, or signature processing; ordinary JSON parsing that silently
+keeps one duplicate is insufficient. This profile supports exactly
+`schemaVersion` `1.0.0`; unknown versions fail closed.
+
 The resolver and verifier **MUST** perform the final eligibility check and
 immutable binding commit on the same snapshot/transaction boundary. The
-committed binding digest **MUST** recompute from JCS canonical bytes (excluding
-only the digest and its redundant commit-verification field), and the commit
+committed binding digest **MUST** recompute from the same JCS canonical preimage
+defined above: the binding with its entire `integrity` and `authentication`
+members and redundant `commit.verifiedBindingDigest` omitted, and the commit
 **MUST** attest to that exact digest before launch success. A revocation before
 commit rejects the launch; revocation strictly after an immutable commit does
 not rewrite that historical binding, but prevents later dispatches. Integrity

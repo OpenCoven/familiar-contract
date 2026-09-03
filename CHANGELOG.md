@@ -28,6 +28,10 @@ This project uses [Semantic Versioning](https://semver.org/).
   Resolution snapshots, strict RFC 3339 timestamps, authenticated lineage
   edges, retention tombstone/purge evidence, and a fixed error-code conformance
   manifest close stale-cache and vector-integrity gaps.
+- **Rereview hardening** — Defines one non-circular digest preimage, records
+  authoritative snapshot freshness, supports erased/redacted detached bundles
+  with retained digest/audit evidence, rejects duplicate JSON keys and unknown
+  profile versions, and classifies every timestamped revocation outcome.
 - **Embodiment-binding conformance lane** — 16 positive and 20 negative
   vectors covering active, retired/restored, continuation, fork, succession,
   direct/automation/Psyche targets, degraded history, privacy authorization,

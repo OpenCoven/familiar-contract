@@ -1,7 +1,8 @@
 {
   "profile": "familiar.embodiment_binding.v1",
   "schemaVersion": "1.0.0",
-  "bindingId": "binding-tests/conformance/embodiment-bindings/negative/20-revocation-at-commit-outcome-none",
+  "schemaVersion": "999.0.0",
+  "bindingId": "binding-active-direct-001",
   "familiar": {
     "familiarRootId": "familiar-root:oak",
     "identityRevisionId": "familiar-revision:oak:3",
@@ -23,8 +24,8 @@
           "authentication": {
             "method": "ed25519",
             "signerId": "authority:oak",
-            "publicKey": "MCowBQYDK2VwAyEAzrwqiIiyCqPCU8dFjFSb2+59c30U/8t2ec5G4Cg8Be8=",
-            "signature": "NCGmm9CcX4+jTraNE4sI+5QeFEfooTWw/1Y2D+kmRz5HUHKrWP6/0WXQHfL7UA+cLe2gb1MpwQoU0O398U0PAw=="
+            "publicKey": "MCowBQYDK2VwAyEADKdDkStzOfdcwMlBhvC2oHMSZQATc/jXFrmldhX+8w0=",
+            "signature": "sdSEm4i2qtsEQahD7t5XTc31Y3Kj+7q04Hjl+gdR2MrSGuNrToNPAy65nahDJuuUJ8KIZNk0xIV9fTiMWeJhDg=="
           }
         }
       }
@@ -78,19 +79,18 @@
     "readAuthorization": "not_requested"
   },
   "revocation": {
-    "outcome": "none",
-    "revokedAt": "2026-09-03T09:00:00Z"
+    "outcome": "none"
   },
   "integrity": {
     "algorithm": "sha-256",
     "canonicalization": "jcs-rfc8785",
-    "bindingDigest": "06ecc487259810f5d94afc76f233bcef7b0f53772e6545b70329586317822617"
+    "bindingDigest": "ca47880ae04f74cd6a0a8c8451d63b6790ebbde970e1d92da707e997783893e0"
   },
   "authentication": {
     "method": "ed25519",
     "signerId": "authority:oak",
-    "publicKey": "MCowBQYDK2VwAyEAzrwqiIiyCqPCU8dFjFSb2+59c30U/8t2ec5G4Cg8Be8=",
-    "signature": "r0f35ug50xzgbbDlHeUJ+IhVVhNE/j4YUGTExlogBRlC2Mcg5sMVxWTgcCxNbVXfKUGoAgrttx8AaPelYCaICg=="
+    "publicKey": "MCowBQYDK2VwAyEADKdDkStzOfdcwMlBhvC2oHMSZQATc/jXFrmldhX+8w0=",
+    "signature": "L9uCIA2/BeRz7NImN40AEJZ/rELjtuX/1RkHRhex1XTOFnrYn5/tkqjz7zZLBqq0MiRPlAxKL2ihBeTeN8DFDQ=="
   },
   "privacy": {
     "classification": "metadata-only",
@@ -105,7 +105,7 @@
     "state": "committed",
     "finalValidityCheckAt": "2026-09-03T09:00:00Z",
     "committedAt": "2026-09-03T09:00:00Z",
-    "verifiedBindingDigest": "06ecc487259810f5d94afc76f233bcef7b0f53772e6545b70329586317822617"
+    "verifiedBindingDigest": "ca47880ae04f74cd6a0a8c8451d63b6790ebbde970e1d92da707e997783893e0"
   },
   "resolutionSnapshot": {
     "snapshotId": "snapshot:oak-dispatch-001",

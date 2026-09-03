@@ -23,8 +23,8 @@
           "authentication": {
             "method": "ed25519",
             "signerId": "authority:oak",
-            "publicKey": "MCowBQYDK2VwAyEAfHo7QxHOjE3p7op6OwRJj0+H35PqJttH5CUUJAaOge0=",
-            "signature": "FDWV5jSgS/sknNG+eRvrwUV6guRTm14Ynca1ZQckOnRMiUlIGfAw5n4VBe1BAOon6YqCy6w6VcpXV14h6RdUAg=="
+            "publicKey": "MCowBQYDK2VwAyEAUzIKgezYonu/uIcdsdhdfOsgiVEmVR0NW5UJjTpHlyo=",
+            "signature": "nWZoJYkahkIeh+4HcTKFR/BtysdoB0N4SIHK8um6eaeLE86CUbQiv+D9j0tXSlureu4GnpkFEfCwCeJ/j8jbAg=="
           }
         }
       }
@@ -83,13 +83,13 @@
   "integrity": {
     "algorithm": "sha-256",
     "canonicalization": "jcs-rfc8785",
-    "bindingDigest": "cddfe1c3820f2e2c5f4beba0b0f629b9a3663cbde3731f0fe591c19472abccd2"
+    "bindingDigest": "9c3b1d3823c3a52abd495d5c147d03bf9732b7d3b95816b1094fa992a484cc34"
   },
   "authentication": {
     "method": "ed25519",
     "signerId": "authority:oak",
-    "publicKey": "MCowBQYDK2VwAyEAfHo7QxHOjE3p7op6OwRJj0+H35PqJttH5CUUJAaOge0=",
-    "signature": "S5oQcvR5IcBB8vem1HXW2PX+yPPf3EddbtUyXTcbE96+tuMZlmlrM01HTRofhPU8CzNX1l5DGWSdpe5EygW6AA=="
+    "publicKey": "MCowBQYDK2VwAyEAUzIKgezYonu/uIcdsdhdfOsgiVEmVR0NW5UJjTpHlyo=",
+    "signature": "1Bs1OKciP1HJMv4cwOl9osaS1NeI15WAG2Q4Vd7ialEZPl4EB9nisHOxEAlf39D6hE/ISgVm0+9G/I9vPP8VDg=="
   },
   "privacy": {
     "classification": "metadata-only",
@@ -104,7 +104,7 @@
     "state": "committed",
     "finalValidityCheckAt": "2026-09-03T09:00:00Z",
     "committedAt": "2026-09-03T09:00:00Z",
-    "verifiedBindingDigest": "cddfe1c3820f2e2c5f4beba0b0f629b9a3663cbde3731f0fe591c19472abccd2"
+    "verifiedBindingDigest": "9c3b1d3823c3a52abd495d5c147d03bf9732b7d3b95816b1094fa992a484cc34"
   },
   "resolutionSnapshot": {
     "snapshotId": "snapshot:oak-dispatch-001",
@@ -113,6 +113,11 @@
     "identityRevisionId": "familiar-revision:oak:3",
     "lineagePosition": 3,
     "bundleDigest": "ca973605cef73dd456884adcbda64d698a849a295837e9fd1fdf13b3afcd74e3",
-    "status": "active"
+    "status": "active",
+    "authoritativeLedgerGeneration": 3,
+    "authoritativeHeadRevisionId": "familiar-revision:oak:3",
+    "freshnessBoundSeconds": 300,
+    "cacheObservedAt": "2026-09-03T09:00:00Z",
+    "cacheProvenance": "authoritative-read"
   }
 }

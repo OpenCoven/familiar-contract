@@ -8,7 +8,7 @@
   "required": ["profile", "schemaVersion", "bindingId", "familiar", "resolutionSnapshot", "identityBundle", "revisionRecordedAt", "validTime", "statusAtDecision", "principal", "target", "bindingPurpose", "identityMeaning", "issuedAt", "decisionAt", "policyVersion", "resolver", "verifier", "historicalVerification", "revocation", "commit", "integrity", "authentication", "privacy"],
   "properties": {
     "profile": { "const": "familiar.embodiment_binding.v1" },
-    "schemaVersion": { "$ref": "#/definitions/version" },
+    "schemaVersion": { "const": "1.0.0" },
     "bindingId": { "type": "string", "minLength": 1 },
     "familiar": {
       "type": "object", "additionalProperties": false,
@@ -41,9 +41,9 @@
     },
     "resolutionSnapshot": {
       "type": "object", "additionalProperties": false,
-      "required": ["snapshotId", "resolvedAt", "familiarRootId", "identityRevisionId", "lineagePosition", "bundleDigest", "status"],
+      "required": ["snapshotId", "resolvedAt", "authoritativeLedgerGeneration", "authoritativeHeadRevisionId", "freshnessBoundSeconds", "cacheObservedAt", "cacheProvenance", "familiarRootId", "identityRevisionId", "lineagePosition", "bundleDigest", "status"],
       "properties": {
-        "snapshotId": { "$ref": "#/definitions/opaqueId" }, "resolvedAt": { "$ref": "#/definitions/timestamp" }, "familiarRootId": { "$ref": "#/definitions/opaqueId" },
+        "snapshotId": { "$ref": "#/definitions/opaqueId" }, "resolvedAt": { "$ref": "#/definitions/timestamp" }, "authoritativeLedgerGeneration": { "type": "integer", "minimum": 0 }, "authoritativeHeadRevisionId": { "$ref": "#/definitions/opaqueId" }, "freshnessBoundSeconds": { "type": "integer", "minimum": 0 }, "cacheObservedAt": { "$ref": "#/definitions/timestamp" }, "cacheProvenance": { "enum": ["authoritative-read", "validated-cache"] }, "familiarRootId": { "$ref": "#/definitions/opaqueId" },
         "identityRevisionId": { "$ref": "#/definitions/opaqueId" }, "lineagePosition": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
         "bundleDigest": { "$ref": "#/definitions/hash" }, "status": { "enum": ["active", "retired", "revoked", "superseded"] }
       }

@@ -1,7 +1,7 @@
 {
   "profile": "familiar.embodiment_binding.v1",
   "schemaVersion": "1.0.0",
-  "bindingId": "binding-tests/conformance/embodiment-bindings/negative/20-revocation-at-commit-outcome-none",
+  "bindingId": "binding-24-redacted-verified-history",
   "familiar": {
     "familiarRootId": "familiar-root:oak",
     "identityRevisionId": "familiar-revision:oak:3",
@@ -23,8 +23,8 @@
           "authentication": {
             "method": "ed25519",
             "signerId": "authority:oak",
-            "publicKey": "MCowBQYDK2VwAyEAzrwqiIiyCqPCU8dFjFSb2+59c30U/8t2ec5G4Cg8Be8=",
-            "signature": "NCGmm9CcX4+jTraNE4sI+5QeFEfooTWw/1Y2D+kmRz5HUHKrWP6/0WXQHfL7UA+cLe2gb1MpwQoU0O398U0PAw=="
+            "publicKey": "MCowBQYDK2VwAyEADn+anhjG8A0tVxzxWIFjOlTfVzO61jRb9wuMEMy8qv0=",
+            "signature": "TWI5Lua0qbJeHPg6NZMNYmLjUHpQapIrIEsthtAznn4gjEDkJUZNZpC0tApQ8fPjzdiuCOEelvjZFzv1HL4rBA=="
           }
         }
       }
@@ -38,9 +38,9 @@
     },
     "bundleDigest": {
       "algorithm": "sha-256",
-      "value": "d048ee8d8081f7efce5b98a26565c6745f4ffc1dd72e107239e1e9b8df55c9c8"
+      "value": "d8bf5ff8d456eee731fd272fd30c4efc5210055e642290c80ec2dad3bc905bba"
     },
-    "historicalBundleRef": "urn:sha256:d048ee8d8081f7efce5b98a26565c6745f4ffc1dd72e107239e1e9b8df55c9c8"
+    "historicalBundleRef": "urn:sha256:d8bf5ff8d456eee731fd272fd30c4efc5210055e642290c80ec2dad3bc905bba"
   },
   "revisionRecordedAt": "2026-09-03T08:00:00Z",
   "validTime": {
@@ -78,19 +78,18 @@
     "readAuthorization": "not_requested"
   },
   "revocation": {
-    "outcome": "none",
-    "revokedAt": "2026-09-03T09:00:00Z"
+    "outcome": "none"
   },
   "integrity": {
     "algorithm": "sha-256",
     "canonicalization": "jcs-rfc8785",
-    "bindingDigest": "06ecc487259810f5d94afc76f233bcef7b0f53772e6545b70329586317822617"
+    "bindingDigest": "6589ce8800120ed755fd52c154b019af03dce749a7ff7846992579d188be4def"
   },
   "authentication": {
     "method": "ed25519",
     "signerId": "authority:oak",
-    "publicKey": "MCowBQYDK2VwAyEAzrwqiIiyCqPCU8dFjFSb2+59c30U/8t2ec5G4Cg8Be8=",
-    "signature": "r0f35ug50xzgbbDlHeUJ+IhVVhNE/j4YUGTExlogBRlC2Mcg5sMVxWTgcCxNbVXfKUGoAgrttx8AaPelYCaICg=="
+    "publicKey": "MCowBQYDK2VwAyEADn+anhjG8A0tVxzxWIFjOlTfVzO61jRb9wuMEMy8qv0=",
+    "signature": "U7FEDxaS54dx1QrHXF5BmAa+OtpFmhcA9OWegMLaFjiKlWJD+QsjKTpyF5+5y4vmROwHARUvOG4wKzYRxZJIBQ=="
   },
   "privacy": {
     "classification": "metadata-only",
@@ -105,7 +104,7 @@
     "state": "committed",
     "finalValidityCheckAt": "2026-09-03T09:00:00Z",
     "committedAt": "2026-09-03T09:00:00Z",
-    "verifiedBindingDigest": "06ecc487259810f5d94afc76f233bcef7b0f53772e6545b70329586317822617"
+    "verifiedBindingDigest": "6589ce8800120ed755fd52c154b019af03dce749a7ff7846992579d188be4def"
   },
   "resolutionSnapshot": {
     "snapshotId": "snapshot:oak-dispatch-001",
@@ -113,7 +112,7 @@
     "familiarRootId": "familiar-root:oak",
     "identityRevisionId": "familiar-revision:oak:3",
     "lineagePosition": 3,
-    "bundleDigest": "d048ee8d8081f7efce5b98a26565c6745f4ffc1dd72e107239e1e9b8df55c9c8",
+    "bundleDigest": "d8bf5ff8d456eee731fd272fd30c4efc5210055e642290c80ec2dad3bc905bba",
     "status": "active",
     "authoritativeLedgerGeneration": 3,
     "authoritativeHeadRevisionId": "familiar-revision:oak:3",
