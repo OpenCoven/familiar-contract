@@ -525,8 +525,8 @@ fn check_lineage(b: &Binding, violations: &mut Vec<Violation>) {
             || lineage.root_evidence != "genesis"
             || predecessor.is_some())
     {
-        // The reference reports this one without an error code.
-        violations.push(Violation::uncoded(
+        violations.push(Violation::new(
+            Code::Lineage,
             "familiar.lineageEvidence",
             "Genesis requires position 0, genesis root evidence, and no predecessor.",
         ));

@@ -38,12 +38,7 @@ fn codes(kind: &str, file: &str) -> Vec<String> {
         post_commit_revocation: revocation.as_deref(),
     })
     .iter()
-    .map(|violation| {
-        violation
-            .code
-            .map_or("(uncoded)", |code| code.as_str())
-            .to_owned()
-    })
+    .map(|violation| violation.code.as_str().to_owned())
     .collect()
 }
 
@@ -79,7 +74,7 @@ fn manifest_enumerates_exactly_the_vectors_on_disk() {
 fn every_positive_vector_passes() {
     let manifest = manifest();
     let positives = manifest["positive"].as_array().unwrap();
-    assert_eq!(positives.len(), 22);
+    assert_eq!(positives.len(), 23);
     let failures: Vec<String> = positives
         .iter()
         .map(|entry| entry["file"].as_str().unwrap())
@@ -99,7 +94,7 @@ fn every_positive_vector_passes() {
 fn every_negative_vector_fails_with_its_code() {
     let manifest = manifest();
     let negatives = manifest["negative"].as_array().unwrap();
-    assert_eq!(negatives.len(), 65);
+    assert_eq!(negatives.len(), 68);
     let failures: Vec<String> = negatives
         .iter()
         .filter_map(|entry| {
@@ -137,7 +132,7 @@ fn deep_inputs_fail_closed_without_overflowing() {
     let run = |inputs: EmbodimentInputs<'_>| -> Vec<&'static str> {
         verify(&inputs)
             .iter()
-            .filter_map(|violation| violation.code.map(|code| code.as_str()))
+            .map(|violation| violation.code.as_str())
             .collect()
     };
     let with = |binding: &str, bundle: &str, ledger: &str, revocation: Option<&str>| {

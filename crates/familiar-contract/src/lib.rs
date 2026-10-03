@@ -131,9 +131,8 @@ impl fmt::Display for Code {
 /// One failed check.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Violation {
-    /// The error code. Only a malformed genesis lineage has none, as in the
-    /// reference.
-    pub code: Option<Code>,
+    /// The error code.
+    pub code: Code,
     /// The member or document the check concerns.
     pub field: String,
     /// What the check requires.
@@ -143,17 +142,9 @@ pub struct Violation {
 impl Violation {
     fn new(code: Code, field: impl Into<String>, message: impl Into<Cow<'static, str>>) -> Self {
         Self {
-            code: Some(code),
+            code,
             field: field.into(),
             message: message.into(),
-        }
-    }
-
-    fn uncoded(field: &str, message: &'static str) -> Self {
-        Self {
-            code: None,
-            field: field.to_owned(),
-            message: Cow::Borrowed(message),
         }
     }
 }
@@ -161,9 +152,10 @@ impl Violation {
 impl fmt::Display for Violation {
     /// `[CODE] field: message`, the reference's `[CODE] field` form.
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if let Some(code) = self.code {
-            write!(formatter, "[{code}] ")?;
-        }
-        write!(formatter, "{}: {}", self.field, self.message)
+        write!(
+            formatter,
+            "[{}] {}: {}",
+            self.code, self.field, self.message
+        )
     }
 }

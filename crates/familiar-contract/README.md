@@ -73,7 +73,7 @@ These JavaScript behaviours are reproduced exactly:
 From the repository root:
 
 ```bash
-cargo test                                   # unit tests and all 87 vectors
+cargo test                                   # unit tests and all 91 vectors
 npm ci && bash tests/conformance/run-rust-parity.sh
 ```
 
@@ -83,10 +83,10 @@ then runs `rust-differential.js`, which requires the two validators to agree
 on mutants of the vectors:
 
 - **Default:** every vector gets text-level mutants: number forms, duplicate
-  keys, lone surrogates, and deep nesting. The 22 positive vectors and their
+  keys, lone surrogates, and deep nesting. The 23 positive vectors and their
   sidecars are also mutated member by member, and each mutated binding or
   revocation event is re-signed with a fresh key.
-- **`--all`:** member-level mutation of all 87 vectors as well. It takes a few
+- **`--all`:** member-level mutation of all 91 vectors as well. It takes a few
   minutes and about 1.5 GB of scratch space:
 
   ```bash
