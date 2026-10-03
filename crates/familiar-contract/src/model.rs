@@ -6,8 +6,8 @@
 //! optional member here has `minLength: 1`, a pattern, or an object type, so
 //! `Some` is exactly JavaScript truthiness.
 
+use serde::de::IgnoredAny;
 use serde::Deserialize;
-use serde_json::Value;
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -192,7 +192,9 @@ pub(crate) struct Component {
     pub component_id: String,
     pub digest: Digest,
     pub redaction_state: String,
-    pub content: Option<Value>,
+    /// Only its presence is read here; the content itself may nest to any
+    /// depth, so it is hashed in place rather than deserialized.
+    pub content: Option<IgnoredAny>,
     pub redaction_evidence: Option<String>,
 }
 

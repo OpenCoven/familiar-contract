@@ -151,14 +151,24 @@ function* textMutants(text) {
   yield text.replace(/("bindingId":\s*")/, '$1\\ud800');
   yield text.replace(/("policyVersion":\s*")/, '$1\\u00e9\\u0000');
   yield text.replace(/^\s*\{/, '{"__proto__": {},');
-  yield `﻿${text}`;
+  yield `\ufeff${text}`;
   yield `${text}x`;
+  // Deep nesting, kept within the depths the reference handles
+  // deterministically: its recursive parse fails near 4,500 levels and its
+  // recursive canonicalJson between 1,000 and 3,000.
+  const nested = depth => '['.repeat(depth) + ']'.repeat(depth);
+  yield nested(2000);
+  yield text.replace(/^\s*\{/, `{"deep": ${nested(2000)},`);
+  yield text.replace(/"content":\s*\{/, `"content": {"deep": ${'{"a":'.repeat(600)}1${'}'.repeat(600)},`);
 }
 
 // Cases stream to a JSON Lines file for verify-batch, with the reference
 // codes computed as each one is generated; only digests of the inputs stay
 // in memory.
 const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'familiar-differential-'));
+// The scratch directory can reach 1.5 GB with --all; remove it on every exit.
+process.on('exit', () => fs.rmSync(scratch, { recursive: true, force: true }));
+for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, () => process.exit(130));
 const casesPath = path.join(scratch, 'cases.jsonl');
 const casesFile = fs.openSync(casesPath, 'w');
 const expected = [];
@@ -256,7 +266,6 @@ for (let index = 0; index < expected.length; index++) {
   }
 }
 fs.closeSync(casesRead);
-fs.rmSync(scratch, { recursive: true, force: true });
 console.log(`Differential: ${expected.length} cases from ${new Set(labels).size} vectors, ${mismatched} mismatched`);
 console.log(`Codes exercised: ${[...covered].map(String).sort().join(' ')}`);
 process.exit(mismatched === 0 ? 0 : 1);

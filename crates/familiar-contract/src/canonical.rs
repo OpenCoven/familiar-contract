@@ -4,15 +4,19 @@
 //! prints every other value with `JSON.stringify`. For I-JSON input that is
 //! RFC 8785 (JCS). Numbers print as ECMAScript `Number.prototype.toString`
 //! does, and strings escape only `"`, `\` and C0 controls.
+//!
+//! The writer is iterative, so any nesting depth is safe, and the digests
+//! omit their own members while writing rather than cloning the document.
 
 use ring::digest::{digest, SHA256};
 use serde_json::{Map, Value};
 
+/// Members a digest leaves out, as paths from the root.
+type Omit<'a> = &'a [&'a [&'a str]];
+
 /// The canonical JSON text of `value`.
 pub fn canonical_json(value: &Value) -> String {
-    let mut out = String::new();
-    write_value(value, &mut out);
-    out
+    write_canonical(value, &[])
 }
 
 /// Lowercase hexadecimal SHA-256 of the canonical JSON text of `value`.
@@ -23,36 +27,26 @@ pub fn digest_object(value: &Value) -> String {
 /// The binding digest: the binding without `integrity`, `authentication` and
 /// `commit.verifiedBindingDigest`.
 pub fn binding_digest(binding: &Value) -> String {
-    let mut committed = binding.clone();
-    if let Some(object) = committed.as_object_mut() {
-        object.remove("integrity");
-        object.remove("authentication");
-        if let Some(commit) = object.get_mut("commit").and_then(Value::as_object_mut) {
-            commit.remove("verifiedBindingDigest");
-        }
-    }
-    digest_object(&committed)
+    let omit: Omit<'_> = &[
+        &["integrity"],
+        &["authentication"],
+        &["commit", "verifiedBindingDigest"],
+    ];
+    sha256_hex(write_canonical(binding, omit).as_bytes())
 }
 
 /// The post-commit revocation event digest: the event without `integrity` and
 /// `authentication`.
 pub fn revocation_digest(revocation: &Value) -> String {
-    let mut committed = revocation.clone();
-    if let Some(object) = committed.as_object_mut() {
-        object.remove("integrity");
-        object.remove("authentication");
-    }
-    digest_object(&committed)
+    let omit: Omit<'_> = &[&["integrity"], &["authentication"]];
+    sha256_hex(write_canonical(revocation, omit).as_bytes())
 }
 
 /// The historical bundle digest: the bundle without `bundleDigest`. It covers
 /// the retention and redaction state as well as the components.
 pub fn bundle_digest(bundle: &Value) -> String {
-    let mut copy = bundle.clone();
-    if let Some(object) = copy.as_object_mut() {
-        object.remove("bundleDigest");
-    }
-    digest_object(&copy)
+    let omit: Omit<'_> = &[&["bundleDigest"]];
+    sha256_hex(write_canonical(bundle, omit).as_bytes())
 }
 
 /// The fields a lineage transition signs, in a fixed six-member object.
@@ -102,44 +96,89 @@ pub(crate) fn sha256_hex(bytes: &[u8]) -> String {
         .collect()
 }
 
-fn write_value(value: &Value, out: &mut String) {
-    match value {
-        Value::Null => out.push_str("null"),
-        Value::Bool(true) => out.push_str("true"),
-        Value::Bool(false) => out.push_str("false"),
-        Value::Number(number) => match number.as_f64() {
-            Some(float) if float.is_finite() => {
-                out.push_str(ryu_js::Buffer::new().format_finite(float));
+/// One step of the writer: a value to write, with the object keys that lead
+/// to it while it is still within reach of an omitted path, or literal text.
+enum Step<'a> {
+    Value(&'a Value, Option<Vec<&'a str>>),
+    Key(&'a str),
+    Text(char),
+}
+
+fn write_canonical(root: &Value, omit: Omit<'_>) -> String {
+    let mut out = String::new();
+    let mut steps = vec![Step::Value(root, Some(Vec::new()))];
+    while let Some(step) = steps.pop() {
+        let (value, path) = match step {
+            Step::Text(text) => {
+                out.push(text);
+                continue;
             }
-            // JSON.stringify prints a non-finite number as null.
-            _ => out.push_str("null"),
-        },
-        Value::String(text) => write_string(text, out),
-        Value::Array(items) => {
-            out.push('[');
-            for (index, item) in items.iter().enumerate() {
-                if index > 0 {
-                    out.push(',');
-                }
-                write_value(item, out);
-            }
-            out.push(']');
-        }
-        Value::Object(object) => {
-            let mut keys: Vec<&String> = object.keys().collect();
-            keys.sort_by(|left, right| left.encode_utf16().cmp(right.encode_utf16()));
-            out.push('{');
-            for (index, key) in keys.into_iter().enumerate() {
-                if index > 0 {
-                    out.push(',');
-                }
-                write_string(key, out);
+            Step::Key(key) => {
+                write_string(key, &mut out);
                 out.push(':');
-                write_value(&object[key], out);
+                continue;
             }
-            out.push('}');
+            Step::Value(value, path) => (value, path),
+        };
+        match value {
+            Value::Null => out.push_str("null"),
+            Value::Bool(true) => out.push_str("true"),
+            Value::Bool(false) => out.push_str("false"),
+            Value::Number(number) => match number.as_f64() {
+                Some(float) if float.is_finite() => {
+                    out.push_str(ryu_js::Buffer::new().format_finite(float));
+                }
+                // JSON.stringify prints a non-finite number as null.
+                _ => out.push_str("null"),
+            },
+            Value::String(text) => write_string(text, &mut out),
+            Value::Array(items) => {
+                out.push('[');
+                steps.push(Step::Text(']'));
+                for (index, item) in items.iter().enumerate().rev() {
+                    steps.push(Step::Value(item, None));
+                    if index > 0 {
+                        steps.push(Step::Text(','));
+                    }
+                }
+            }
+            Value::Object(object) => {
+                let mut keys: Vec<&String> = object
+                    .keys()
+                    .filter(|key| {
+                        path.as_ref().is_none_or(|path| {
+                            !omit.iter().any(|omitted| {
+                                omitted.len() == path.len() + 1
+                                    && omitted[..path.len()] == path[..]
+                                    && omitted[path.len()] == key.as_str()
+                            })
+                        })
+                    })
+                    .collect();
+                keys.sort_by(|left, right| left.encode_utf16().cmp(right.encode_utf16()));
+                out.push('{');
+                steps.push(Step::Text('}'));
+                for (index, key) in keys.into_iter().enumerate().rev() {
+                    // Track the path only while an omitted path extends it.
+                    let child = path.as_ref().and_then(|path| {
+                        let mut child = path.clone();
+                        child.push(key.as_str());
+                        omit.iter()
+                            .any(|omitted| {
+                                omitted.len() > child.len() && omitted[..child.len()] == child[..]
+                            })
+                            .then_some(child)
+                    });
+                    steps.push(Step::Value(&object[key], child));
+                    steps.push(Step::Key(key));
+                    if index > 0 {
+                        steps.push(Step::Text(','));
+                    }
+                }
+            }
         }
     }
+    out
 }
 
 fn write_string(text: &str, out: &mut String) {
@@ -211,6 +250,19 @@ mod tests {
     }
 
     #[test]
+    fn writes_any_depth_without_recursion() {
+        let depth = 1_000_000;
+        let arrays = crate::json::parse(&("[".repeat(depth) + &"]".repeat(depth))).unwrap();
+        assert_eq!(canonical_json(&arrays.value).len(), 2 * depth);
+        let objects =
+            crate::json::parse(&(r#"{"b":0,"a":"#.repeat(depth) + "1" + &"}".repeat(depth)))
+                .unwrap();
+        let text = canonical_json(&objects.value);
+        assert!(text.starts_with(r#"{"a":{"a":"#) && text.ends_with(r#"},"b":0},"b":0}"#));
+        assert_eq!(bundle_digest(&objects.value), digest_object(&objects.value));
+    }
+
+    #[test]
     fn digests_omit_their_own_members() {
         let binding = json!({
             "a": 1, "integrity": {"bindingDigest": "x"}, "authentication": {},
@@ -227,6 +279,20 @@ mod tests {
         );
         let bundle = json!({"a": 1, "bundleDigest": {}});
         assert_eq!(bundle_digest(&bundle), digest_object(&json!({"a": 1})));
+        // Only the exact paths are omitted, never same-named members elsewhere.
+        let nested = json!({
+            "integrity": 1, "a": {"integrity": 2, "authentication": 3},
+            "commit": {"verifiedBindingDigest": 4, "x": {"verifiedBindingDigest": 5}},
+            "verifiedBindingDigest": 6
+        });
+        assert_eq!(
+            binding_digest(&nested),
+            digest_object(&json!({
+                "a": {"integrity": 2, "authentication": 3},
+                "commit": {"x": {"verifiedBindingDigest": 5}},
+                "verifiedBindingDigest": 6
+            }))
+        );
         assert_eq!(
             sha256_hex(b""),
             "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"

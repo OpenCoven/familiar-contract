@@ -46,6 +46,8 @@ pub struct EmbodimentInputs<'a> {
 pub fn verify(inputs: &EmbodimentInputs<'_>) -> Vec<Violation> {
     // validateEmbodimentBindingFile: each input is parsed, and the binding,
     // bundle and ledger checked for I-JSON, before anything else runs.
+    // Each document stays a `json::Parsed`, which tears itself down without
+    // recursion; values are only ever borrowed from it.
     let binding = match json::parse(inputs.binding) {
         Ok(parsed) if parsed.not_i_json => {
             return vec![Violation::new(
@@ -54,7 +56,7 @@ pub fn verify(inputs: &EmbodimentInputs<'_>) -> Vec<Violation> {
                 "JCS inputs must be I-JSON and cannot contain non-finite numbers or lone UTF-16 surrogates.",
             )]
         }
-        Ok(parsed) => parsed.value,
+        Ok(parsed) => parsed,
         Err(error) => {
             return vec![Violation::new(
                 Code::Json,
@@ -72,7 +74,7 @@ pub fn verify(inputs: &EmbodimentInputs<'_>) -> Vec<Violation> {
                 "JCS inputs must be I-JSON and cannot contain non-finite numbers or lone UTF-16 surrogates.",
             )]
         }
-        Some(Ok(parsed)) => Some(parsed.value),
+        Some(Ok(parsed)) => Some(parsed),
         Some(Err(error)) => {
             return vec![Violation::new(
                 Code::BundleSchema,
@@ -90,7 +92,7 @@ pub fn verify(inputs: &EmbodimentInputs<'_>) -> Vec<Violation> {
                 "Trusted ledger JSON must be I-JSON and cannot contain non-finite numbers or lone UTF-16 surrogates.",
             )]
         }
-        Some(Ok(parsed)) => Some(parsed.value),
+        Some(Ok(parsed)) => Some(parsed),
         Some(Err(error)) => {
             return vec![Violation::new(
                 Code::TrustedLedger,
@@ -112,9 +114,9 @@ pub fn verify(inputs: &EmbodimentInputs<'_>) -> Vec<Violation> {
         }
     };
     verify_binding(
-        &binding,
-        bundle.as_ref(),
-        ledger.as_ref(),
+        &binding.value,
+        bundle.as_ref().map(|parsed| &parsed.value),
+        ledger.as_ref().map(|parsed| &parsed.value),
         revocation.as_ref(),
     )
 }
@@ -144,14 +146,17 @@ fn verify_binding(
         .iter_errors(value)
         .map(|error| {
             let path = error.instance_path().to_string();
+            let keyword = error.kind().keyword();
+            // The message names the keyword only. Formatting the error itself
+            // would print the offending value, which may be nested arbitrarily
+            // deep.
             Violation::new(
                 Code::Schema,
                 format!(
-                    "schema {} [{}]",
+                    "schema {} [{keyword}]",
                     if path.is_empty() { "/" } else { &path },
-                    error.kind().keyword()
                 ),
-                error.to_string(),
+                format!("fails the schema's `{keyword}` keyword"),
             )
         })
         .collect();
@@ -695,10 +700,16 @@ fn verify_bundle(value: &Value, b: &Binding) -> Vec<Violation> {
     // recording it, so a later required component can then read as missing.
     let mut seen = HashSet::new();
     let mut redacted = 0;
-    for component in &bundle.components {
+    // Content is hashed in place from the parsed document; the typed view only
+    // records whether it is present.
+    let contents = value["components"]
+        .as_array()
+        .map(Vec::as_slice)
+        .unwrap_or_default();
+    for (index, component) in bundle.components.iter().enumerate() {
         let bad = seen.contains(component.component_id.as_str())
             || (component.redaction_state == "retained"
-                && component.content.as_ref().is_none_or(|content| {
+                && contents[index].get("content").is_none_or(|content| {
                     component.digest.value != canonical::digest_object(content)
                 }))
             || (component.redaction_state == "redacted"

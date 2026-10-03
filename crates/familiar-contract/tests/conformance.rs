@@ -116,3 +116,43 @@ fn every_negative_vector_fails_with_its_code() {
         failures.join("\n")
     );
 }
+
+/// Arbitrarily deep input in any role fails closed, without overflowing the
+/// stack while parsing, validating, hashing or dropping it.
+#[test]
+fn deep_inputs_fail_closed_without_overflowing() {
+    let depth = 200_000;
+    let arrays = "[".repeat(depth) + &"]".repeat(depth);
+    let member = format!(r#"{{"schemaVersion":"1.0.0","deep":{arrays}}}"#);
+    let file = "01-active-direct.json";
+    let binding = read(&suite().join("positive").join(file));
+    let bundle = sidecar("bundles", file).unwrap();
+    let ledger = sidecar("ledgers", file).unwrap();
+    let deep_content = bundle.replacen(
+        r#""content": {"#,
+        &format!(r#""content": {{"deep": {arrays}, "#),
+        1,
+    );
+    assert_ne!(deep_content, bundle, "the bundle has retained content");
+    let run = |inputs: EmbodimentInputs<'_>| -> Vec<&'static str> {
+        verify(&inputs)
+            .iter()
+            .filter_map(|violation| violation.code.map(|code| code.as_str()))
+            .collect()
+    };
+    let with = |binding: &str, bundle: &str, ledger: &str, revocation: Option<&str>| {
+        run(EmbodimentInputs {
+            binding,
+            historical_bundle: Some(bundle),
+            trusted_ledger: Some(ledger),
+            post_commit_revocation: revocation,
+        })
+    };
+    assert_eq!(with(&arrays, &bundle, &ledger, None), ["E_SCHEMA"]);
+    assert!(with(&member, &bundle, &ledger, None).contains(&"E_SCHEMA"));
+    assert!(with(&binding, &arrays, &ledger, None).contains(&"E_BUNDLE_SCHEMA"));
+    assert!(with(&binding, &deep_content, &ledger, None).contains(&"E_COMPONENT_DIGEST"));
+    assert!(with(&binding, &bundle, &arrays, None).contains(&"E_TRUSTED_LEDGER"));
+    assert!(with(&binding, &bundle, &ledger, Some(&arrays)).contains(&"E_REVOCATION"));
+    assert!(with(&binding, &bundle, &ledger, None).is_empty());
+}

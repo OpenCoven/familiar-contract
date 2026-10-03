@@ -14,21 +14,24 @@
 //! and `1e2` become the integers `3` and `100`, and `9007199254740993` becomes
 //! `9007199254740992`. Schema checks, comparisons and canonical bytes then see
 //! the same value JavaScript does.
+//!
+//! Parsing, and dropping a [`Parsed`] document, are iterative, so nesting
+//! depth is bounded only by the input's size and never by the stack. The
+//! reference has no stated limit either; its recursive scanner fails at an
+//! engine-dependent depth (about 4,500 levels in Node 24), which no fixed
+//! limit here could match.
 
 use std::collections::HashSet;
 
 use serde_json::{Map, Number, Value};
 
-/// Nesting deeper than this is refused as a syntax error rather than risking
-/// the stack. Real documents nest a handful of levels.
-const MAX_DEPTH: usize = 512;
-
 /// A document that `JSON.parse` would reject, or that repeats an object key.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SyntaxError(pub String);
 
-/// A parsed document.
-#[derive(Debug, Clone, PartialEq)]
+/// A parsed document. Dropping it tears the value down iteratively, so a
+/// deeply nested document cannot overflow the stack.
+#[derive(Debug)]
 pub struct Parsed {
     /// The document, with numbers normalized to their JavaScript value. A lone
     /// surrogate is replaced by U+FFFD, and a non-finite number by `null`;
@@ -39,6 +42,25 @@ pub struct Parsed {
     pub not_i_json: bool,
 }
 
+impl Drop for Parsed {
+    fn drop(&mut self) {
+        dismantle(std::mem::take(&mut self.value));
+    }
+}
+
+/// Drops `value` without recursion. serde_json's own `Drop` recurses once per
+/// nesting level.
+pub(crate) fn dismantle(value: Value) {
+    let mut pending = vec![value];
+    while let Some(value) = pending.pop() {
+        match value {
+            Value::Array(items) => pending.extend(items),
+            Value::Object(object) => pending.extend(object.into_iter().map(|(_, item)| item)),
+            _ => {}
+        }
+    }
+}
+
 /// Parses `text` as one JSON document.
 pub fn parse(text: &str) -> Result<Parsed, SyntaxError> {
     let mut parser = Parser {
@@ -46,17 +68,23 @@ pub fn parse(text: &str) -> Result<Parsed, SyntaxError> {
         text,
         at: 0,
         not_i_json: false,
+        open: Vec::new(),
     };
-    parser.whitespace();
-    let value = parser.value(0)?;
-    parser.whitespace();
-    if parser.at != parser.bytes.len() {
-        return Err(parser.error("trailing input"));
+    match parser.document() {
+        Ok(value) => Ok(Parsed {
+            value,
+            not_i_json: parser.not_i_json,
+        }),
+        Err(error) => {
+            for frame in parser.open.drain(..) {
+                match frame {
+                    Frame::Array(items) => dismantle(Value::Array(items)),
+                    Frame::Object { map, .. } => dismantle(Value::Object(map)),
+                }
+            }
+            Err(error)
+        }
     }
-    Ok(Parsed {
-        value,
-        not_i_json: parser.not_i_json,
-    })
 }
 
 /// Formats a JSON number the way JavaScript would hold it: integer-valued
@@ -75,11 +103,24 @@ pub(crate) fn js_number(value: f64) -> Option<Number> {
     Number::from_f64(value)
 }
 
+/// A container still being read.
+enum Frame {
+    Array(Vec<Value>),
+    Object {
+        map: Map<String, Value>,
+        keys: HashSet<Vec<u16>>,
+        /// The member whose value is being read.
+        key: String,
+    },
+}
+
 struct Parser<'a> {
     bytes: &'a [u8],
     text: &'a str,
     at: usize,
     not_i_json: bool,
+    /// Open containers, outermost first.
+    open: Vec<Frame>,
 }
 
 impl Parser<'_> {
@@ -97,90 +138,133 @@ impl Parser<'_> {
         }
     }
 
+    /// The whole document: one value and nothing after it.
+    fn document(&mut self) -> Result<Value, SyntaxError> {
+        loop {
+            self.whitespace();
+            let Some(mut value) = self.open_or_scalar()? else {
+                // A container opened; read its first element or member.
+                continue;
+            };
+            // Attach the finished value, closing every container it ends.
+            loop {
+                self.whitespace();
+                match self.open.last_mut() {
+                    None => {
+                        if self.at != self.bytes.len() {
+                            dismantle(value);
+                            return Err(self.error("trailing input"));
+                        }
+                        return Ok(value);
+                    }
+                    Some(Frame::Array(items)) => {
+                        items.push(value);
+                        match self.peek() {
+                            Some(b',') => {
+                                self.at += 1;
+                                break;
+                            }
+                            Some(b']') => {
+                                self.at += 1;
+                                let Some(Frame::Array(items)) = self.open.pop() else {
+                                    unreachable!("the last frame is an array");
+                                };
+                                value = Value::Array(items);
+                            }
+                            _ => return Err(self.error("expected `,` or `]`")),
+                        }
+                    }
+                    Some(Frame::Object { map, key, .. }) => {
+                        map.insert(std::mem::take(key), value);
+                        match self.peek() {
+                            Some(b',') => {
+                                self.at += 1;
+                                self.member_key()?;
+                                break;
+                            }
+                            Some(b'}') => {
+                                self.at += 1;
+                                let Some(Frame::Object { map, .. }) = self.open.pop() else {
+                                    unreachable!("the last frame is an object");
+                                };
+                                value = Value::Object(map);
+                            }
+                            _ => return Err(self.error("expected `,` or `}`")),
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /// Reads a scalar, or an empty container, as a finished value. A non-empty
+    /// container is pushed as an open frame instead, and `None` returned.
+    fn open_or_scalar(&mut self) -> Result<Option<Value>, SyntaxError> {
+        match self.peek() {
+            Some(b'[') => {
+                self.at += 1;
+                self.whitespace();
+                if self.peek() == Some(b']') {
+                    self.at += 1;
+                    return Ok(Some(Value::Array(Vec::new())));
+                }
+                self.open.push(Frame::Array(Vec::new()));
+                Ok(None)
+            }
+            Some(b'{') => {
+                self.at += 1;
+                self.whitespace();
+                if self.peek() == Some(b'}') {
+                    self.at += 1;
+                    return Ok(Some(Value::Object(Map::new())));
+                }
+                self.open.push(Frame::Object {
+                    map: Map::new(),
+                    keys: HashSet::new(),
+                    key: String::new(),
+                });
+                self.member_key()?;
+                Ok(None)
+            }
+            Some(b'"') => Ok(Some(Value::String(self.string()?.text))),
+            Some(b't') => self.literal("true", Value::Bool(true)).map(Some),
+            Some(b'f') => self.literal("false", Value::Bool(false)).map(Some),
+            Some(b'n') => self.literal("null", Value::Null).map(Some),
+            Some(b'-' | b'0'..=b'9') => self.number().map(Some),
+            Some(_) => Err(self.error("unexpected token")),
+            None => Err(self.error("unexpected end of input")),
+        }
+    }
+
+    /// Reads `"key":` for the innermost open object.
+    fn member_key(&mut self) -> Result<(), SyntaxError> {
+        self.whitespace();
+        if self.peek() != Some(b'"') {
+            return Err(self.error("expected a string key"));
+        }
+        let decoded = self.string()?;
+        self.whitespace();
+        if self.peek() != Some(b':') {
+            return Err(self.error("expected colon"));
+        }
+        self.at += 1;
+        let at = self.at;
+        let Some(Frame::Object { keys, key, .. }) = self.open.last_mut() else {
+            unreachable!("a key is read only inside an object");
+        };
+        if !keys.insert(decoded.units) {
+            return Err(SyntaxError(format!("duplicate object key at byte {at}")));
+        }
+        *key = decoded.text;
+        Ok(())
+    }
+
     fn literal(&mut self, word: &str, value: Value) -> Result<Value, SyntaxError> {
         if self.bytes[self.at..].starts_with(word.as_bytes()) {
             self.at += word.len();
             Ok(value)
         } else {
             Err(self.error("unexpected token"))
-        }
-    }
-
-    fn value(&mut self, depth: usize) -> Result<Value, SyntaxError> {
-        if depth > MAX_DEPTH {
-            return Err(self.error("nesting too deep"));
-        }
-        match self.peek() {
-            Some(b'{') => self.object(depth),
-            Some(b'[') => self.array(depth),
-            Some(b'"') => Ok(Value::String(self.string()?.text)),
-            Some(b't') => self.literal("true", Value::Bool(true)),
-            Some(b'f') => self.literal("false", Value::Bool(false)),
-            Some(b'n') => self.literal("null", Value::Null),
-            Some(b'-' | b'0'..=b'9') => self.number(),
-            Some(_) => Err(self.error("unexpected token")),
-            None => Err(self.error("unexpected end of input")),
-        }
-    }
-
-    fn object(&mut self, depth: usize) -> Result<Value, SyntaxError> {
-        self.at += 1;
-        let mut map = Map::new();
-        let mut keys: HashSet<Vec<u16>> = HashSet::new();
-        self.whitespace();
-        if self.peek() == Some(b'}') {
-            self.at += 1;
-            return Ok(Value::Object(map));
-        }
-        loop {
-            self.whitespace();
-            if self.peek() != Some(b'"') {
-                return Err(self.error("expected a string key"));
-            }
-            let key = self.string()?;
-            if !keys.insert(key.units) {
-                return Err(self.error("duplicate object key"));
-            }
-            self.whitespace();
-            if self.peek() != Some(b':') {
-                return Err(self.error("expected colon"));
-            }
-            self.at += 1;
-            self.whitespace();
-            let item = self.value(depth + 1)?;
-            map.insert(key.text, item);
-            self.whitespace();
-            match self.peek() {
-                Some(b',') => self.at += 1,
-                Some(b'}') => {
-                    self.at += 1;
-                    return Ok(Value::Object(map));
-                }
-                _ => return Err(self.error("expected `,` or `}`")),
-            }
-        }
-    }
-
-    fn array(&mut self, depth: usize) -> Result<Value, SyntaxError> {
-        self.at += 1;
-        let mut items = Vec::new();
-        self.whitespace();
-        if self.peek() == Some(b']') {
-            self.at += 1;
-            return Ok(Value::Array(items));
-        }
-        loop {
-            self.whitespace();
-            items.push(self.value(depth + 1)?);
-            self.whitespace();
-            match self.peek() {
-                Some(b',') => self.at += 1,
-                Some(b']') => {
-                    self.at += 1;
-                    return Ok(Value::Array(items));
-                }
-                _ => return Err(self.error("expected `,` or `]`")),
-            }
         }
     }
 
@@ -324,15 +408,25 @@ mod tests {
             parsed.value,
             json!({"a": [1, 3, 100, 0, 0.5, 9_007_199_254_740_992_u64, 1e300], "b": null})
         );
+        assert_eq!(
+            ok(r#"[[], {}, [[1], {"a": {"b": []}}], "x", true, false, null]"#).value,
+            json!([[], {}, [[1], {"a": {"b": []}}], "x", true, false, null])
+        );
     }
 
     #[test]
     fn rejects_what_json_parse_rejects() {
         for text in [
             "",
+            " ",
             "{",
+            "[",
             "[1,]",
             "{\"a\":1,}",
+            "{\"a\"}",
+            "{\"a\":}",
+            "{,}",
+            "[,1]",
             "01",
             "1.",
             ".5",
@@ -349,6 +443,10 @@ mod tests {
             "{a:1}",
             "[1 2]",
             "1 2",
+            "[1]]",
+            "{}}",
+            "[}",
+            "{]",
             "\u{feff}{}",
             "\u{a0}{}",
             "NaN",
@@ -363,6 +461,7 @@ mod tests {
         assert!(parse(r#"{"a":1,"a":2}"#).is_err());
         assert!(parse(r#"{"a":1,"\u0061":2}"#).is_err());
         assert!(parse(r#"{"a":{"b":1},"c":{"b":1}}"#).is_ok());
+        assert!(parse(r#"{"a":{"b":1,"b":2}}"#).is_err());
         // Different lone surrogates are different keys, even though both
         // become U+FFFD in the parsed value.
         assert!(parse(r#"{"\ud800":1,"\ud801":2}"#).is_ok());
@@ -396,10 +495,23 @@ mod tests {
     }
 
     #[test]
-    fn refuses_unbounded_nesting() {
-        let deep = "[".repeat(MAX_DEPTH + 2) + &"]".repeat(MAX_DEPTH + 2);
-        assert!(parse(&deep).is_err());
-        let fine = "[".repeat(64) + &"]".repeat(64);
-        assert!(parse(&fine).is_ok());
+    fn nesting_depth_is_not_limited_by_the_stack() {
+        // Far deeper than any recursive parser or Drop would survive.
+        let depth = 1_000_000;
+        let arrays = "[".repeat(depth) + &"]".repeat(depth);
+        let parsed = ok(&arrays);
+        let mut level = &parsed.value;
+        let mut seen = 0;
+        while let Some(inner) = level.as_array().and_then(|items| items.first()) {
+            level = inner;
+            seen += 1;
+        }
+        assert_eq!(seen, depth - 1);
+        drop(parsed);
+        let objects = r#"{"a":"#.repeat(depth) + "1" + &"}".repeat(depth);
+        assert!(!ok(&objects).not_i_json);
+        // A deep document that fails part-way is torn down without recursion.
+        assert!(parse(&("[".repeat(depth) + "1,")).is_err());
+        assert!(parse(&(r#"{"a":"#.repeat(depth) + "1" + &"}".repeat(depth) + "x")).is_err());
     }
 }

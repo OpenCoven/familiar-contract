@@ -79,6 +79,23 @@ npm ci && bash tests/conformance/run-rust-parity.sh
 
 `run-rust-parity.sh` runs every vector, and the CLI misuse cases, through both
 validators and requires the same exit status and the same set of codes. It
-then runs `rust-differential.js`, which mutates every vector and its sidecars
-member by member, re-signs the mutants with a fresh key, and requires the two
-validators to agree on each mutant.
+then runs `rust-differential.js`, which requires the two validators to agree
+on mutants of the vectors:
+
+- **Default:** every vector gets text-level mutants: number forms, duplicate
+  keys, lone surrogates, and deep nesting. The 22 positive vectors and their
+  sidecars are also mutated member by member, and each mutated binding or
+  revocation event is re-signed with a fresh key.
+- **`--all`:** member-level mutation of all 87 vectors as well. It takes a few
+  minutes and about 1.5 GB of scratch space:
+
+  ```bash
+  bash tests/conformance/run-rust-parity.sh --all
+  ```
+
+Parsing, canonicalization and teardown are iterative, so nesting depth is
+limited only by input size. The reference has no stated limit, but its
+recursive functions fail at engine-dependent depths. Its parse fails near
+4,500 levels with Node 24's default stack, and its `canonicalJson` fails
+somewhere between 1,000 and 3,000. Below those depths the two agree; above
+them the reference's result depends on the JavaScript engine.
