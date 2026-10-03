@@ -1,0 +1,24 @@
+[package]
+name = "familiar-contract"
+description = "Rust verifier for the Familiar Contract's familiar.embodiment_binding.v1 profile"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+# The schemas are read from the repository root, so this crate is consumed as a
+# git dependency pinned by revision, never published on its own.
+publish = false
+
+[dependencies]
+# `arbitrary_precision` keeps verdicts identical whether or not a consumer's
+# feature unification enables it: numbers are normalized to their JavaScript
+# value on parse either way.
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["arbitrary_precision"] }
+jsonschema = { version = "0.58", default-features = false, features = ["arbitrary-precision"] }
+ring = "0.17"
+ryu-js = "0.2"
+
+[[example]]
+name = "validate-embodiment"

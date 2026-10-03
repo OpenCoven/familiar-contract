@@ -1038,4 +1038,16 @@ ${bold('Exit codes:')}
   }
 }
 
-main();
+// Run as a CLI; when required, expose the embodiment-binding functions so the
+// Rust port's differential test can compare against them in process.
+if (require.main === module) {
+  main();
+} else {
+  module.exports = {
+    validateEmbodimentBindingFile,
+    canonicalJson,
+    bindingDigest,
+    revocationDigest,
+    digestObject
+  };
+}
