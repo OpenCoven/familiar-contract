@@ -11,6 +11,12 @@ This project uses [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **Rust embodiment-binding verifier** — `crates/familiar-contract` ports
+  `--embodiment-binding` validation to Rust, consumed as a git dependency
+  pinned by commit. It reaches the same verdicts and error codes as
+  `validate.js` on all 87 vectors, and a differential test compares the two on
+  mutants of every vector. `validate.js` now exports its embodiment functions
+  when required as a module; its CLI behaviour is unchanged.
 - **`familiar.embodiment_binding.v1`** — A universal, versioned,
   privacy-minimized JSON profile for proving the stable familiar root and exact
   identity revision embodied by one direct session, automation run/attempt, or

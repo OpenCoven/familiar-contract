@@ -125,6 +125,15 @@ bundle digest, and successor root/revision. This lets the validator distinguish
 continuation, restoration, fork/new-root, and succession without trusting
 unstructured lineage prose.
 
+## Rust verifier
+
+[`crates/familiar-contract`](../crates/familiar-contract/) ports the
+embodiment-binding mode to Rust for runtimes that verify bindings in process.
+For the same binding and sidecars it reports the same verdict and error codes
+as `validate.js`. `cargo test` runs all 87 vectors against it, and
+`bash tests/conformance/run-rust-parity.sh` compares the two validators on
+every vector and on mutants of each. This validator remains the reference.
+
 ## For CI Integration
 
 ```yaml

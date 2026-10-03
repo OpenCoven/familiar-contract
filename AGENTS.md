@@ -36,6 +36,15 @@ pull requests against this repo. This is the agent-specific layer; read
   node -e "for (const f of require('fs').readdirSync('schemas')) JSON.parse(require('fs').readFileSync('schemas/' + f, 'utf8'))"
   npm test
   ```
+- **Keep the Rust verifier in step.** `crates/familiar-contract` is a port of
+  the embodiment-binding checks in `validators/validate.js`. A change to those
+  checks, to `schemas/familiar-embodiment-*.schema.json` or
+  `schemas/familiar-identity-bundle.schema.json`, or to the embodiment vectors
+  must update the crate in the same PR, and pass:
+  ```sh
+  cargo test
+  bash tests/conformance/run-rust-parity.sh
+  ```
 - **Backward compatibility matters.** The contract is consumed by real agents.
   Prefer additive changes; a breaking change to identity/role/soul/ward needs an
   explicit rationale and a version note in the PR body.
