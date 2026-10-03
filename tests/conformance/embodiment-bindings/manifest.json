@@ -110,6 +110,11 @@
       "expected": "positive",
       "file": "22-revoked-historical.json",
       "errorCode": null
+    },
+    {
+      "expected": "positive",
+      "file": "23-genesis-dispatch.json",
+      "errorCode": null
     }
   ],
   "negative": [
@@ -437,6 +442,21 @@
       "expected": "negative",
       "file": "65-falsy-empty-string-revocation.json",
       "errorCode": "E_REVOCATION"
+    },
+    {
+      "expected": "negative",
+      "file": "66-genesis-nonzero-position.json",
+      "errorCode": "E_LINEAGE"
+    },
+    {
+      "expected": "negative",
+      "file": "67-genesis-continued-root-evidence.json",
+      "errorCode": "E_LINEAGE"
+    },
+    {
+      "expected": "negative",
+      "file": "68-genesis-with-predecessor.json",
+      "errorCode": "E_LINEAGE"
     }
   ]
 }

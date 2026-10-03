@@ -11,10 +11,16 @@ This project uses [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **Genesis lineage error code and vectors** — A malformed genesis lineage
+  (a nonzero position, non-genesis root evidence, or a predecessor) now
+  reports `E_LINEAGE`, like every other lineage check, instead of failing
+  with no code. One positive genesis dispatch vector and three negative
+  vectors, one per rule, cover it. The Rust crate's `Violation::code` is no
+  longer optional.
 - **Rust embodiment-binding verifier** — `crates/familiar-contract` ports
   `--embodiment-binding` validation to Rust, consumed as a git dependency
   pinned by commit. It reaches the same verdicts and error codes as
-  `validate.js` on all 87 vectors, and a differential test compares the two on
+  `validate.js` on all 91 vectors, and a differential test compares the two on
   mutants of every vector. `validate.js` now exports its embodiment functions
   when required as a module; its CLI behaviour is unchanged.
 - **`familiar.embodiment_binding.v1`** — A universal, versioned,
@@ -40,8 +46,8 @@ This project uses [Semantic Versioning](https://semver.org/).
   profile versions, rejects non-finite I-JSON numbers and non-Ed25519 keys, and
   separates post-commit revocation into an immutable-binding-referenced,
   append-only signed `familiar.embodiment_revocation.v1` event.
-- **Embodiment-binding conformance lane** — 22 positive and 65 negative
-  vectors covering active and historical revision states, continuation,
+- **Embodiment-binding conformance lane** — 23 positive and 68 negative
+  vectors covering active and historical revision states, genesis, continuation,
   restoration, fork, succession, direct/automation/Psyche targets, retained
   and redacted history, privacy authorization, transaction timing, key-type
   confusion, revocation events, tampering, ambiguity, stale revisions, and

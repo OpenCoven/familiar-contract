@@ -8,7 +8,7 @@
 //
 // Usage: node tests/conformance/rust-differential.js <verify-batch binary> [--all]
 //
-// By default the 22 positive vectors are mutated member by member and the
+// By default the 23 positive vectors are mutated member by member and the
 // negative vectors run with text-level mutants only; enum swaps on the
 // positives already reach the negatives' states. `--all` mutates every vector
 // and its sidecars, which takes a few minutes and about 1.5 GB of scratch.

@@ -331,7 +331,7 @@ function validateEmbodimentBinding(binding, file, historicalBundle, trustedLedge
     violations.push(bindingViolation('E_LINEAGE', 'familiar.lineageEvidence.predecessor', 'A lineage predecessor must be a distinct identity revision.'));
   }
   if (lineage.relationship === 'genesis' && (familiar.lineagePosition !== 0 || lineage.rootEvidence !== 'genesis' || predecessor)) {
-    violations.push(violation(file, 'familiar.lineageEvidence', 'Genesis requires position 0, genesis root evidence, and no predecessor.'));
+    violations.push(bindingViolation('E_LINEAGE', 'familiar.lineageEvidence', 'Genesis requires position 0, genesis root evidence, and no predecessor.'));
   }
   if (['same_familiar_revision', 'restoration'].includes(lineage.relationship)) {
     if (!predecessor || lineage.rootEvidence !== 'continued' || predecessor.familiarRootId !== familiar.familiarRootId ||
